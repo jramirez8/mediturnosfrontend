@@ -25,6 +25,7 @@ export default function MedicalInfoScreen() {
   const [tipoSangre, setTipoSangre] = useState('O_POSITIVO');
   const [fechaNacimiento, setFechaNacimiento] = useState('1990-01-01');
   const [numAfiliado, setNumAfiliado] = useState('');
+  const [numeroHistoriaClinica, setNumeroHistoriaClinica] = useState('');
   const [clinicaCabecera, setClinicaCabecera] = useState('');
   const [doctorCabecera, setDoctorCabecera] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -32,6 +33,11 @@ export default function MedicalInfoScreen() {
   const handleFinishRegistration = async () => {
     try {
       setLoading(true);
+
+      if (!obraSocialId.trim() || !tipoSangre.trim() || !fechaNacimiento.trim() || !numAfiliado.trim() || !numeroHistoriaClinica.trim() || !telefono.trim()) {
+        Alert.alert('Datos faltantes', 'Completá obra social ID, tipo de sangre, fecha de nacimiento, carnet, historia clínica y teléfono.');
+        return;
+      }
 
       const registrationData = {
         ...data,
@@ -41,7 +47,7 @@ export default function MedicalInfoScreen() {
         fechaNacimiento,
         numeroAfiliado: numAfiliado,
         numeroCarnet: numAfiliado,
-        numeroHistoriaClinica: `HC-${data.dni || Date.now()}`,
+        numeroHistoriaClinica,
         institucionCabecera: clinicaCabecera,
         hospitalClinicaCabecera: clinicaCabecera,
         medicoCabecera: doctorCabecera,
@@ -138,6 +144,18 @@ export default function MedicalInfoScreen() {
                   placeholder="N° de afiliado"
                   value={numAfiliado}
                   onChangeText={setNumAfiliado}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Número de historia clínica</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ej: HC-0001"
+                  value={numeroHistoriaClinica}
+                  onChangeText={setNumeroHistoriaClinica}
                 />
               </View>
             </View>

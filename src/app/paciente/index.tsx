@@ -104,7 +104,7 @@ export default function PacienteHomeScreen() {
 
         <MtCard style={styles.healthCard}>
           <Text style={styles.healthTitle}>Estado del proyecto</Text>
-          <Text style={styles.healthText}>Frontend Expo + backend Railway + cache local de emergencia. Si no hay red, la app muestra datos demo/cache para no quedar muerta.</Text>
+          <Text style={styles.healthText}>Frontend Expo + backend Railway. La app ya no inventa sesiones ni turnos: si el backend falla, mostramos el error.</Text>
           <MtButton title="Abrir ajustes" variant="secondary" onPress={() => router.push('/paciente/settings')} style={{ marginTop: 14 }} />
           <MtButton title="Actualizar datos" variant="ghost" onPress={loadDashboard} style={{ marginTop: 10 }} />
           <MtButton title="Cerrar sesión" variant="danger" onPress={() => Alert.alert('Cerrar sesión', '¿Seguro?', [{ text: 'Cancelar' }, { text: 'Salir', onPress: handleLogout }])} style={{ marginTop: 10 }} />

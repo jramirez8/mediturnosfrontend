@@ -1,6 +1,5 @@
 import { api } from './client';
 import { getCachedJson, setCachedJson } from '../db/cache';
-import { demoProfile } from '../data/demoData';
 
 export type UserProfile = {
   id: number;
@@ -24,9 +23,9 @@ export type UserProfile = {
 };
 
 const normalizeProfile = (p: any): UserProfile => ({
-  id: Number(p.pacienteId ?? p.id ?? 1),
+  id: Number(p.pacienteId ?? p.id),
   pacienteId: p.pacienteId ? Number(p.pacienteId) : p.id ? Number(p.id) : undefined,
-  usuarioId: Number(p.usuarioId ?? p.usuario?.id ?? 1),
+  usuarioId: Number(p.usuarioId ?? p.usuario?.id),
   nombre: p.nombre ?? p.usuario?.nombre ?? '',
   apellido: p.apellido ?? p.usuario?.apellido ?? '',
   dni: p.dni ?? p.usuario?.dni ?? '',
@@ -50,12 +49,19 @@ function clean(value?: string | number | null) {
   return text || undefined;
 }
 
+function requireNumber(value: unknown, fieldName: string) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`No tengo ${fieldName} real desde el backend. No voy a inventarlo.`);
+  }
+  return parsed;
+}
+
 function buildProfilePayload(current: UserProfile, data: Partial<UserProfile>) {
   return {
     email: clean(data.email) ?? current.email,
     telefono: clean(data.telefono) ?? current.telefono ?? '0000000000',
-    // El endpoint /perfil exige obraSocialId, no nombre. Conservamos el ID que vino del backend.
-    obraSocialId: Number(data.obraSocialId ?? current.obraSocialId ?? 1),
+    obraSocialId: requireNumber(data.obraSocialId ?? current.obraSocialId, 'obraSocialId'),
     numeroCarnet: clean(data.numeroCarnet ?? data.numeroAfiliado) ?? current.numeroCarnet ?? current.numeroAfiliado,
     hospitalClinicaCabecera: clean(data.hospitalClinicaCabecera ?? data.institucionCabecera) ?? current.hospitalClinicaCabecera ?? current.institucionCabecera,
     doctorCabecera: clean(data.doctorCabecera ?? data.medicoCabecera) ?? current.doctorCabecera ?? current.medicoCabecera,
@@ -76,7 +82,8 @@ export const userService = {
       const cached = await getCachedJson<UserProfile>(cacheKey);
       if (cached) return cached;
       const last = await getCachedJson<UserProfile>('profile:last');
-      return last ?? demoProfile;
+      if (last) return last;
+      throw error;
     }
   },
 
@@ -84,20 +91,16 @@ export const userService = {
     const usuarioId = typeof usuarioIdOrData === 'string' ? usuarioIdOrData : undefined;
     const data = (maybeData ?? usuarioIdOrData) as Partial<UserProfile>;
     const cacheKey = `profile:${usuarioId ?? 'me'}`;
-    const current = await getCachedJson<UserProfile>(cacheKey) ?? await getCachedJson<UserProfile>('profile:last') ?? demoProfile;
 
-    try {
-      const endpoint = usuarioId ? `/api/pacientes/perfil/${usuarioId}` : '/api/pacientes/perfil/me';
-      const response = await api.put<any>(endpoint, buildProfilePayload(current, data));
-      const profile = normalizeProfile(response.data);
-      await setCachedJson(cacheKey, profile);
-      await setCachedJson('profile:last', profile);
-      return profile;
-    } catch (error) {
-      const merged = { ...current, ...data } as UserProfile;
-      await setCachedJson(cacheKey, merged);
-      await setCachedJson('profile:last', merged);
-      throw error;
-    }
+    const current = await getCachedJson<UserProfile>(cacheKey)
+      ?? await getCachedJson<UserProfile>('profile:last')
+      ?? await userService.getProfile(usuarioId);
+
+    const endpoint = usuarioId ? `/api/pacientes/perfil/${usuarioId}` : '/api/pacientes/perfil/me';
+    const response = await api.put<any>(endpoint, buildProfilePayload(current, data));
+    const profile = normalizeProfile(response.data);
+    await setCachedJson(cacheKey, profile);
+    await setCachedJson('profile:last', profile);
+    return profile;
   },
 };

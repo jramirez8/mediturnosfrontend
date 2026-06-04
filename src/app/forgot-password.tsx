@@ -24,7 +24,7 @@ export default function ForgotPasswordScreen() {
       if (resetToken) {
         Alert.alert(
           'Token generado',
-          'Modo demo activo: ya podemos cargar la nueva contraseña sin esperar el correo.',
+          'El backend devolvió un token de recuperación para entorno de desarrollo; podés cargar la nueva contraseña sin esperar el correo.',
           [
             {
               text: 'Continuar',

@@ -1,7 +1,6 @@
 import { api } from './client';
 import { TurnoResponse } from './appointmentService';
 import { getCachedJson, setCachedJson } from '../db/cache';
-import { demoAppointments } from '../data/demoData';
 
 export const medicalHistoryService = {
   getHistory: async (usuarioId?: string | null) => {
@@ -13,7 +12,8 @@ export const medicalHistoryService = {
       return response.data;
     } catch (error) {
       const cached = await getCachedJson<TurnoResponse[]>(cacheKey);
-      return cached ?? demoAppointments.filter((turno) => turno.estado === 'FINALIZADO');
+      if (cached) return cached;
+      throw error;
     }
   },
 
@@ -25,7 +25,7 @@ export const medicalHistoryService = {
     } catch (error) {
       const cached = await getCachedJson<TurnoResponse>(`history-detail:${id}`);
       if (cached) return cached;
-      return demoAppointments.find((turno) => turno.id === id) ?? demoAppointments[0];
+      throw error;
     }
   },
 
@@ -45,7 +45,6 @@ export const medicalHistoryService = {
     return response.data;
   },
 
-  // Alias viejo: este endpoint NO recibe multipart en el backend; guardamos detalle clínico JSON.
   uploadDocument: async (turnoId: number, data: FormData | Record<string, unknown>) => {
     const response = await api.put(`/api/turnos/${turnoId}/detalle-consulta`, data instanceof FormData ? {} : data);
     return response.data;

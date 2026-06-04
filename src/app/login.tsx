@@ -69,9 +69,9 @@ export default function LoginScreen() {
           <Text style={styles.forgot} onPress={() => router.push('/forgot-password')}>{t('login.forgot')}</Text>
         </MtCard>
 
-        <MtCard style={styles.demoCard}>
-          <Text style={styles.demoTitle}>{t('login.demoTitle')}</Text>
-          <Text style={styles.demoText}>{t('login.demoText')}</Text>
+        <MtCard style={styles.infoCard}>
+          <Text style={styles.infoTitle}>{t('login.seedTitle')}</Text>
+          <Text style={styles.infoText}>{t('login.seedText')}</Text>
         </MtCard>
       </KeyboardAvoidingView>
     </MtScreen>
@@ -99,8 +99,8 @@ function createStyles(theme: MediturnosTheme) {
     helper: { color: theme.colors.muted, marginTop: 6, lineHeight: 20 },
     form: { gap: 14, marginTop: 20 },
     forgot: { color: theme.colors.primary, fontWeight: '800', textAlign: 'center', marginTop: 18 },
-    demoCard: { marginTop: 16, backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
-    demoTitle: { color: theme.colors.primaryDark, fontWeight: '900', fontSize: 15 },
-    demoText: { color: theme.colors.primaryDark, lineHeight: 20, marginTop: 4, fontSize: 13 },
+    infoCard: { marginTop: 16, backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
+    infoTitle: { color: theme.colors.primaryDark, fontWeight: '900', fontSize: 15 },
+    infoText: { color: theme.colors.primaryDark, lineHeight: 20, marginTop: 4, fontSize: 13 },
   });
 }

@@ -1,6 +1,5 @@
 import { api } from './client';
 import { getCachedJson, setCachedJson } from '../db/cache';
-import { demoProfessionals, demoSpecialties } from '../data/demoData';
 
 export type Professional = {
   id: number;
@@ -54,7 +53,7 @@ export const professionalService = {
         },
       });
 
-      const data = response.data.map(normalizeProfessional);
+      const data = response.data.map(normalizeProfessional).filter((p) => Number.isFinite(p.id));
       await setCachedJson(cacheKey, data);
       await setCachedJson('professionals:last', data);
       return data;
@@ -63,7 +62,7 @@ export const professionalService = {
       if (cached) return cached;
       const last = await getCachedJson<Professional[]>('professionals:last');
       if (last) return filterLocal(last, especialidad, query);
-      return filterLocal(demoProfessionals, especialidad, query);
+      throw error;
     }
   },
 
@@ -75,7 +74,8 @@ export const professionalService = {
       return data;
     } catch (error) {
       const cached = await getCachedJson<string[]>('specialties');
-      return cached ?? demoSpecialties;
+      if (cached) return cached;
+      throw error;
     }
   },
 

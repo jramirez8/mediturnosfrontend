@@ -9,6 +9,7 @@ type AuthState = {
   pacienteId: string | null;
   role: string | null;
   loading: boolean;
+  hydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   loadToken: () => Promise<void>;
@@ -20,12 +21,22 @@ function pickString(...values: any[]) {
   return found === undefined ? null : String(found);
 }
 
+async function clearAuthStorage() {
+  await Promise.allSettled([
+    storage.deleteItem('access_token'),
+    storage.deleteItem('usuario_id'),
+    storage.deleteItem('paciente_id'),
+    storage.deleteItem('role'),
+  ]);
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   usuarioId: null,
   pacienteId: null,
   role: null,
   loading: false,
+  hydrated: false,
 
   loadToken: async () => {
     const [token, usuarioId, pacienteId, role] = await Promise.all([
@@ -34,7 +45,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       storage.getItem('paciente_id'),
       storage.getItem('role'),
     ]);
-    set({ token, usuarioId, pacienteId, role });
+
+    // Limpieza de versiones anteriores: hubo builds que guardaban tokens falsos.
+    // Eso ya no autentica nada y no debe dejar pasar al módulo paciente.
+    if (token?.startsWith('demo-token-')) {
+      await clearAuthStorage();
+      set({ token: null, usuarioId: null, pacienteId: null, role: null, hydrated: true, loading: false });
+      return;
+    }
+
+    set({ token, usuarioId, pacienteId, role, hydrated: true, loading: false });
   },
 
   fetchPacienteId: async (uId: string) => {
@@ -46,17 +66,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ pacienteId: pId });
       return pId;
     } catch (e) {
-      console.warn('No se pudo obtener pacienteId. La app sigue usando JWT/cache.', e);
+      console.warn('No se pudo obtener pacienteId desde backend.', e);
       return null;
     }
   },
 
   login: async (email, password) => {
-    set({ loading: true });
+    set({ loading: true, token: null, usuarioId: null, pacienteId: null, role: null, hydrated: true });
+    await clearAuthStorage();
+
     try {
       const response = await api.post('/api/auth/login', { identificador: email, email, password });
 
-      const token = pickString(response.data?.token, response.data?.accessToken, response.data?.jwt) || `demo-token-${Date.now()}`;
+      const token = pickString(response.data?.token, response.data?.accessToken, response.data?.jwt);
+      if (!token) {
+        throw new Error('El backend respondió el login pero no devolvió JWT. Revisá AuthLoginResponse/token/accessToken/jwt.');
+      }
+
       const uId = pickString(response.data?.usuarioId, response.data?.userId, response.data?.id, response.data?.usuario?.id);
       const pId = pickString(response.data?.pacienteId, response.data?.paciente?.id);
       const role = pickString(response.data?.role, response.data?.rol, response.data?.tipoUsuario, response.data?.usuario?.rol);
@@ -65,7 +91,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (uId) await storage.setItem('usuario_id', uId);
       if (role) await storage.setItem('role', role);
 
-      set({ token, usuarioId: uId, role });
+      set({ token, usuarioId: uId, role, hydrated: true });
 
       if (pId) {
         await storage.setItem('paciente_id', pId);
@@ -79,14 +105,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    // Primero limpiamos el estado de Zustand para que la UI salga aunque storage/cache fallen.
-    set({ token: null, usuarioId: null, pacienteId: null, role: null, loading: false });
+    // Estado primero: la UI sale aunque falle storage/cache.
+    set({ token: null, usuarioId: null, pacienteId: null, role: null, loading: false, hydrated: true });
 
     await Promise.allSettled([
-      storage.deleteItem('access_token'),
-      storage.deleteItem('usuario_id'),
-      storage.deleteItem('paciente_id'),
-      storage.deleteItem('role'),
+      clearAuthStorage(),
       clearAppCache(),
     ]);
   },

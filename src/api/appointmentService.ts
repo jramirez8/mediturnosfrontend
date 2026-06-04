@@ -1,6 +1,5 @@
 import { api } from './client';
-import { getCachedJson, setCachedJson } from '../db/cache';
-import { demoAppointments, demoSlots } from '../data/demoData';
+import { clearAppCache, getCachedJson, setCachedJson } from '../db/cache';
 
 export type AppointmentSlot = {
   fecha: string;
@@ -55,58 +54,88 @@ function buildFechaHora(fecha?: string, hora?: string, fechaHora?: string) {
   return `${cleanFecha}T${cleanHora.slice(0, 5)}`;
 }
 
+function ensureNumber(value: unknown, fieldName: string) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`Falta dato obligatorio para el backend: ${fieldName}.`);
+  }
+  return parsed;
+}
+
+function ensureFechaHora(value: string) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) {
+    throw new Error('Falta fechaHora válida para solicitar/reprogramar el turno.');
+  }
+  return value;
+}
+
 const normalizeTurno = (t: any): TurnoResponse => {
-  const derived = splitFechaHora(t.fechaHora ?? t.fechaHoraInicio ?? t.fecha_hora);
-  const fecha = t.fecha ?? derived.fecha;
-  const hora = t.hora ? String(t.hora).slice(0, 5) : derived.hora;
-  const profesionalNombre = t.profesionalNombreCompleto
-    ?? t.profesionalNombreApellido
-    ?? `${t.profesionalNombre ?? t.profesional?.nombre ?? ''} ${t.profesionalApellido ?? t.profesional?.apellido ?? ''}`.trim();
-  const pacienteNombre = t.pacienteNombreCompleto
-    ?? `${t.pacienteNombre ?? t.paciente?.nombre ?? ''} ${t.pacienteApellido ?? t.paciente?.apellido ?? ''}`.trim();
+  const derived = splitFechaHora(t?.fechaHora ?? t?.fechaHoraInicio ?? t?.fecha_hora);
+  const fecha = t?.fecha ?? derived.fecha;
+  const hora = t?.hora ? String(t.hora).slice(0, 5) : derived.hora;
+  const profesionalNombre = t?.profesionalNombreCompleto
+    ?? t?.profesionalNombreApellido
+    ?? `${t?.profesionalNombre ?? t?.profesional?.nombre ?? ''} ${t?.profesionalApellido ?? t?.profesional?.apellido ?? ''}`.trim();
+  const pacienteNombre = t?.pacienteNombreCompleto
+    ?? `${t?.pacienteNombre ?? t?.paciente?.nombre ?? ''} ${t?.pacienteApellido ?? t?.paciente?.apellido ?? ''}`.trim();
 
   return {
-    id: Number(t.id),
+    id: Number(t?.id),
     fecha,
     hora,
-    fechaHora: buildFechaHora(fecha, hora, t.fechaHora ?? t.fechaHoraInicio),
-    pacienteId: t.pacienteId ? Number(t.pacienteId) : t.paciente?.id ? Number(t.paciente.id) : undefined,
+    fechaHora: buildFechaHora(fecha, hora, t?.fechaHora ?? t?.fechaHoraInicio),
+    pacienteId: t?.pacienteId ? Number(t.pacienteId) : t?.paciente?.id ? Number(t.paciente.id) : undefined,
     pacienteNombre,
-    profesionalId: t.profesionalId ? Number(t.profesionalId) : t.profesional?.id ? Number(t.profesional.id) : undefined,
-    profesionalInstitucionId: t.profesionalInstitucionId ? Number(t.profesionalInstitucionId) : undefined,
-    especialidadId: t.especialidadId ? Number(t.especialidadId) : undefined,
+    profesionalId: t?.profesionalId ? Number(t.profesionalId) : t?.profesional?.id ? Number(t.profesional.id) : undefined,
+    profesionalInstitucionId: t?.profesionalInstitucionId ? Number(t.profesionalInstitucionId) : undefined,
+    especialidadId: t?.especialidadId ? Number(t.especialidadId) : undefined,
     profesionalNombre,
-    especialidad: t.especialidad ?? t.especialidadNombre ?? 'Consulta médica',
-    institucionId: t.institucionId ? Number(t.institucionId) : undefined,
-    institucionNombre: t.institucionNombre ?? t.institucion ?? t.profesionalInstitucion?.institucion?.nombre ?? 'Institución',
-    estado: t.estado ?? 'PENDIENTE',
-    motivoConsulta: t.motivoConsulta,
-    diagnostico: t.diagnostico,
-    observaciones: t.observaciones,
-    enfermedadActual: t.enfermedadActual,
-    antecedenteEnfermedadActual: t.antecedenteEnfermedadActual,
-    antecedentesPersonales: t.antecedentesPersonales,
-    antecedentesFamiliares: t.antecedentesFamiliares,
-    antecedentes: t.antecedentes ?? t.antecedentesPersonales,
-    medicacionActual: t.medicacionActual,
-    medicacionHabitual: t.medicacionHabitual ?? t.medicacionActual,
-    alergias: t.alergias,
-    habitos: t.habitos,
-    hallazgosExamenFisico: t.hallazgosExamenFisico,
-    conducta: t.conducta,
+    especialidad: t?.especialidad ?? t?.especialidadNombre ?? 'Consulta médica',
+    institucionId: t?.institucionId ? Number(t.institucionId) : undefined,
+    institucionNombre: t?.institucionNombre ?? t?.institucion ?? t?.profesionalInstitucion?.institucion?.nombre ?? 'Institución',
+    estado: t?.estado ?? 'PENDIENTE',
+    motivoConsulta: t?.motivoConsulta,
+    diagnostico: t?.diagnostico,
+    observaciones: t?.observaciones,
+    enfermedadActual: t?.enfermedadActual,
+    antecedenteEnfermedadActual: t?.antecedenteEnfermedadActual,
+    antecedentesPersonales: t?.antecedentesPersonales,
+    antecedentesFamiliares: t?.antecedentesFamiliares,
+    antecedentes: t?.antecedentes ?? t?.antecedentesPersonales,
+    medicacionActual: t?.medicacionActual,
+    medicacionHabitual: t?.medicacionHabitual ?? t?.medicacionActual,
+    alergias: t?.alergias,
+    habitos: t?.habitos,
+    hallazgosExamenFisico: t?.hallazgosExamenFisico,
+    conducta: t?.conducta,
   };
 };
 
 const normalizeSlot = (slot: any): AppointmentSlot => {
-  const fechaHora = slot.fechaHora ?? slot.fechaHoraIso ?? slot.fechaHoraInicio ?? slot.fecha_hora;
+  const fechaHora = slot?.fechaHora ?? slot?.fechaHoraIso ?? slot?.fechaHoraInicio ?? slot?.fecha_hora;
   const derived = splitFechaHora(fechaHora);
   return {
-    fecha: slot.fecha ?? derived.fecha,
-    hora: slot.hora ? String(slot.hora).slice(0, 5) : derived.hora,
-    fechaHora: buildFechaHora(slot.fecha ?? derived.fecha, slot.hora ?? derived.hora, fechaHora),
-    disponible: slot.disponible ?? true,
+    fecha: slot?.fecha ?? derived.fecha,
+    hora: slot?.hora ? String(slot.hora).slice(0, 5) : derived.hora,
+    fechaHora: buildFechaHora(slot?.fecha ?? derived.fecha, slot?.hora ?? derived.hora, fechaHora),
+    disponible: slot?.disponible ?? true,
   };
 };
+
+async function verifyCreatedTurno(created: TurnoResponse) {
+  if (!created?.id || Number.isNaN(Number(created.id))) {
+    throw new Error('El backend respondió la solicitud, pero no devolvió id de turno. No lo doy por confirmado.');
+  }
+
+  const detail = await api.get<any>(`/api/turnos/${created.id}`);
+  const verified = normalizeTurno(detail.data);
+
+  if (!verified?.id || Number(verified.id) !== Number(created.id)) {
+    throw new Error('El backend respondió, pero no pude verificar que el turno haya quedado persistido.');
+  }
+
+  return verified;
+}
 
 export const appointmentService = {
   getMyAppointments: async (pacienteId?: string | null) => {
@@ -122,7 +151,8 @@ export const appointmentService = {
       const cached = await getCachedJson<TurnoResponse[]>(cacheKey);
       if (cached) return cached;
       const last = await getCachedJson<TurnoResponse[]>('appointments:last');
-      return last ?? demoAppointments;
+      if (last) return last;
+      throw error;
     }
   },
 
@@ -136,7 +166,7 @@ export const appointmentService = {
     } catch (error) {
       const cached = await getCachedJson<TurnoResponse>(cacheKey);
       if (cached) return cached;
-      return demoAppointments.find((item) => item.id === id) ?? demoAppointments[0];
+      throw error;
     }
   },
 
@@ -151,7 +181,8 @@ export const appointmentService = {
       return data;
     } catch (error) {
       const cached = await getCachedJson<AppointmentSlot[]>(cacheKey);
-      return cached ?? demoSlots;
+      if (cached) return cached;
+      throw error;
     }
   },
 
@@ -167,16 +198,21 @@ export const appointmentService = {
     observaciones?: string;
   }) => {
     const payload = {
-      pacienteId: Number(data.pacienteId),
-      profesionalId: Number(data.profesionalId),
+      pacienteId: ensureNumber(data.pacienteId, 'pacienteId'),
+      profesionalId: ensureNumber(data.profesionalId, 'profesionalId'),
       profesionalInstitucionId: data.profesionalInstitucionId ? Number(data.profesionalInstitucionId) : undefined,
       especialidadId: data.especialidadId ? Number(data.especialidadId) : undefined,
-      fechaHora: buildFechaHora(data.fecha, data.hora, data.fechaHora),
+      fechaHora: ensureFechaHora(buildFechaHora(data.fecha, data.hora, data.fechaHora)),
       observaciones: data.observaciones || data.motivoConsulta || undefined,
     };
 
     const response = await api.post<any>('/api/turnos/solicitar', payload);
-    return normalizeTurno(response.data);
+    const created = normalizeTurno(response.data);
+    const verified = await verifyCreatedTurno(created);
+
+    // Invalida cache de pantallas con datos de turnos para que Mis turnos vuelva al backend.
+    await clearAppCache();
+    return verified;
   },
 
   requestAppointment: async (data: {
@@ -193,7 +229,7 @@ export const appointmentService = {
   }) => {
     return appointmentService.solicitar({
       pacienteId: data.pacienteId,
-      profesionalId: Number(data.profesionalId ?? data.professionalId),
+      profesionalId: ensureNumber(data.profesionalId ?? data.professionalId, 'profesionalId'),
       profesionalInstitucionId: data.profesionalInstitucionId,
       especialidadId: data.especialidadId,
       fecha: data.fecha,
@@ -216,14 +252,17 @@ export const appointmentService = {
       profesionalId: data.profesionalId ? Number(data.profesionalId) : undefined,
       profesionalInstitucionId: data.profesionalInstitucionId ? Number(data.profesionalInstitucionId) : undefined,
       especialidadId: data.especialidadId ? Number(data.especialidadId) : undefined,
-      fechaHora: buildFechaHora(data.fecha, data.hora, data.fechaHora),
+      fechaHora: ensureFechaHora(buildFechaHora(data.fecha, data.hora, data.fechaHora)),
     };
     const response = await api.put<any>(`/api/turnos/${id}/reprogramar`, payload);
-    return normalizeTurno(response.data);
+    const updated = normalizeTurno(response.data);
+    await clearAppCache();
+    return updated;
   },
 
   cancelar: async (id: number) => {
     const response = await api.delete(`/api/turnos/${id}`);
+    await clearAppCache();
     return response.data;
   },
 };

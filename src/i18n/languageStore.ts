@@ -40,8 +40,8 @@ const es: Dictionary = {
   'login.submit': 'Ingresar',
   'login.createAccount': 'Crear cuenta',
   'login.forgot': '¿Olvidaste tu contraseña?',
-  'login.demoTitle': 'Demo lista para defensa',
-  'login.demoText': 'Credenciales seed precargadas. Si Railway cae, algunas pantallas siguen mostrando cache/datos demo para no quedar en blanco.',
+  'login.seedTitle': 'Credenciales de prueba',
+  'login.seedText': 'Credenciales seed precargadas para probar contra el backend real. Si el backend falla, el login no inventa sesión.',
 };
 
 const en: Dictionary = {
@@ -78,8 +78,8 @@ const en: Dictionary = {
   'login.submit': 'Sign in',
   'login.createAccount': 'Create account',
   'login.forgot': 'Forgot your password?',
-  'login.demoTitle': 'Demo ready for presentation',
-  'login.demoText': 'Seed credentials are preloaded. If Railway is down, some screens still show cache/demo data instead of going blank.',
+  'login.seedTitle': 'Test credentials',
+  'login.seedText': 'Seed credentials are preloaded to test the real backend. If the backend fails, the app does not create a session.',
 };
 
 const dictionaries: Record<AppLanguage, Dictionary> = { es, en };

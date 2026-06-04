@@ -37,9 +37,18 @@ function clean(value?: string | number | null) {
   return text || undefined;
 }
 
-function numberOrDefault(value: unknown, fallback: number) {
+function requirePositiveNumber(value: unknown, fieldName: string) {
   const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`Falta ${fieldName} real. No se completa registro con datos inventados.`);
+  }
+  return parsed;
+}
+
+function requireText(value: string | number | null | undefined, fieldName: string) {
+  const text = clean(value);
+  if (!text) throw new Error(`Falta ${fieldName}. No se completa registro con datos inventados.`);
+  return text;
 }
 
 function buildRegistrationPayload(data: RegistrationRequest) {
@@ -53,15 +62,14 @@ function buildRegistrationPayload(data: RegistrationRequest) {
     email: clean(data.email) ?? '',
     password,
     confirmPassword: clean(data.confirmPassword ?? data.repeatPassword) ?? password,
-    // El backend trabaja por ID. Si la pantalla vieja manda texto, usamos Particular=1 como fallback de demo.
-    obraSocialId: numberOrDefault(data.obraSocialId, 1),
-    tipoSangre: clean(data.tipoSangre) ?? 'O_POSITIVO',
-    numeroCarnet: clean(data.numeroCarnet ?? data.numeroAfiliado) ?? `AF-${dni || Date.now()}`,
-    numeroHistoriaClinica: clean(data.numeroHistoriaClinica) ?? `HC-${dni || Date.now()}`,
+    obraSocialId: requirePositiveNumber(data.obraSocialId, 'obraSocialId'),
+    tipoSangre: requireText(data.tipoSangre, 'tipoSangre'),
+    numeroCarnet: requireText(data.numeroCarnet ?? data.numeroAfiliado, 'numeroCarnet'),
+    numeroHistoriaClinica: requireText(data.numeroHistoriaClinica, 'numeroHistoriaClinica'),
     hospitalClinicaCabecera: clean(data.hospitalClinicaCabecera ?? data.institucionCabecera),
     doctorCabecera: clean(data.doctorCabecera ?? data.medicoCabecera),
-    fechaNacimiento: clean(data.fechaNacimiento) ?? '1990-01-01',
-    telefono: clean(data.telefono) ?? '0000000000',
+    fechaNacimiento: requireText(data.fechaNacimiento, 'fechaNacimiento'),
+    telefono: requireText(data.telefono, 'telefono'),
   };
 }
 

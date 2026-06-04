@@ -110,7 +110,7 @@ export default function SolicitarTurnoScreen() {
 
     try {
       setSending(true);
-      await appointmentService.requestAppointment({
+      const createdTurno = await appointmentService.requestAppointment({
         pacienteId,
         profesionalId: selectedProfessional.id,
         profesionalInstitucionId: selectedProfessional.profesionalInstitucionId ?? selectedProfessional.id,
@@ -121,9 +121,11 @@ export default function SolicitarTurnoScreen() {
         motivoConsulta: motivo,
         observaciones: [motivo, observaciones].filter(Boolean).join(' - '),
       });
-      Alert.alert('Turno solicitado', 'La solicitud fue enviada correctamente.', [
-        { text: 'Ver mis turnos', onPress: () => router.replace('/paciente/turnos') },
-      ]);
+      Alert.alert(
+        'Turno confirmado',
+        `Turno #${createdTurno.id} creado y verificado contra el backend.`,
+        [{ text: 'Ver mis turnos', onPress: () => router.replace('/paciente/turnos') }]
+      );
     } catch (error: any) {
       Alert.alert('No se pudo solicitar', readableError(error, 'El horario pudo haber sido tomado. Probá otro.'));
     } finally {
