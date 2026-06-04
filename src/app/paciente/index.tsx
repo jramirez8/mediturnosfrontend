@@ -9,6 +9,7 @@ import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 import { clearAppCache, purgeLegacyCache } from '../../db/cache';
+import { logoutAndGoToLogin } from '../../utils/session';
 
 type DashboardError = {
   profile?: string;
@@ -95,8 +96,7 @@ export default function PacienteHomeScreen() {
     setProfile(null);
     setAppointments([]);
     setErrors({});
-    await logout();
-    router.replace('/login');
+    await logoutAndGoToLogin(logout);
   };
 
   const hardReset = async () => {
@@ -225,8 +225,7 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
 
   const leave = async () => {
-    await logout();
-    router.replace('/login');
+    await logoutAndGoToLogin(logout);
   };
 
   return (

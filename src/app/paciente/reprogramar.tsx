@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { appointmentService, AppointmentSlot, TurnoResponse } from '../../api/appointmentService';
 import { MtBottomNav, MtButton, MtCard, MtHeader, MtLoading, MtScreen } from '../../components/mediturnos';
@@ -7,8 +7,14 @@ import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 
-export default function ReprogramarTurnoScreen() {
-  const { id } = useLocalSearchParams();
+type Notice = {
+  type: 'success' | 'error';
+  title: string;
+  message: string;
+};
+
+export default function ReprogramarScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
   const [turno, setTurno] = useState<TurnoResponse | null>(null);
@@ -20,6 +26,8 @@ export default function ReprogramarTurnoScreen() {
   const [selectedSlot, setSelectedSlot] = useState<AppointmentSlot | null>(null);
   const [showDates, setShowDates] = useState(false);
   const [showTimes, setShowTimes] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [updatedTurno, setUpdatedTurno] = useState<TurnoResponse | null>(null);
 
   useEffect(() => {
     if (id) fetchInitialData();
@@ -28,12 +36,17 @@ export default function ReprogramarTurnoScreen() {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
+      setNotice(null);
       const turnoData = await appointmentService.getAppointmentDetail(Number(id));
       setTurno(turnoData);
 
       const piId = turnoData.profesionalInstitucionId;
       if (!piId) {
-        Alert.alert('Falta dato del turno', 'El backend no devolvió profesionalInstitucionId. No puedo pedir disponibilidad real para reprogramar.');
+        setNotice({
+          type: 'error',
+          title: 'No se puede reprogramar',
+          message: 'El backend no devolvió profesionalInstitucionId. No puedo pedir disponibilidad real para este turno.',
+        });
         return;
       }
 
@@ -44,7 +57,7 @@ export default function ReprogramarTurnoScreen() {
       setSelectedSlot(first);
       setSelectedDate(first?.fecha ?? '');
     } catch (error: any) {
-      Alert.alert('Error', readableError(error, 'No se pudo cargar la información del turno.'));
+      setNotice({ type: 'error', title: 'No se pudo cargar el turno', message: readableError(error, 'No se pudo cargar la información del turno.') });
     } finally {
       setLoading(false);
       setLoadingSlots(false);
@@ -60,22 +73,26 @@ export default function ReprogramarTurnoScreen() {
     setSelectedSlot(firstSlot);
     setShowDates(false);
     setShowTimes(true);
+    setNotice(null);
   };
 
   const handleConfirm = async () => {
+    setNotice(null);
+    setUpdatedTurno(null);
+
     if (!turno) return;
     if (!selectedSlot) {
-      Alert.alert('Aviso', 'Por favor seleccioná una nueva fecha y hora.');
+      setNotice({ type: 'error', title: 'Falta horario', message: 'Seleccioná una nueva fecha y hora.' });
       return;
     }
     if (!turno.profesionalId) {
-      Alert.alert('Falta dato del turno', 'El backend no devolvió profesionalId. No puedo reprogramar este turno.');
+      setNotice({ type: 'error', title: 'No se puede reprogramar', message: 'El backend no devolvió profesionalId. No puedo reprogramar este turno.' });
       return;
     }
 
     try {
       setRescheduling(true);
-      await appointmentService.reprogramar(Number(id), {
+      const updated = await appointmentService.reprogramar(Number(id), {
         profesionalId: turno.profesionalId,
         profesionalInstitucionId: turno.profesionalInstitucionId,
         especialidadId: turno.especialidadId,
@@ -84,98 +101,128 @@ export default function ReprogramarTurnoScreen() {
         fechaHora: selectedSlot.fechaHora,
       });
 
-      Alert.alert(
-        'Turno reprogramado',
-        `Tu turno fue reprogramado para el ${selectedSlot.fecha} a las ${selectedSlot.hora}.`,
-        [{ text: 'Entendido', onPress: () => router.replace('/paciente/turnos') }]
-      );
+      setTurno(updated);
+      setUpdatedTurno(updated);
+      setNotice({
+        type: 'success',
+        title: 'Turno reprogramado',
+        message: `Tu turno quedó reprogramado para el ${updated.fecha || selectedSlot.fecha} a las ${updated.hora || selectedSlot.hora} hs.`,
+      });
     } catch (error: any) {
-      Alert.alert('No se pudo reprogramar', readableError(error, 'El backend rechazó el horario o faltan datos del turno.'));
+      setNotice({ type: 'error', title: 'No se pudo reprogramar', message: readableError(error, 'El backend rechazó el horario o faltan datos del turno.') });
     } finally {
       setRescheduling(false);
     }
   };
 
   if (loading) return <MtLoading text="Cargando turno..." />;
-  if (!turno) return <MtLoading text="No se encontró el turno." />;
 
   return (
     <>
       <MtScreen scroll>
         <MtHeader eyebrow="AGENDA" title="Reprogramar turno" subtitle="Elegí una nueva fecha y horario disponible." />
 
-        <MtCard style={styles.doctorCard}>
-          <Text style={styles.doctorName}>{turno.profesionalNombre || 'Profesional'}</Text>
-          <Text style={styles.specialty}>{turno.especialidad}</Text>
-          <Text style={styles.currentDate}>Actual: {turno.fecha} · {turno.hora} hs</Text>
-        </MtCard>
+        {!!notice && <NoticeBox notice={notice} styles={styles} />}
 
-        <Text style={styles.sectionTitle}>Nueva fecha y horario</Text>
-        <MtCard style={styles.section}>
-          {loadingSlots ? (
-            <Text style={styles.muted}>Buscando horarios disponibles...</Text>
-          ) : availableSlots.length === 0 ? (
-            <Text style={styles.muted}>No hay otros horarios disponibles.</Text>
-          ) : (
-            <View style={styles.dropdownArea}>
-              <DropdownBox
-                label="Fecha"
-                value={selectedDate || 'Elegir fecha'}
-                open={showDates}
-                onToggle={() => {
-                  setShowDates((current) => !current);
-                  setShowTimes(false);
-                }}
-                styles={styles}
-              />
-              {showDates && (
-                <ScrollView style={styles.dropdownList} nestedScrollEnabled>
-                  {availableDates.map((date) => (
-                    <Pressable key={date} style={styles.optionItem} onPress={() => handleSelectDate(date)}>
-                      <Text style={styles.optionText}>{date}</Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
+        {!turno ? (
+          <MtCard style={styles.section}>
+            <Text style={styles.muted}>No se encontró el turno.</Text>
+            <MtButton title="Volver a mis turnos" onPress={() => router.replace('/paciente/turnos')} style={{ marginTop: 14 }} />
+          </MtCard>
+        ) : (
+          <>
+            <MtCard style={styles.doctorCard}>
+              <Text style={styles.doctorName}>{turno.profesionalNombre || 'Profesional'}</Text>
+              <Text style={styles.specialty}>{turno.especialidad}</Text>
+              <Text style={styles.currentDate}>Actual: {turno.fecha} · {turno.hora} hs</Text>
+            </MtCard>
+
+            <Text style={styles.sectionTitle}>Nueva fecha y horario</Text>
+            <MtCard style={styles.section}>
+              {loadingSlots ? (
+                <Text style={styles.muted}>Buscando horarios disponibles...</Text>
+              ) : availableSlots.length === 0 ? (
+                <Text style={styles.muted}>No hay otros horarios disponibles.</Text>
+              ) : updatedTurno ? (
+                <View style={styles.successActions}>
+                  <MtButton title="Ver mis turnos" onPress={() => router.replace('/paciente/turnos')} />
+                  <MtButton title="Elegir otro horario" variant="ghost" onPress={() => { setUpdatedTurno(null); setNotice(null); }} />
+                </View>
+              ) : (
+                <View style={styles.dropdownArea}>
+                  <DropdownBox
+                    label="Fecha"
+                    value={selectedDate || 'Elegir fecha'}
+                    open={showDates}
+                    onToggle={() => {
+                      setShowDates((current) => !current);
+                      setShowTimes(false);
+                    }}
+                    styles={styles}
+                  />
+                  {showDates && (
+                    <ScrollView style={styles.dropdownList} nestedScrollEnabled>
+                      {availableDates.map((date) => (
+                        <Pressable key={date} style={styles.optionItem} onPress={() => handleSelectDate(date)}>
+                          <Text style={styles.optionText}>{date}</Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  )}
+
+                  <DropdownBox
+                    label="Horario"
+                    value={selectedSlot ? `${selectedSlot.hora} hs` : 'Elegir horario'}
+                    open={showTimes}
+                    disabled={!selectedDate}
+                    onToggle={() => {
+                      setShowTimes((current) => !current);
+                      setShowDates(false);
+                    }}
+                    styles={styles}
+                  />
+                  {showTimes && (
+                    <ScrollView style={styles.dropdownList} nestedScrollEnabled>
+                      {slotsForDate.map((slot) => (
+                        <Pressable
+                          key={`${slot.fecha}-${slot.hora}`}
+                          style={styles.optionItem}
+                          onPress={() => {
+                            setSelectedSlot(slot);
+                            setShowTimes(false);
+                            setNotice(null);
+                          }}
+                        >
+                          <Text style={styles.optionText}>{slot.hora} hs</Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  )}
+                </View>
               )}
+            </MtCard>
 
-              <DropdownBox
-                label="Horario"
-                value={selectedSlot ? `${selectedSlot.hora} hs` : 'Elegir horario'}
-                open={showTimes}
-                disabled={!selectedDate}
-                onToggle={() => {
-                  setShowTimes((current) => !current);
-                  setShowDates(false);
-                }}
-                styles={styles}
-              />
-              {showTimes && (
-                <ScrollView style={styles.dropdownList} nestedScrollEnabled>
-                  {slotsForDate.map((slot) => (
-                    <Pressable
-                      key={`${slot.fecha}-${slot.hora}`}
-                      style={styles.optionItem}
-                      onPress={() => {
-                        setSelectedSlot(slot);
-                        setShowTimes(false);
-                      }}
-                    >
-                      <Text style={styles.optionText}>{slot.hora} hs</Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              )}
-            </View>
-          )}
-        </MtCard>
-
-        <View style={styles.actionButtons}>
-          <MtButton title="Confirmar nueva fecha" loading={rescheduling} disabled={!selectedSlot || rescheduling} onPress={handleConfirm} />
-          <MtButton title="Cancelar" variant="ghost" onPress={() => router.back()} />
-        </View>
+            {!updatedTurno && (
+              <View style={styles.actionButtons}>
+                <MtButton title="Confirmar nueva fecha" loading={rescheduling} disabled={!selectedSlot || rescheduling} onPress={handleConfirm} />
+                <MtButton title="Cancelar" variant="ghost" onPress={() => router.back()} />
+              </View>
+            )}
+          </>
+        )}
       </MtScreen>
       <MtBottomNav active="turnos" />
     </>
+  );
+}
+
+function NoticeBox({ notice, styles }: { notice: Notice; styles: ReturnType<typeof createStyles> }) {
+  const success = notice.type === 'success';
+  return (
+    <View style={[styles.noticeBox, success ? styles.noticeSuccess : styles.noticeError]}>
+      <Text style={[styles.noticeTitle, success ? styles.noticeSuccessText : styles.noticeErrorText]}>{notice.title}</Text>
+      <Text style={[styles.noticeMessage, success ? styles.noticeSuccessText : styles.noticeErrorText]}>{notice.message}</Text>
+    </View>
   );
 }
 
@@ -223,5 +270,13 @@ function createStyles(theme: MediturnosTheme) {
     optionItem: { paddingVertical: 13, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
     optionText: { color: theme.colors.ink, fontWeight: '800' },
     actionButtons: { gap: 12, marginTop: 4 },
+    successActions: { gap: 10 },
+    noticeBox: { borderRadius: 18, borderWidth: 1, padding: 14, marginBottom: 14 },
+    noticeSuccess: { backgroundColor: theme.mode === 'dark' ? '#063D35' : '#ECFDF5', borderColor: theme.colors.success },
+    noticeError: { backgroundColor: theme.mode === 'dark' ? '#3F1111' : '#FEF2F2', borderColor: theme.colors.danger },
+    noticeTitle: { fontWeight: '900', fontSize: 15, marginBottom: 4 },
+    noticeMessage: { fontWeight: '700', lineHeight: 20 },
+    noticeSuccessText: { color: theme.mode === 'dark' ? '#D1FAE5' : '#065F46' },
+    noticeErrorText: { color: theme.mode === 'dark' ? '#FEE2E2' : '#991B1B' },
   });
 }

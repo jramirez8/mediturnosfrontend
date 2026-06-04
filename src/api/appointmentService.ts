@@ -69,6 +69,10 @@ function ensureFechaHora(value: string) {
   return value;
 }
 
+function normalizeEstado(value: unknown) {
+  return String(value ?? '').trim().toUpperCase();
+}
+
 const normalizeTurno = (t: any): TurnoResponse => {
   const derived = splitFechaHora(t?.fechaHora ?? t?.fechaHoraInicio ?? t?.fecha_hora);
   const fecha = t?.fecha ?? derived.fecha;
@@ -122,18 +126,30 @@ const normalizeSlot = (slot: any): AppointmentSlot => {
   };
 };
 
+async function fetchVerifiedTurno(id: number) {
+  const detail = await api.get<any>(`/api/turnos/${id}`);
+  const verified = normalizeTurno(detail.data);
+
+  if (!verified?.id || Number(verified.id) !== Number(id)) {
+    throw new Error('El backend respondió, pero no pude verificar el turno persistido.');
+  }
+
+  return verified;
+}
+
 async function verifyCreatedTurno(created: TurnoResponse) {
   if (!created?.id || Number.isNaN(Number(created.id))) {
     throw new Error('El backend respondió la solicitud, pero no devolvió id de turno. No lo doy por confirmado.');
   }
 
-  const detail = await api.get<any>(`/api/turnos/${created.id}`);
-  const verified = normalizeTurno(detail.data);
+  return fetchVerifiedTurno(Number(created.id));
+}
 
-  if (!verified?.id || Number(verified.id) !== Number(created.id)) {
-    throw new Error('El backend respondió, pero no pude verificar que el turno haya quedado persistido.');
+async function verifyEstado(id: number, estadoEsperado: string) {
+  const verified = await fetchVerifiedTurno(id);
+  if (normalizeEstado(verified.estado) !== normalizeEstado(estadoEsperado)) {
+    throw new Error(`El backend respondió, pero el turno sigue en estado ${verified.estado}. No lo doy por ${estadoEsperado}.`);
   }
-
   return verified;
 }
 
@@ -210,7 +226,6 @@ export const appointmentService = {
     const created = normalizeTurno(response.data);
     const verified = await verifyCreatedTurno(created);
 
-    // Invalida cache de pantallas con datos de turnos para que Mis turnos vuelva al backend.
     await clearAppCache();
     return verified;
   },
@@ -249,20 +264,29 @@ export const appointmentService = {
     fechaHora?: string;
   }) => {
     const payload = {
-      profesionalId: data.profesionalId ? Number(data.profesionalId) : undefined,
+      profesionalId: ensureNumber(data.profesionalId, 'profesionalId'),
       profesionalInstitucionId: data.profesionalInstitucionId ? Number(data.profesionalInstitucionId) : undefined,
       especialidadId: data.especialidadId ? Number(data.especialidadId) : undefined,
       fechaHora: ensureFechaHora(buildFechaHora(data.fecha, data.hora, data.fechaHora)),
     };
-    const response = await api.put<any>(`/api/turnos/${id}/reprogramar`, payload);
-    const updated = normalizeTurno(response.data);
+
+    await api.put<any>(`/api/turnos/${id}/reprogramar`, payload);
+    const verified = await fetchVerifiedTurno(id);
+    const expectedFechaHora = payload.fechaHora.slice(0, 16);
+
+    if (String(verified.fechaHora ?? '').slice(0, 16) !== expectedFechaHora) {
+      throw new Error('El backend respondió, pero no pude verificar la nueva fecha del turno.');
+    }
+
     await clearAppCache();
-    return updated;
+    return verified;
   },
 
   cancelar: async (id: number) => {
-    const response = await api.delete(`/api/turnos/${id}`);
+    // Cancelar NO debe borrar el turno: debe pasar a estado CANCELADO para que quede en historial.
+    await api.put<any>(`/api/turnos/${id}/estado`, { estado: 'CANCELADO' });
+    const verified = await verifyEstado(id, 'CANCELADO');
     await clearAppCache();
-    return response.data;
+    return verified;
   },
 };

@@ -22,11 +22,14 @@ const AUTH_KEYS = [
 ];
 
 export async function hardClearAuthStorage(): Promise<void> {
-  AUTH_KEYS.forEach((key) => delete memoryStorage[key]);
+  Object.keys(memoryStorage).forEach((key) => delete memoryStorage[key]);
 
   if (hasLocalStorage()) {
     try {
       AUTH_KEYS.forEach((key) => globalThis.localStorage.removeItem(key));
+      if ('sessionStorage' in globalThis) {
+        AUTH_KEYS.forEach((key) => globalThis.sessionStorage.removeItem(key));
+      }
 
       Object.keys(globalThis.localStorage)
         .filter((key) => {
@@ -34,6 +37,15 @@ export async function hardClearAuthStorage(): Promise<void> {
           return lower.includes('mediturnos') || lower.includes('auth') || lower.includes('token') || lower.includes('usuario') || lower.includes('paciente');
         })
         .forEach((key) => globalThis.localStorage.removeItem(key));
+
+      if ('sessionStorage' in globalThis) {
+        Object.keys(globalThis.sessionStorage)
+          .filter((key) => {
+            const lower = key.toLowerCase();
+            return lower.includes('mediturnos') || lower.includes('auth') || lower.includes('token') || lower.includes('usuario') || lower.includes('paciente');
+          })
+          .forEach((key) => globalThis.sessionStorage.removeItem(key));
+      }
     } catch {
       // si el browser bloquea localStorage, igual ya limpiamos memoria
     }

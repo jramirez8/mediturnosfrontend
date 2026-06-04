@@ -1,13 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { appointmentService, AppointmentSlot } from '../../api/appointmentService';
+import { appointmentService, AppointmentSlot, TurnoResponse } from '../../api/appointmentService';
 import { professionalService, Professional } from '../../api/professionalService';
 import { useAuthStore } from '../../auth/authStore';
 import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtLoading, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
+
+type Notice = {
+  type: 'success' | 'error';
+  title: string;
+  message: string;
+};
 
 export default function SolicitarTurnoScreen() {
   const params = useLocalSearchParams();
@@ -27,6 +33,8 @@ export default function SolicitarTurnoScreen() {
   const [motivo, setMotivo] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [query, setQuery] = useState('');
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [createdTurno, setCreatedTurno] = useState<TurnoResponse | null>(null);
 
   useEffect(() => {
     loadProfessionals();
@@ -40,13 +48,21 @@ export default function SolicitarTurnoScreen() {
     try {
       setLoading(true);
       const data = await professionalService.getAll();
-      setProfessionals(data);
-
       const paramId = String(params.profesionalInstitucionId ?? params.professionalId ?? '');
+      let nextData = data;
+
       if (paramId) {
         const found = data.find((p) => String(p.profesionalInstitucionId ?? p.id) === paramId || String(p.id) === paramId);
-        if (found) setSelectedProfessional(found);
+        if (found) {
+          setSelectedProfessional(found);
+          // Lo pongo primero para que también se vea en la lista horizontal.
+          nextData = [found, ...data.filter((p) => (p.profesionalInstitucionId ?? p.id) !== (found.profesionalInstitucionId ?? found.id))];
+        }
       }
+
+      setProfessionals(nextData);
+    } catch (error: any) {
+      setNotice({ type: 'error', title: 'No se pudieron cargar profesionales', message: readableError(error) });
     } finally {
       setLoading(false);
     }
@@ -55,6 +71,7 @@ export default function SolicitarTurnoScreen() {
   const loadSlots = async (profesionalInstitucionId: number) => {
     try {
       setSlotsLoading(true);
+      setNotice(null);
       const data = await appointmentService.getDisponibilidad(profesionalInstitucionId);
       const available = data.filter((slot) => slot.disponible !== false);
       setSlots(available);
@@ -63,6 +80,11 @@ export default function SolicitarTurnoScreen() {
       setSelectedDate(first?.fecha ?? '');
       setShowDates(false);
       setShowTimes(false);
+    } catch (error: any) {
+      setSlots([]);
+      setSelectedSlot(null);
+      setSelectedDate('');
+      setNotice({ type: 'error', title: 'No se pudo cargar disponibilidad', message: readableError(error) });
     } finally {
       setSlotsLoading(false);
     }
@@ -78,6 +100,8 @@ export default function SolicitarTurnoScreen() {
   const slotsForDate = useMemo(() => slots.filter((slot) => slot.fecha === selectedDate), [slots, selectedDate]);
 
   const handleSelectProfessional = (item: Professional) => {
+    setNotice(null);
+    setCreatedTurno(null);
     setSelectedProfessional(item);
     setSelectedSlot(null);
     setSelectedDate('');
@@ -92,25 +116,29 @@ export default function SolicitarTurnoScreen() {
     setSelectedSlot(firstSlot);
     setShowDates(false);
     setShowTimes(true);
+    setNotice(null);
   };
 
   const handleConfirm = async () => {
+    setNotice(null);
+    setCreatedTurno(null);
+
     if (!pacienteId) {
-      Alert.alert('Falta paciente', 'No pude resolver el paciente logueado. Cerrá sesión y volvé a entrar.');
+      setNotice({ type: 'error', title: 'No pudimos identificarte', message: 'Cerrá sesión y volvé a iniciar sesión con una cuenta de paciente.' });
       return;
     }
     if (!selectedProfessional) {
-      Alert.alert('Falta profesional', 'Elegí un profesional para continuar.');
+      setNotice({ type: 'error', title: 'Falta profesional', message: 'Elegí un profesional para continuar.' });
       return;
     }
     if (!selectedSlot) {
-      Alert.alert('Falta horario', 'Elegí fecha y hora disponibles.');
+      setNotice({ type: 'error', title: 'Falta horario', message: 'Elegí una fecha y un horario disponible.' });
       return;
     }
 
     try {
       setSending(true);
-      const createdTurno = await appointmentService.requestAppointment({
+      const created = await appointmentService.requestAppointment({
         pacienteId,
         profesionalId: selectedProfessional.id,
         profesionalInstitucionId: selectedProfessional.profesionalInstitucionId ?? selectedProfessional.id,
@@ -121,16 +149,25 @@ export default function SolicitarTurnoScreen() {
         motivoConsulta: motivo,
         observaciones: [motivo, observaciones].filter(Boolean).join(' - '),
       });
-      Alert.alert(
-        'Turno confirmado',
-        `Turno #${createdTurno.id} creado y verificado contra el backend.`,
-        [{ text: 'Ver mis turnos', onPress: () => router.replace('/paciente/turnos') }]
-      );
+
+      setCreatedTurno(created);
+      setNotice({
+        type: 'success',
+        title: 'Turno confirmado',
+        message: `Tu turno quedó registrado para el ${created.fecha || selectedSlot.fecha} a las ${created.hora || selectedSlot.hora} hs. N° ${created.id}.`,
+      });
     } catch (error: any) {
-      Alert.alert('No se pudo solicitar', readableError(error, 'El horario pudo haber sido tomado. Probá otro.'));
+      setNotice({ type: 'error', title: 'No se pudo solicitar el turno', message: readableError(error, 'El horario pudo haber sido tomado. Probá otro.') });
     } finally {
       setSending(false);
     }
+  };
+
+  const resetForm = () => {
+    setCreatedTurno(null);
+    setNotice(null);
+    setMotivo('');
+    setObservaciones('');
   };
 
   if (loading) return <MtLoading text="Preparando solicitud..." />;
@@ -140,8 +177,19 @@ export default function SolicitarTurnoScreen() {
       <MtScreen scroll>
         <MtHeader eyebrow="NUEVO TURNO" title="Solicitar turno" subtitle="Elegí profesional, fecha, horario y motivo de consulta." />
 
+        {!!notice && <NoticeBox notice={notice} styles={styles} />}
+
         <Text style={styles.step}>1. Profesional</Text>
         <MtCard style={styles.block}>
+          {!!selectedProfessional && (
+            <View style={styles.selectedBox}>
+              <Text style={styles.selectedEyebrow}>Profesional seleccionado</Text>
+              <Text style={styles.selectedName}>{selectedProfessional.apellido}, {selectedProfessional.nombre}</Text>
+              <Text style={styles.selectedMeta}>{selectedProfessional.especialidad} · {selectedProfessional.institucion}</Text>
+              <Text style={styles.selectedHint}>Podés confirmar este profesional o elegir otro de la lista.</Text>
+            </View>
+          )}
+
           <TextInput
             value={query}
             onChangeText={setQuery}
@@ -166,6 +214,7 @@ export default function SolicitarTurnoScreen() {
                   <Text style={styles.profName}>{item.apellido}, {item.nombre}</Text>
                   <Text style={styles.profSpecialty}>{item.especialidad}</Text>
                   <Text style={styles.profInstitution}>{item.institucion}</Text>
+                  {selected && <Text style={styles.selectedTag}>Seleccionado</Text>}
                 </Pressable>
               );
             }}
@@ -190,7 +239,6 @@ export default function SolicitarTurnoScreen() {
                   setShowDates((current) => !current);
                   setShowTimes(false);
                 }}
-                theme={theme}
                 styles={styles}
               />
               {showDates && (
@@ -212,7 +260,6 @@ export default function SolicitarTurnoScreen() {
                   setShowTimes((current) => !current);
                   setShowDates(false);
                 }}
-                theme={theme}
                 styles={styles}
               />
               {showTimes && (
@@ -224,6 +271,7 @@ export default function SolicitarTurnoScreen() {
                       onPress={() => {
                         setSelectedSlot(slot);
                         setShowTimes(false);
+                        setNotice(null);
                       }}
                     >
                       <Text style={styles.optionText}>{slot.hora} hs</Text>
@@ -256,11 +304,29 @@ export default function SolicitarTurnoScreen() {
           <Text style={styles.summaryLine}>Profesional: {selectedProfessional ? `${selectedProfessional.apellido}, ${selectedProfessional.nombre}` : 'Sin seleccionar'}</Text>
           <Text style={styles.summaryLine}>Especialidad: {selectedProfessional?.especialidad ?? '-'}</Text>
           <Text style={styles.summaryLine}>Horario: {selectedSlot ? `${selectedSlot.fecha} ${selectedSlot.hora}` : '-'}</Text>
-          <MtButton title="Confirmar solicitud" loading={sending} onPress={handleConfirm} style={{ marginTop: 16 }} />
+
+          {createdTurno ? (
+            <View style={styles.successActions}>
+              <MtButton title="Ver mis turnos" onPress={() => router.replace('/paciente/turnos')} />
+              <MtButton title="Solicitar otro" variant="ghost" onPress={resetForm} />
+            </View>
+          ) : (
+            <MtButton title="Confirmar solicitud" loading={sending} disabled={sending} onPress={handleConfirm} style={{ marginTop: 16 }} />
+          )}
         </MtCard>
       </MtScreen>
       <MtBottomNav active="solicitar" />
     </>
+  );
+}
+
+function NoticeBox({ notice, styles }: { notice: Notice; styles: ReturnType<typeof createStyles> }) {
+  const success = notice.type === 'success';
+  return (
+    <View style={[styles.noticeBox, success ? styles.noticeSuccess : styles.noticeError]}>
+      <Text style={[styles.noticeTitle, success ? styles.noticeSuccessText : styles.noticeErrorText]}>{notice.title}</Text>
+      <Text style={[styles.noticeMessage, success ? styles.noticeSuccessText : styles.noticeErrorText]}>{notice.message}</Text>
+    </View>
   );
 }
 
@@ -277,7 +343,6 @@ function DropdownBox({
   open: boolean;
   disabled?: boolean;
   onToggle: () => void;
-  theme: MediturnosTheme;
   styles: ReturnType<typeof createStyles>;
 }) {
   return (
@@ -298,10 +363,16 @@ function createStyles(theme: MediturnosTheme) {
     search: { minHeight: 48, borderRadius: 15, backgroundColor: theme.colors.bg, paddingHorizontal: 14, borderWidth: 1, borderColor: theme.colors.border, color: theme.colors.ink, marginBottom: 12 },
     proList: { gap: 10, paddingRight: 20 },
     profCard: { width: 230, backgroundColor: theme.colors.bg, borderRadius: 20, padding: 15, borderWidth: 1, borderColor: theme.colors.border },
-    profCardSelected: { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
+    profCardSelected: { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary, borderWidth: 2 },
     profName: { color: theme.colors.ink, fontWeight: '900', fontSize: 15 },
     profSpecialty: { color: theme.colors.primary, fontWeight: '800', marginTop: 4 },
     profInstitution: { color: theme.colors.muted, marginTop: 4, fontSize: 12, lineHeight: 17 },
+    selectedTag: { marginTop: 10, alignSelf: 'flex-start', color: theme.colors.primaryDark, backgroundColor: theme.colors.surface, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, fontSize: 11, fontWeight: '900', overflow: 'hidden' },
+    selectedBox: { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary, borderWidth: 1, borderRadius: 18, padding: 14, marginBottom: 12 },
+    selectedEyebrow: { color: theme.colors.primaryDark, fontSize: 12, fontWeight: '900', letterSpacing: 0.8, marginBottom: 4 },
+    selectedName: { color: theme.colors.primaryDark, fontSize: 18, fontWeight: '900' },
+    selectedMeta: { color: theme.colors.primaryDark, fontWeight: '800', marginTop: 4 },
+    selectedHint: { color: theme.colors.primaryDark, opacity: 0.85, fontWeight: '700', marginTop: 8, lineHeight: 18 },
     muted: { color: theme.colors.muted, fontWeight: '700', lineHeight: 20 },
     dropdownArea: { gap: 10 },
     dropdownButton: { minHeight: 58, borderRadius: 18, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.bg, paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -317,5 +388,13 @@ function createStyles(theme: MediturnosTheme) {
     summary: { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
     summaryTitle: { color: theme.colors.primaryDark, fontWeight: '900', fontSize: 17, marginBottom: 8 },
     summaryLine: { color: theme.colors.primaryDark, lineHeight: 22, fontWeight: '700' },
+    successActions: { gap: 10, marginTop: 16 },
+    noticeBox: { borderRadius: 18, borderWidth: 1, padding: 14, marginBottom: 14 },
+    noticeSuccess: { backgroundColor: theme.mode === 'dark' ? '#063D35' : '#ECFDF5', borderColor: theme.colors.success },
+    noticeError: { backgroundColor: theme.mode === 'dark' ? '#3F1111' : '#FEF2F2', borderColor: theme.colors.danger },
+    noticeTitle: { fontWeight: '900', fontSize: 15, marginBottom: 4 },
+    noticeMessage: { fontWeight: '700', lineHeight: 20 },
+    noticeSuccessText: { color: theme.mode === 'dark' ? '#D1FAE5' : '#065F46' },
+    noticeErrorText: { color: theme.mode === 'dark' ? '#FEE2E2' : '#991B1B' },
   });
 }

@@ -6,19 +6,24 @@ import { MtButton, MtCard, MtInput, MtScreen } from '../components/mediturnos';
 import { MediturnosTheme } from '../constants/mediturnosTheme';
 import { useMtTheme } from '../theme/themeStore';
 import { useTranslation } from '../i18n/languageStore';
-import { readableError } from '../utils/errors';
+import { debugErrorPayload, readableError } from '../utils/errors';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('paciente@mediturnos.local');
   const [password, setPassword] = useState('Paciente1234');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [debugMessage, setDebugMessage] = useState<string | null>(null);
   const { login, loading } = useAuthStore();
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
   const { t } = useTranslation();
 
   const handleLogin = async () => {
+    setErrorMessage(null);
+    setDebugMessage(null);
+
     if (!email.trim() || !password) {
-      Alert.alert('Datos incompletos', 'Ingresá email y contraseña para continuar.');
+      setErrorMessage('Ingresá email y contraseña para continuar.');
       return;
     }
 
@@ -26,7 +31,14 @@ export default function LoginScreen() {
       await login(email.trim(), password);
       router.replace('/paciente');
     } catch (error: any) {
-      Alert.alert('No pudimos iniciar sesión', readableError(error, 'Revisá tus credenciales o el estado del backend.'));
+      const message = readableError(error, 'Revisá tus credenciales o el estado del backend.');
+      const debug = debugErrorPayload(error);
+      console.error('LOGIN_REAL_ERROR', debug);
+      setErrorMessage(message);
+      setDebugMessage(`${debug.method ?? 'POST'} ${debug.url ?? '/api/auth/login'}${debug.status ? ` · HTTP ${debug.status}` : ''}`);
+      if (Platform.OS !== 'web') {
+        Alert.alert('No pudimos iniciar sesión', message);
+      }
     }
   };
 
@@ -64,6 +76,14 @@ export default function LoginScreen() {
             />
           </View>
 
+          {errorMessage ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorTitle}>No pudimos iniciar sesión</Text>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+              {debugMessage ? <Text style={styles.errorDebug}>{debugMessage}</Text> : null}
+            </View>
+          ) : null}
+
           <MtButton title={t('login.submit')} onPress={handleLogin} loading={loading} style={{ marginTop: 18 }} />
           <MtButton title={t('login.createAccount')} variant="ghost" onPress={() => router.push('/registro')} style={{ marginTop: 10 }} />
           <Text style={styles.forgot} onPress={() => router.push('/forgot-password')}>{t('login.forgot')}</Text>
@@ -99,6 +119,10 @@ function createStyles(theme: MediturnosTheme) {
     helper: { color: theme.colors.muted, marginTop: 6, lineHeight: 20 },
     form: { gap: 14, marginTop: 20 },
     forgot: { color: theme.colors.primary, fontWeight: '800', textAlign: 'center', marginTop: 18 },
+    errorBox: { borderWidth: 1, borderColor: theme.colors.danger, backgroundColor: theme.mode === 'dark' ? '#2B1113' : '#FFF1F2', borderRadius: 16, padding: 12, marginTop: 16 },
+    errorTitle: { color: theme.colors.danger, fontWeight: '900', marginBottom: 4 },
+    errorText: { color: theme.colors.ink, fontWeight: '700', lineHeight: 20 },
+    errorDebug: { color: theme.colors.muted, marginTop: 6, fontSize: 12, fontWeight: '800' },
     infoCard: { marginTop: 16, backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
     infoTitle: { color: theme.colors.primaryDark, fontWeight: '900', fontSize: 15 },
     infoText: { color: theme.colors.primaryDark, lineHeight: 20, marginTop: 4, fontSize: 13 },

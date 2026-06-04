@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useAuthStore } from '../../auth/authStore';
 import { MtBottomNav, MtButton, MtCard, MtHeader, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme, useThemeStore } from '../../theme/themeStore';
 import { useTranslation } from '../../i18n/languageStore';
+import { logoutAndGoToLogin } from '../../utils/session';
 
 export default function SettingsScreen() {
   const theme = useMtTheme();
@@ -16,8 +17,7 @@ export default function SettingsScreen() {
   const logout = useAuthStore((state) => state.logout);
 
   const handleLogout = async () => {
-    await logout();
-    router.replace('/login');
+    await logoutAndGoToLogin(logout);
   };
 
   return (
