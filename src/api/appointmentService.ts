@@ -1,0 +1,229 @@
+import { api } from './client';
+import { getCachedJson, setCachedJson } from '../db/cache';
+import { demoAppointments, demoSlots } from '../data/demoData';
+
+export type AppointmentSlot = {
+  fecha: string;
+  hora: string;
+  fechaHora?: string;
+  disponible: boolean;
+};
+
+export type TurnoResponse = {
+  id: number;
+  fecha: string;
+  hora: string;
+  fechaHora?: string;
+  pacienteId?: number;
+  pacienteNombre: string;
+  profesionalId?: number;
+  profesionalInstitucionId?: number;
+  especialidadId?: number;
+  profesionalNombre: string;
+  especialidad: string;
+  institucionId?: number;
+  institucionNombre: string;
+  estado: string;
+  motivoConsulta?: string;
+  diagnostico?: string;
+  observaciones?: string;
+  enfermedadActual?: string;
+  antecedenteEnfermedadActual?: string;
+  antecedentesPersonales?: string;
+  antecedentesFamiliares?: string;
+  antecedentes?: string;
+  medicacionActual?: string;
+  medicacionHabitual?: string;
+  alergias?: string;
+  habitos?: string;
+  hallazgosExamenFisico?: string;
+  conducta?: string;
+};
+
+function splitFechaHora(raw?: string | null) {
+  const value = raw ? String(raw) : '';
+  if (!value) return { fecha: '', hora: '' };
+  const [fecha, time = ''] = value.includes('T') ? value.split('T') : value.split(' ');
+  return { fecha: fecha ?? '', hora: time.slice(0, 5) };
+}
+
+function buildFechaHora(fecha?: string, hora?: string, fechaHora?: string) {
+  if (fechaHora) return String(fechaHora).slice(0, 16);
+  const cleanFecha = String(fecha ?? '').trim();
+  const cleanHora = String(hora ?? '').trim();
+  if (!cleanFecha || !cleanHora) return '';
+  return `${cleanFecha}T${cleanHora.slice(0, 5)}`;
+}
+
+const normalizeTurno = (t: any): TurnoResponse => {
+  const derived = splitFechaHora(t.fechaHora ?? t.fechaHoraInicio ?? t.fecha_hora);
+  const fecha = t.fecha ?? derived.fecha;
+  const hora = t.hora ? String(t.hora).slice(0, 5) : derived.hora;
+  const profesionalNombre = t.profesionalNombreCompleto
+    ?? t.profesionalNombreApellido
+    ?? `${t.profesionalNombre ?? t.profesional?.nombre ?? ''} ${t.profesionalApellido ?? t.profesional?.apellido ?? ''}`.trim();
+  const pacienteNombre = t.pacienteNombreCompleto
+    ?? `${t.pacienteNombre ?? t.paciente?.nombre ?? ''} ${t.pacienteApellido ?? t.paciente?.apellido ?? ''}`.trim();
+
+  return {
+    id: Number(t.id),
+    fecha,
+    hora,
+    fechaHora: buildFechaHora(fecha, hora, t.fechaHora ?? t.fechaHoraInicio),
+    pacienteId: t.pacienteId ? Number(t.pacienteId) : t.paciente?.id ? Number(t.paciente.id) : undefined,
+    pacienteNombre,
+    profesionalId: t.profesionalId ? Number(t.profesionalId) : t.profesional?.id ? Number(t.profesional.id) : undefined,
+    profesionalInstitucionId: t.profesionalInstitucionId ? Number(t.profesionalInstitucionId) : undefined,
+    especialidadId: t.especialidadId ? Number(t.especialidadId) : undefined,
+    profesionalNombre,
+    especialidad: t.especialidad ?? t.especialidadNombre ?? 'Consulta médica',
+    institucionId: t.institucionId ? Number(t.institucionId) : undefined,
+    institucionNombre: t.institucionNombre ?? t.institucion ?? t.profesionalInstitucion?.institucion?.nombre ?? 'Institución',
+    estado: t.estado ?? 'PENDIENTE',
+    motivoConsulta: t.motivoConsulta,
+    diagnostico: t.diagnostico,
+    observaciones: t.observaciones,
+    enfermedadActual: t.enfermedadActual,
+    antecedenteEnfermedadActual: t.antecedenteEnfermedadActual,
+    antecedentesPersonales: t.antecedentesPersonales,
+    antecedentesFamiliares: t.antecedentesFamiliares,
+    antecedentes: t.antecedentes ?? t.antecedentesPersonales,
+    medicacionActual: t.medicacionActual,
+    medicacionHabitual: t.medicacionHabitual ?? t.medicacionActual,
+    alergias: t.alergias,
+    habitos: t.habitos,
+    hallazgosExamenFisico: t.hallazgosExamenFisico,
+    conducta: t.conducta,
+  };
+};
+
+const normalizeSlot = (slot: any): AppointmentSlot => {
+  const fechaHora = slot.fechaHora ?? slot.fechaHoraIso ?? slot.fechaHoraInicio ?? slot.fecha_hora;
+  const derived = splitFechaHora(fechaHora);
+  return {
+    fecha: slot.fecha ?? derived.fecha,
+    hora: slot.hora ? String(slot.hora).slice(0, 5) : derived.hora,
+    fechaHora: buildFechaHora(slot.fecha ?? derived.fecha, slot.hora ?? derived.hora, fechaHora),
+    disponible: slot.disponible ?? true,
+  };
+};
+
+export const appointmentService = {
+  getMyAppointments: async (pacienteId?: string | null) => {
+    const cacheKey = `appointments:${pacienteId ?? 'me'}`;
+    try {
+      const endpoint = pacienteId ? `/api/turnos/paciente/${pacienteId}` : '/api/turnos/paciente/me';
+      const response = await api.get<any[]>(endpoint);
+      const data = response.data.map(normalizeTurno);
+      await setCachedJson(cacheKey, data);
+      await setCachedJson('appointments:last', data);
+      return data;
+    } catch (error) {
+      const cached = await getCachedJson<TurnoResponse[]>(cacheKey);
+      if (cached) return cached;
+      const last = await getCachedJson<TurnoResponse[]>('appointments:last');
+      return last ?? demoAppointments;
+    }
+  },
+
+  getAppointmentDetail: async (id: number) => {
+    const cacheKey = `appointment:${id}`;
+    try {
+      const response = await api.get<any>(`/api/turnos/${id}`);
+      const data = normalizeTurno(response.data);
+      await setCachedJson(cacheKey, data);
+      return data;
+    } catch (error) {
+      const cached = await getCachedJson<TurnoResponse>(cacheKey);
+      if (cached) return cached;
+      return demoAppointments.find((item) => item.id === id) ?? demoAppointments[0];
+    }
+  },
+
+  getDisponibilidad: async (profesionalInstitucionId: number) => {
+    const cacheKey = `slots:${profesionalInstitucionId}`;
+    try {
+      const response = await api.get<any[]>('/api/turnos/disponibilidad', {
+        params: { profesionalInstitucionId },
+      });
+      const data = response.data.map(normalizeSlot).filter((slot) => !!slot.fecha && !!slot.hora);
+      await setCachedJson(cacheKey, data);
+      return data;
+    } catch (error) {
+      const cached = await getCachedJson<AppointmentSlot[]>(cacheKey);
+      return cached ?? demoSlots;
+    }
+  },
+
+  solicitar: async (data: {
+    pacienteId?: number | string | null;
+    profesionalId: number;
+    profesionalInstitucionId?: number;
+    especialidadId?: number;
+    fecha?: string;
+    hora?: string;
+    fechaHora?: string;
+    motivoConsulta?: string;
+    observaciones?: string;
+  }) => {
+    const payload = {
+      pacienteId: Number(data.pacienteId),
+      profesionalId: Number(data.profesionalId),
+      profesionalInstitucionId: data.profesionalInstitucionId ? Number(data.profesionalInstitucionId) : undefined,
+      especialidadId: data.especialidadId ? Number(data.especialidadId) : undefined,
+      fechaHora: buildFechaHora(data.fecha, data.hora, data.fechaHora),
+      observaciones: data.observaciones || data.motivoConsulta || undefined,
+    };
+
+    const response = await api.post<any>('/api/turnos/solicitar', payload);
+    return normalizeTurno(response.data);
+  },
+
+  requestAppointment: async (data: {
+    pacienteId?: number | string | null;
+    professionalId?: number;
+    profesionalId?: number;
+    profesionalInstitucionId?: number;
+    especialidadId?: number;
+    fecha?: string;
+    hora?: string;
+    fechaHora?: string;
+    motivoConsulta?: string;
+    observaciones?: string;
+  }) => {
+    return appointmentService.solicitar({
+      pacienteId: data.pacienteId,
+      profesionalId: Number(data.profesionalId ?? data.professionalId),
+      profesionalInstitucionId: data.profesionalInstitucionId,
+      especialidadId: data.especialidadId,
+      fecha: data.fecha,
+      hora: data.hora,
+      fechaHora: data.fechaHora,
+      motivoConsulta: data.motivoConsulta,
+      observaciones: data.observaciones,
+    });
+  },
+
+  reprogramar: async (id: number, data: {
+    profesionalId?: number;
+    profesionalInstitucionId?: number;
+    especialidadId?: number;
+    fecha?: string;
+    hora?: string;
+    fechaHora?: string;
+  }) => {
+    const payload = {
+      profesionalId: data.profesionalId ? Number(data.profesionalId) : undefined,
+      profesionalInstitucionId: data.profesionalInstitucionId ? Number(data.profesionalInstitucionId) : undefined,
+      especialidadId: data.especialidadId ? Number(data.especialidadId) : undefined,
+      fechaHora: buildFechaHora(data.fecha, data.hora, data.fechaHora),
+    };
+    const response = await api.put<any>(`/api/turnos/${id}/reprogramar`, payload);
+    return normalizeTurno(response.data);
+  },
+
+  cancelar: async (id: number) => {
+    const response = await api.delete(`/api/turnos/${id}`);
+    return response.data;
+  },
+};
