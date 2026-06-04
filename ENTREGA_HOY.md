@@ -39,8 +39,8 @@ npm run start:tunnel
 ## Credenciales demo
 
 ```txt
-admin@mediturnos.local
-Admin1234
+paciente@mediturnos.local
+Paciente1234
 ```
 
 ## Archivos principales tocados

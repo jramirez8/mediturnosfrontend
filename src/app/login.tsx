@@ -9,8 +9,8 @@ import { useTranslation } from '../i18n/languageStore';
 import { readableError } from '../utils/errors';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('admin@mediturnos.local');
-  const [password, setPassword] = useState('Admin1234');
+  const [email, setEmail] = useState('paciente@mediturnos.local');
+  const [password, setPassword] = useState('Paciente1234');
   const { login, loading } = useAuthStore();
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);

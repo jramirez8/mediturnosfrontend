@@ -11,7 +11,7 @@ Cambios aplicados:
 
 Flujo probado conceptualmente:
 
-1. Login con `admin@mediturnos.local / Admin1234`.
+1. Login con `paciente@mediturnos.local / Paciente1234`.
 2. Recuperar contraseña con email o DNI.
 3. Si Brevo está configurado: llega correo. Si no: modo demo devuelve token y deja continuar.
 4. Reset password actualiza contraseña.

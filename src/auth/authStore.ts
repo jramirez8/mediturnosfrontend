@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { api } from '../api/client';
-import { storage } from '../api/storage';
-import { clearAppCache } from '../db/cache';
+import { hardClearAuthStorage, storage } from '../api/storage';
+import { clearAppCache, purgeLegacyCache } from '../db/cache';
 
 type AuthState = {
   token: string | null;
@@ -21,12 +21,15 @@ function pickString(...values: any[]) {
   return found === undefined ? null : String(found);
 }
 
-async function clearAuthStorage() {
+async function clearEverythingAuthRelated() {
   await Promise.allSettled([
     storage.deleteItem('access_token'),
     storage.deleteItem('usuario_id'),
     storage.deleteItem('paciente_id'),
     storage.deleteItem('role'),
+    hardClearAuthStorage(),
+    clearAppCache(),
+    purgeLegacyCache(),
   ]);
 }
 
@@ -39,6 +42,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hydrated: false,
 
   loadToken: async () => {
+    await purgeLegacyCache();
     const [token, usuarioId, pacienteId, role] = await Promise.all([
       storage.getItem('access_token'),
       storage.getItem('usuario_id'),
@@ -47,9 +51,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     ]);
 
     // Limpieza de versiones anteriores: hubo builds que guardaban tokens falsos.
-    // Eso ya no autentica nada y no debe dejar pasar al módulo paciente.
     if (token?.startsWith('demo-token-')) {
-      await clearAuthStorage();
+      await clearEverythingAuthRelated();
       set({ token: null, usuarioId: null, pacienteId: null, role: null, hydrated: true, loading: false });
       return;
     }
@@ -73,7 +76,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async (email, password) => {
     set({ loading: true, token: null, usuarioId: null, pacienteId: null, role: null, hydrated: true });
-    await clearAuthStorage();
+    await clearEverythingAuthRelated();
 
     try {
       const response = await api.post('/api/auth/login', { identificador: email, email, password });
@@ -105,12 +108,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    // Estado primero: la UI sale aunque falle storage/cache.
+    // Estado primero: la UI debe salir aunque falle storage/cache.
     set({ token: null, usuarioId: null, pacienteId: null, role: null, loading: false, hydrated: true });
-
-    await Promise.allSettled([
-      clearAuthStorage(),
-      clearAppCache(),
-    ]);
+    await clearEverythingAuthRelated();
+    set({ token: null, usuarioId: null, pacienteId: null, role: null, loading: false, hydrated: true });
   },
 }));

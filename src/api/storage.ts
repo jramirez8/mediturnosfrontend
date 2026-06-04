@@ -1,22 +1,43 @@
 import { Platform } from 'react-native';
 
 /**
- * Storage de guerra para Expo Go / entrega.
- *
- * No importa expo-secure-store a propósito: en Expo Go desincronizado puede tirar
- * "getValueWithKeyAsync is not a function" y dejar la app en bootloop.
- * Para HOY priorizamos que la app arranque y navegue siempre.
- *
- * - Web: localStorage.
- * - Android/iOS Expo Go: memoria durante la sesión.
- *
- * Cuando armemos development build estable, volvemos a SecureStore.
+ * Storage simple para Expo Go/Web.
+ * No importa expo-secure-store para evitar bootloops en Expo Go desincronizado.
  */
 const memoryStorage: Record<string, string> = {};
 const isWeb = Platform.OS === 'web';
 
 function hasLocalStorage() {
   return isWeb && typeof globalThis !== 'undefined' && 'localStorage' in globalThis;
+}
+
+const AUTH_KEYS = [
+  'access_token',
+  'usuario_id',
+  'paciente_id',
+  'role',
+  'token',
+  'jwt',
+  'auth',
+];
+
+export async function hardClearAuthStorage(): Promise<void> {
+  AUTH_KEYS.forEach((key) => delete memoryStorage[key]);
+
+  if (hasLocalStorage()) {
+    try {
+      AUTH_KEYS.forEach((key) => globalThis.localStorage.removeItem(key));
+
+      Object.keys(globalThis.localStorage)
+        .filter((key) => {
+          const lower = key.toLowerCase();
+          return lower.includes('mediturnos') || lower.includes('auth') || lower.includes('token') || lower.includes('usuario') || lower.includes('paciente');
+        })
+        .forEach((key) => globalThis.localStorage.removeItem(key));
+    } catch {
+      // si el browser bloquea localStorage, igual ya limpiamos memoria
+    }
+  }
 }
 
 export const storage = {

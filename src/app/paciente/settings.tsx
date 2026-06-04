@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../auth/authStore';
 import { MtBottomNav, MtButton, MtCard, MtHeader, MtScreen } from '../../components/mediturnos';
@@ -72,7 +72,7 @@ export default function SettingsScreen() {
         <MtCard style={styles.section}>
           <Text style={styles.sectionTitle}>Cuenta</Text>
           <Text style={styles.sectionSubtitle}>Desde acá sí o sí se ve el cierre de sesión, sin esconderlo abajo del dashboard.</Text>
-          <MtButton title="Cerrar sesión" variant="danger" onPress={() => Alert.alert('Cerrar sesión', '¿Seguro que querés salir?', [{ text: 'Cancelar' }, { text: 'Salir', style: 'destructive', onPress: handleLogout }])} />
+          <MtButton title="Cerrar sesión" variant="danger" onPress={handleLogout} />
           <MtButton title="Volver al perfil" variant="ghost" onPress={() => router.push('/paciente/perfil')} style={{ marginTop: 10 }} />
         </MtCard>
       </MtScreen>
