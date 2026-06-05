@@ -119,7 +119,6 @@ export default function PerfilScreen() {
             <Text style={styles.preferenceHint}>{t('settings.languageHint')}</Text>
             <View style={styles.languageRow}>
               <LanguageButton label={t('settings.spanish')} selected={language === 'es'} onPress={() => setLanguage('es')} styles={styles} />
-              <LanguageButton label={t('settings.english')} selected={language === 'en'} onPress={() => setLanguage('en')} styles={styles} />
             </View>
           </View>
         </MtCard>

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { authService } from '../api/authService';
 import { MtButton, MtCard, MtInput, MtScreen } from '../components/mediturnos';
 import { mt } from '../constants/mediturnosTheme';
 import { readableError } from '../utils/errors';
 
 export default function ForgotPasswordScreen() {
-  const [identifier, setIdentifier] = useState('');
+  const params = useLocalSearchParams<{ identifier?: string }>();
+  const [identifier, setIdentifier] = useState(params.identifier ?? '');
   const [loading, setLoading] = useState(false);
 
   const handleRequestReset = async () => {
@@ -18,23 +19,7 @@ export default function ForgotPasswordScreen() {
 
     try {
       setLoading(true);
-      const response = await authService.forgotPassword(identifier.trim());
-      const resetToken = response?.resetToken || response?.token || null;
-
-      if (resetToken) {
-        Alert.alert(
-          'Token generado',
-          'El backend devolvió un token de recuperación para entorno de desarrollo; podés cargar la nueva contraseña sin esperar el correo.',
-          [
-            {
-              text: 'Continuar',
-              onPress: () => router.push({ pathname: '/reset-password', params: { token: resetToken } }),
-            },
-          ]
-        );
-        return;
-      }
-
+      await authService.forgotPassword(identifier.trim());
       router.push('/forgot-password-success');
     } catch (error: any) {
       console.error('Forgot password error:', error);

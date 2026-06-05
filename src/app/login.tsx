@@ -28,8 +28,8 @@ export default function LoginScreen() {
     }
 
     try {
-      await login(email.trim(), password);
-      router.replace('/paciente');
+      const result = await login(email.trim(), password);
+      router.replace(result.route as any);
     } catch (error: any) {
       const message = readableError(error, 'Revisá tus credenciales o el estado del backend.');
       const debug = debugErrorPayload(error);
@@ -79,8 +79,11 @@ export default function LoginScreen() {
           {errorMessage ? (
             <View style={styles.errorBox}>
               <Text style={styles.errorTitle}>No pudimos iniciar sesión</Text>
-              <Text style={styles.errorText}>{errorMessage}</Text>
-              {debugMessage ? <Text style={styles.errorDebug}>{debugMessage}</Text> : null}
+              <Text style={styles.errorText}>
+                {debugMessage?.includes('HTTP 400') || debugMessage?.includes('HTTP 401')
+                  ? 'El usuario o la contraseña no son correctos. Revisá los datos e intentá nuevamente.'
+                  : errorMessage}
+              </Text>
             </View>
           ) : null}
 

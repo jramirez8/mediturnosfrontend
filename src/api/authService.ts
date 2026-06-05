@@ -40,14 +40,14 @@ function clean(value?: string | number | null) {
 function requirePositiveNumber(value: unknown, fieldName: string) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new Error(`Falta ${fieldName} real. No se completa registro con datos inventados.`);
+    throw new Error(`Falta seleccionar ${fieldName}.`);
   }
   return parsed;
 }
 
 function requireText(value: string | number | null | undefined, fieldName: string) {
   const text = clean(value);
-  if (!text) throw new Error(`Falta ${fieldName}. No se completa registro con datos inventados.`);
+  if (!text) throw new Error(`Falta completar ${fieldName}.`);
   return text;
 }
 
@@ -62,20 +62,37 @@ function buildRegistrationPayload(data: RegistrationRequest) {
     email: clean(data.email) ?? '',
     password,
     confirmPassword: clean(data.confirmPassword ?? data.repeatPassword) ?? password,
-    obraSocialId: requirePositiveNumber(data.obraSocialId, 'obraSocialId'),
-    tipoSangre: requireText(data.tipoSangre, 'tipoSangre'),
-    numeroCarnet: requireText(data.numeroCarnet ?? data.numeroAfiliado, 'numeroCarnet'),
-    numeroHistoriaClinica: requireText(data.numeroHistoriaClinica, 'numeroHistoriaClinica'),
+    obraSocialId: requirePositiveNumber(data.obraSocialId, 'obra social'),
+    tipoSangre: requireText(data.tipoSangre, 'grupo sanguíneo'),
+    numeroCarnet: requireText(data.numeroCarnet ?? data.numeroAfiliado, 'número de carnet'),
     hospitalClinicaCabecera: clean(data.hospitalClinicaCabecera ?? data.institucionCabecera),
     doctorCabecera: clean(data.doctorCabecera ?? data.medicoCabecera),
-    fechaNacimiento: requireText(data.fechaNacimiento, 'fechaNacimiento'),
-    telefono: requireText(data.telefono, 'telefono'),
+    fechaNacimiento: requireText(data.fechaNacimiento, 'fecha de nacimiento'),
+    telefono: requireText(data.telefono, 'teléfono'),
   };
 }
+
+export type RegistrationAvailability = {
+  disponible: boolean;
+  dniRegistrado?: boolean;
+  emailRegistrado?: boolean;
+  telefonoRegistrado?: boolean;
+  conflictos?: string[];
+  message?: string;
+};
 
 export const authService = {
   register: async (data: RegistrationRequest) => {
     const response = await api.post('/api/auth/register', buildRegistrationPayload(data));
+    return response.data;
+  },
+
+  checkRegistrationAvailability: async (data: { dni: string; email: string; telefono: string }): Promise<RegistrationAvailability> => {
+    const response = await api.post('/api/auth/register/check', {
+      dni: clean(data.dni) ?? '',
+      email: clean(data.email) ?? '',
+      telefono: clean(data.telefono) ?? '',
+    });
     return response.data;
   },
 

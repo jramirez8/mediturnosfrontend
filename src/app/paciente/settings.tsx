@@ -26,7 +26,7 @@ export default function SettingsScreen() {
         <MtHeader
           eyebrow="CONFIGURACIÓN"
           title="Ajustes"
-          subtitle="Tema, idioma, sesión y preferencias visibles de la app. Esto responde directo a Clase 10."
+          subtitle="Tema, sesión y preferencias visibles de la app. La interfaz queda en español para no mezclar idiomas."
         />
 
         <MtCard style={styles.section}>
@@ -65,7 +65,6 @@ export default function SettingsScreen() {
           <Text style={styles.sectionSubtitle}>{t('settings.languageHint')}</Text>
           <View style={styles.languageRow}>
             <LanguageButton label={t('settings.spanish')} selected={language === 'es'} onPress={() => setLanguage('es')} styles={styles} />
-            <LanguageButton label={t('settings.english')} selected={language === 'en'} onPress={() => setLanguage('en')} styles={styles} />
           </View>
         </MtCard>
 

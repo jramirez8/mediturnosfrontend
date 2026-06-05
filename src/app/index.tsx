@@ -1,10 +1,11 @@
-import { Redirect } from "expo-router";
-import { useAuthStore } from "../auth/authStore";
-import { useEffect, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { Redirect } from 'expo-router';
+import { useAuthStore } from '../auth/authStore';
+import { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { routeForRole } from '../auth/roles';
 
 export default function Index() {
-  const { loadToken, token } = useAuthStore();
+  const { loadToken, token, role } = useAuthStore();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -13,7 +14,7 @@ export default function Index() {
       setReady(true);
     }
     prepare();
-  }, []);
+  }, [loadToken]);
 
   if (!ready) {
     return (
@@ -23,6 +24,5 @@ export default function Index() {
     );
   }
 
-  // Si ya tenemos token, vamos a la home del paciente, si no al login
-  return token ? <Redirect href="/paciente" /> : <Redirect href="/login" />;
+  return token ? <Redirect href={routeForRole(role) as any} /> : <Redirect href="/login" />;
 }

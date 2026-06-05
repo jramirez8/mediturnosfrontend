@@ -21,7 +21,7 @@ type RegistrationData = {
 type RegistrationState = {
   data: RegistrationData;
   setStep1: (nombre: string, apellido: string, dni: string) => void;
-  setStep2: (email: string, password: string, confirmPassword?: string) => void;
+  setStep2: (email: string, telefono: string, password: string, confirmPassword?: string) => void;
   setMedicalInfo: (info: Partial<RegistrationData>) => void;
   reset: () => void;
 };
@@ -37,8 +37,8 @@ export const useRegistrationStore = create<RegistrationState>((set) => ({
   setStep1: (nombre, apellido, dni) =>
     set((state) => ({ data: { ...state.data, nombre, apellido, dni } })),
 
-  setStep2: (email, password, confirmPassword) =>
-    set((state) => ({ data: { ...state.data, email, password, confirmPassword: confirmPassword ?? password } })),
+  setStep2: (email, telefono, password, confirmPassword) =>
+    set((state) => ({ data: { ...state.data, email, telefono, password, confirmPassword: confirmPassword ?? password } })),
 
   setMedicalInfo: (info) =>
     set((state) => ({ data: { ...state.data, ...info } })),

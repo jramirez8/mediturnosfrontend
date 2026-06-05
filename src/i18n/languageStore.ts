@@ -3,6 +3,7 @@ import { storage } from '../api/storage';
 
 export type AppLanguage = 'es' | 'en';
 const LANGUAGE_KEY = 'mediturnos_language';
+const LANGUAGE_ENABLED: AppLanguage = 'es'; // Entrega final: UI visible en español. El diccionario EN queda preparado, pero no se habilita parcial.
 
 type Dictionary = Record<string, string>;
 
@@ -27,7 +28,7 @@ const es: Dictionary = {
   'settings.darkMode': 'Modo oscuro',
   'settings.darkModeHint': 'Cambia colores globales sin reiniciar la app.',
   'settings.language': 'Idioma',
-  'settings.languageHint': 'Los textos nuevos usan claves de traducción con fallback.',
+  'settings.languageHint': 'Interfaz visible en español. La estructura de traducción queda preparada para ampliar sin mezclar idiomas.',
   'settings.spanish': 'Español',
   'settings.english': 'Inglés',
   'privacy.title': 'Buenas prácticas de privacidad',
@@ -97,23 +98,20 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
   language: 'es',
   hydrated: false,
 
-  setLanguage: async (language) => {
-    await storage.setItem(LANGUAGE_KEY, language);
-    set({ language, hydrated: true });
+  setLanguage: async (_language) => {
+    // No habilitamos inglés parcial: evita que la app quede mitad ES / mitad EN.
+    await storage.setItem(LANGUAGE_KEY, LANGUAGE_ENABLED);
+    set({ language: LANGUAGE_ENABLED, hydrated: true });
   },
 
   toggleLanguage: async () => {
-    const next = get().language === 'es' ? 'en' : 'es';
-    await get().setLanguage(next);
+    await get().setLanguage(LANGUAGE_ENABLED);
   },
 
   loadLanguage: async () => {
-    const saved = await storage.getItem(LANGUAGE_KEY);
-    if (saved === 'es' || saved === 'en') {
-      set({ language: saved, hydrated: true });
-      return;
-    }
-    set({ language: 'es', hydrated: true });
+    // Si quedó 'en' en storage de una prueba anterior, lo pisamos para que la UI no arranque mezclada.
+    await storage.setItem(LANGUAGE_KEY, LANGUAGE_ENABLED);
+    set({ language: LANGUAGE_ENABLED, hydrated: true });
   },
 
   t: (key) => {

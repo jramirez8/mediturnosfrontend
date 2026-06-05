@@ -17,7 +17,7 @@ export default function ResetPasswordScreen() {
 
   async function handleSubmit() {
     if (!token.trim()) {
-      Alert.alert('Falta token', 'Pegá el token recibido por correo o devuelto por el backend en entorno de desarrollo.');
+      Alert.alert('Falta token', 'Pegá el token recibido por correo.');
       return;
     }
     if (password.length < 8) {

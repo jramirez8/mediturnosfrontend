@@ -15,6 +15,7 @@ export type TurnoResponse = {
   fechaHora?: string;
   pacienteId?: number;
   pacienteNombre: string;
+  pacienteDni?: string;
   profesionalId?: number;
   profesionalInstitucionId?: number;
   especialidadId?: number;
@@ -90,6 +91,7 @@ const normalizeTurno = (t: any): TurnoResponse => {
     fechaHora: buildFechaHora(fecha, hora, t?.fechaHora ?? t?.fechaHoraInicio),
     pacienteId: t?.pacienteId ? Number(t.pacienteId) : t?.paciente?.id ? Number(t.paciente.id) : undefined,
     pacienteNombre,
+    pacienteDni: t?.pacienteDni ?? t?.dni ?? t?.paciente?.dni,
     profesionalId: t?.profesionalId ? Number(t.profesionalId) : t?.profesional?.id ? Number(t.profesional.id) : undefined,
     profesionalInstitucionId: t?.profesionalInstitucionId ? Number(t.profesionalInstitucionId) : undefined,
     especialidadId: t?.especialidadId ? Number(t.especialidadId) : undefined,
@@ -154,6 +156,7 @@ async function verifyEstado(id: number, estadoEsperado: string) {
 }
 
 export const appointmentService = {
+  normalizeForStaff: normalizeTurno,
   getMyAppointments: async (pacienteId?: string | null) => {
     const cacheKey = `appointments:${pacienteId ?? 'me'}`;
     try {
@@ -282,11 +285,22 @@ export const appointmentService = {
     return verified;
   },
 
-  cancelar: async (id: number) => {
-    // Cancelar NO debe borrar el turno: debe pasar a estado CANCELADO para que quede en historial.
-    await api.put<any>(`/api/turnos/${id}/estado`, { estado: 'CANCELADO' });
-    const verified = await verifyEstado(id, 'CANCELADO');
+  actualizarEstado: async (id: number, estado: 'PENDIENTE' | 'CONFIRMADO' | 'REPROGRAMADO' | 'CANCELADO' | 'ATENDIDO' | 'AUSENTE' | string) => {
+    await api.put<any>(`/api/turnos/${id}/estado`, { estado });
+    const verified = await verifyEstado(id, estado);
     await clearAppCache();
     return verified;
+  },
+
+  guardarDetalleConsulta: async (id: number, data: Record<string, string>) => {
+    const response = await api.put<any>(`/api/turnos/${id}/detalle-consulta`, data);
+    const updated = normalizeTurno(response.data);
+    await clearAppCache();
+    return updated;
+  },
+
+  cancelar: async (id: number) => {
+    // Cancelar NO debe borrar el turno: debe pasar a estado CANCELADO para que quede en historial.
+    return appointmentService.actualizarEstado(id, 'CANCELADO');
   },
 };
