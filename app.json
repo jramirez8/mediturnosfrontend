@@ -34,7 +34,15 @@
             "imageWidth": 76
           }
         }
-      ]
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Mediturnos usa Face ID para iniciar sesión de forma segura."
+        }
+      ],
+      "expo-image-picker",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": false,

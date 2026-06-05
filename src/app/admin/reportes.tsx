@@ -1,59 +1,140 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
-import { MtCard, MtHeader, MtLoading, MtScreen, MtStat } from '../../components/mediturnos';
+import { MtButton, MtCard, MtHeader, MtInput, MtLoading, MtPill, MtScreen, MtStat } from '../../components/mediturnos';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { secretariaService } from '../../api/staffService';
+import { adminService, AdminSummary } from '../../api/adminService';
 import { TurnoResponse } from '../../api/appointmentService';
 import { useMtTheme } from '../../theme/themeStore';
+import { readableError } from '../../utils/errors';
+import { AdminNotice, AdminTabs, AdminTitle } from '../../components/admin/AdminUi';
+
+type Range = 'TODOS' | 'HOY' | 'FUTUROS' | 'HISTORICO';
+
+function dateKey(value?: string | null) {
+  return String(value ?? '').slice(0, 10);
+}
+function todayKey() { return new Date().toISOString().slice(0, 10); }
+function isFuture(value?: string | null) { return dateKey(value) >= todayKey(); }
+function isPast(value?: string | null) { return dateKey(value) < todayKey(); }
+
+function countBy(turnos: TurnoResponse[], getter: (t: TurnoResponse) => string | undefined | null) {
+  return turnos.reduce<Record<string, number>>((acc, t) => {
+    const key = String(getter(t) || 'Sin dato');
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function topEntries(map: Record<string, number>, limit = 8) {
+  return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, limit);
+}
 
 export default function AdminReportesScreen() {
   const [turnos, setTurnos] = useState<TurnoResponse[]>([]);
+  const [summary, setSummary] = useState<AdminSummary>({});
+  const [range, setRange] = useState<Range>('TODOS');
+  const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const theme = useMtTheme();
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
-    try { setTurnos(await secretariaService.turnos()); }
-    catch (e: any) { setError(e?.response?.data?.message || e?.message || 'No pudimos cargar reportes.'); }
+    try {
+      const [resumen, allTurnos] = await Promise.all([adminService.resumen(), secretariaService.turnos()]);
+      setSummary(resumen); setTurnos(allTurnos);
+    } catch (e: any) { setError(readableError(e, 'No pudimos cargar reportes.')); }
     finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const byStatus = useMemo(() => turnos.reduce<Record<string, number>>((acc, t) => {
-    const key = String(t.estado || 'SIN_ESTADO').toUpperCase();
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {}), [turnos]);
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    return turnos.filter((t) => {
+      const fecha = t.fecha || t.fechaHora;
+      const matchRange = range === 'TODOS' ? true : range === 'HOY' ? dateKey(fecha) === todayKey() : range === 'FUTUROS' ? isFuture(fecha) : isPast(fecha);
+      const text = `${t.pacienteNombre} ${t.profesionalNombre} ${t.especialidad} ${t.institucionNombre} ${t.estado} ${t.fecha} ${t.hora}`.toLowerCase();
+      return matchRange && (!q || text.includes(q));
+    });
+  }, [turnos, range, query]);
 
-  const bySpecialty = useMemo(() => turnos.reduce<Record<string, number>>((acc, t) => {
-    const key = t.especialidad || 'Sin especialidad';
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {}), [turnos]);
+  const byStatus = useMemo(() => countBy(filtered, (t) => String(t.estado || 'SIN_ESTADO').toUpperCase()), [filtered]);
+  const bySpecialty = useMemo(() => countBy(filtered, (t) => t.especialidad), [filtered]);
+  const byProfessional = useMemo(() => countBy(filtered, (t) => t.profesionalNombre), [filtered]);
+  const byInstitution = useMemo(() => countBy(filtered, (t) => t.institucionNombre), [filtered]);
+  const byDate = useMemo(() => countBy(filtered, (t) => dateKey(t.fecha || t.fechaHora)), [filtered]);
+  const cancellationRate = filtered.length ? Math.round(((byStatus.CANCELADO || 0) / filtered.length) * 100) : 0;
+  const attendanceRate = filtered.length ? Math.round(((byStatus.ATENDIDO || 0) / filtered.length) * 100) : 0;
 
   if (loading) return <MtLoading text="Cargando reportes..." />;
 
+  const Bar = ({ label, value, total }: { label: string; value: number; total: number }) => {
+    const pct = total ? Math.max(5, Math.round((value / total) * 100)) : 0;
+    return (
+      <View style={{ marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
+          <Text style={{ color: theme.colors.ink, fontWeight: '800', flex: 1 }}>{label}</Text>
+          <Text style={{ color: theme.colors.muted, fontWeight: '900' }}>{value}</Text>
+        </View>
+        <View style={{ height: 10, backgroundColor: theme.colors.primaryLight, borderRadius: 999, overflow: 'hidden', marginTop: 7 }}>
+          <View style={{ width: `${pct}%`, height: 10, backgroundColor: theme.colors.primary, borderRadius: 999 }} />
+        </View>
+      </View>
+    );
+  };
+
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="ADMIN" title="Reportes" subtitle="Indicadores simples con datos reales de turnos." />
-      {error ? <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}><Text style={{ color: theme.colors.danger, fontWeight: '900' }}>{error}</Text></MtCard> : null}
+      <MtHeader eyebrow="ADMIN" title="Reportes" subtitle="Indicadores operativos con datos reales de turnos y resumen del sistema." />
+      {error ? <AdminNotice type="danger" title="No pudimos cargar reportes" message={error} onRetry={load} /> : null}
+
+      <MtCard style={{ marginBottom: 14 }}>
+        <AdminTitle title="Filtros" subtitle="No altera datos: solo filtra lo leído del backend." />
+        <AdminTabs value={range} onChange={setRange} options={[{ value: 'TODOS', label: 'Todos' }, { value: 'HOY', label: 'Hoy', tone: 'success' }, { value: 'FUTUROS', label: 'Próximos', tone: 'warning' }, { value: 'HISTORICO', label: 'Histórico', tone: 'muted' }]} />
+        <MtInput label="Buscar" value={query} onChangeText={setQuery} placeholder="paciente, médico, especialidad, estado..." />
+      </MtCard>
+
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
-        <MtStat label="Turnos" value={turnos.length} />
+        <MtStat label="Turnos filtrados" value={filtered.length} />
         <MtStat label="Confirmados" value={byStatus.CONFIRMADO || 0} tone="success" />
         <MtStat label="Cancelados" value={byStatus.CANCELADO || 0} tone="danger" />
         <MtStat label="Atendidos" value={byStatus.ATENDIDO || 0} tone="success" />
+        <MtStat label="Ausentes" value={byStatus.AUSENTE || 0} tone="warning" />
+        <MtStat label="Cancelación" value={`${cancellationRate}%`} tone={cancellationRate > 20 ? 'danger' : 'primary'} />
+        <MtStat label="Atención" value={`${attendanceRate}%`} tone="success" />
+        <MtStat label="Usuarios" value={summary.usuarios ?? 0} />
       </View>
+
       <MtCard style={{ marginBottom: 14 }}>
-        <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18, marginBottom: 12 }}>Por estado</Text>
-        {Object.entries(byStatus).map(([k, v]) => <Text key={k} style={{ color: theme.colors.muted, marginBottom: 8 }}>• {k}: {v}</Text>)}
+        <AdminTitle title="Turnos por estado" />
+        {topEntries(byStatus, 12).map(([label, value]) => <Bar key={label} label={label} value={value} total={filtered.length} />)}
+        {!Object.keys(byStatus).length ? <Text style={{ color: theme.colors.muted }}>Sin datos para el filtro.</Text> : null}
       </MtCard>
-      <MtCard>
-        <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18, marginBottom: 12 }}>Por especialidad</Text>
-        {Object.entries(bySpecialty).map(([k, v]) => <Text key={k} style={{ color: theme.colors.muted, marginBottom: 8 }}>• {k}: {v}</Text>)}
+
+      <MtCard style={{ marginBottom: 14 }}>
+        <AdminTitle title="Especialidades más demandadas" />
+        {topEntries(bySpecialty).map(([label, value]) => <Bar key={label} label={label} value={value} total={filtered.length} />)}
       </MtCard>
-      <RoleBottomNav role="admin" active="catalogos" />
+
+      <MtCard style={{ marginBottom: 14 }}>
+        <AdminTitle title="Médicos con más turnos" />
+        {topEntries(byProfessional).map(([label, value]) => <Bar key={label} label={label} value={value} total={filtered.length} />)}
+      </MtCard>
+
+      <MtCard style={{ marginBottom: 14 }}>
+        <AdminTitle title="Instituciones" />
+        {topEntries(byInstitution).map(([label, value]) => <Bar key={label} label={label} value={value} total={filtered.length} />)}
+      </MtCard>
+
+      <MtCard style={{ marginBottom: 14 }}>
+        <AdminTitle title="Actividad por fecha" />
+        {topEntries(byDate, 10).map(([label, value]) => <Bar key={label} label={label || 'Sin fecha'} value={value} total={filtered.length} />)}
+      </MtCard>
+
+      <MtButton title="Actualizar reportes" onPress={load} variant="ghost" />
+      <RoleBottomNav role="admin" active="reportes" />
     </MtScreen>
   );
 }

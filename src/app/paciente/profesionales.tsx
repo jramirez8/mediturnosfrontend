@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { professionalService, Professional } from '../../api/professionalService';
-import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtPill, MtScreen } from '../../components/mediturnos';
+import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 
@@ -62,9 +62,14 @@ export default function ProfesionalesScreen() {
           keyExtractor={(item) => item}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chips}
-          renderItem={({ item }) => (
-            <MtPill label={item} selected={selectedSpecialty === item} onPress={() => setSelectedSpecialty(item)} />
-          )}
+          renderItem={({ item }) => {
+            const selected = selectedSpecialty === item;
+            return (
+              <Pressable style={[styles.specialtyChip, selected && styles.specialtyChipSelected]} onPress={() => setSelectedSpecialty(item)}>
+                <Text style={[styles.specialtyChipText, selected && styles.specialtyChipTextSelected]}>{item}</Text>
+              </Pressable>
+            );
+          }}
         />
 
         <FlatList
@@ -92,6 +97,8 @@ function ProfessionalCard({ item, styles, theme }: { item: Professional; styles:
             professionalId: item.id,
             profesionalInstitucionId: item.profesionalInstitucionId ?? item.id,
             professionalName: `${item.apellido}, ${item.nombre}`,
+            specialty: item.especialidad,
+            institution: item.institucion,
           },
         })}
       >
@@ -105,7 +112,7 @@ function ProfessionalCard({ item, styles, theme }: { item: Professional; styles:
       </Pressable>
       <View style={styles.footer}>
         <Text style={styles.next}>🕒 {item.proximaDisponibilidad || 'Consultar disponibilidad'}</Text>
-        <MtButton title="Pedir turno" onPress={() => router.push({ pathname: '/paciente/solicitar', params: { professionalId: item.id, profesionalInstitucionId: item.profesionalInstitucionId ?? item.id } })} style={{ minHeight: 42 }} />
+        <MtButton title="Pedir turno" onPress={() => router.push({ pathname: '/paciente/solicitar', params: { professionalId: item.id, profesionalInstitucionId: item.profesionalInstitucionId ?? item.id, professionalName: `${item.apellido}, ${item.nombre}`, specialty: item.especialidad, institution: item.institucion } })} style={{ minHeight: 42 }} />
       </View>
     </MtCard>
   );
@@ -114,7 +121,11 @@ function ProfessionalCard({ item, styles, theme }: { item: Professional; styles:
 function createStyles(theme: MediturnosTheme) {
   return StyleSheet.create({
     searchBox: { marginBottom: 12 },
-    chips: { paddingVertical: 8, paddingRight: 20 },
+    chips: { paddingVertical: 8, paddingRight: 20, gap: 8 },
+    specialtyChip: { borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9, marginRight: 8 },
+    specialtyChipSelected: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryLight },
+    specialtyChipText: { color: theme.colors.ink, fontWeight: '900', fontSize: 12 },
+    specialtyChipTextSelected: { color: theme.colors.primaryDark },
     list: { gap: 14, paddingBottom: 120, paddingTop: 8 },
     card: { gap: 14 },
     row: { flexDirection: 'row', gap: 14 },

@@ -24,6 +24,7 @@ const itemsByRole: Record<string, Item[]> = {
     { key: 'usuarios', label: 'Usuarios', icon: '◉', path: '/admin/usuarios' },
     { key: 'profesionales', label: 'Médicos', icon: '✚', path: '/admin/profesionales' },
     { key: 'catalogos', label: 'Catálogos', icon: '▤', path: '/admin/catalogos' },
+    { key: 'reportes', label: 'Reportes', icon: '▥', path: '/admin/reportes' },
     { key: 'settings', label: 'Ajustes', icon: '⚙', path: '/settings' },
   ],
 };

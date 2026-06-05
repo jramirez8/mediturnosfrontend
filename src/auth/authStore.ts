@@ -3,6 +3,7 @@ import { api } from '../api/client';
 import { hardClearAuthStorage, storage } from '../api/storage';
 import { clearAppCache, purgeLegacyCache } from '../db/cache';
 import { normalizeRole, routeForRole } from './roles';
+import { authenticateDevice, getBiometricInfo, promoteDeviceSessionToActive } from '../utils/deviceAuth';
 
 type LoginResult = {
   role: string | null;
@@ -19,6 +20,7 @@ type AuthState = {
   loading: boolean;
   hydrated: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
+  loginWithDeviceAuth: () => Promise<LoginResult>;
   logout: () => Promise<void>;
   loadToken: () => Promise<void>;
   fetchPacienteId: (uId: string) => Promise<string | null>;
@@ -28,6 +30,8 @@ function pickString(...values: any[]) {
   const found = values.find((value) => value !== undefined && value !== null && value !== '');
   return found === undefined ? null : String(found);
 }
+
+const AUTH_KEYS_ACTIVE = ['access_token', 'usuario_id', 'paciente_id', 'profesional_id', 'role', 'nombre_completo'];
 
 async function clearEverythingAuthRelated() {
   await Promise.allSettled([
@@ -55,6 +59,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loadToken: async () => {
     await purgeLegacyCache();
+
+    const biometric = await getBiometricInfo();
+    if (biometric.enabled) {
+      // Si el dispositivo tiene ingreso biométrico activado, no restauramos sesión automáticamente:
+      // el usuario debe tocar “Ingresar con biometría” y validar huella/rostro/PIN/patrón.
+      await Promise.allSettled(AUTH_KEYS_ACTIVE.map((key) => storage.deleteItem(key)));
+      set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, role: null, nombreCompleto: null, hydrated: true, loading: false });
+      return;
+    }
+
     const [token, usuarioId, pacienteId, profesionalId, role, nombreCompleto] = await Promise.all([
       storage.getItem('access_token'),
       storage.getItem('usuario_id'),
@@ -64,7 +78,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       storage.getItem('nombre_completo'),
     ]);
 
-    // Limpieza de versiones anteriores: hubo builds que guardaban tokens falsos.
     if (token?.startsWith('demo-token-')) {
       await clearEverythingAuthRelated();
       set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, role: null, nombreCompleto: null, hydrated: true, loading: false });
@@ -128,6 +141,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       return { role, route: routeForRole(role) };
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+
+  loginWithDeviceAuth: async () => {
+    set({ loading: true });
+    try {
+      const auth = await authenticateDevice('Ingresar a Mediturnos');
+      if (!auth.success) throw new Error(auth.error ?? 'No pudimos validar el método del dispositivo.');
+
+      const session = await promoteDeviceSessionToActive();
+      const normalizedRole = normalizeRole(session.role);
+      if (!normalizedRole) throw new Error('La sesión guardada tiene un rol desconocido. Ingresá con contraseña una vez más.');
+
+      set({
+        token: session.token,
+        usuarioId: session.usuarioId,
+        pacienteId: session.pacienteId,
+        profesionalId: session.profesionalId,
+        role: normalizedRole,
+        nombreCompleto: session.nombreCompleto,
+        hydrated: true,
+        loading: false,
+      });
+
+      return { role: normalizedRole, route: routeForRole(normalizedRole) };
     } finally {
       set({ loading: false });
     }

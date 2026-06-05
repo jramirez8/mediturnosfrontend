@@ -116,6 +116,8 @@ export default function MedicalInfoScreen() {
   const [numCarnet, setNumCarnet] = useState('');
   const [clinicaCabecera, setClinicaCabecera] = useState('');
   const [medicoCabecera, setMedicoCabecera] = useState('');
+  const [otroClinica, setOtroClinica] = useState('');
+  const [otroMedico, setOtroMedico] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -187,6 +189,16 @@ export default function MedicalInfoScreen() {
         return;
       }
 
+      if (clinicaCabecera === 'Otro' && !otroClinica.trim()) {
+        setError('Completá Observaciones con el hospital o clínica de cabecera.');
+        return;
+      }
+
+      if (medicoCabecera === 'Otro' && !otroMedico.trim()) {
+        setError('Completá Observaciones con el médico de cabecera.');
+        return;
+      }
+
       const registrationData = {
         ...data,
         obraSocialId: Number(obraSocialId),
@@ -194,10 +206,10 @@ export default function MedicalInfoScreen() {
         fechaNacimiento,
         numeroAfiliado: numCarnet.trim(),
         numeroCarnet: numCarnet.trim(),
-        institucionCabecera: clinicaCabecera === 'Otro' ? undefined : clinicaCabecera,
-        hospitalClinicaCabecera: clinicaCabecera === 'Otro' ? undefined : clinicaCabecera,
-        medicoCabecera: medicoCabecera === 'Otro' ? undefined : medicoCabecera,
-        doctorCabecera: medicoCabecera === 'Otro' ? undefined : medicoCabecera,
+        institucionCabecera: clinicaCabecera === 'Otro' ? otroClinica.trim() : clinicaCabecera,
+        hospitalClinicaCabecera: clinicaCabecera === 'Otro' ? otroClinica.trim() : clinicaCabecera,
+        medicoCabecera: medicoCabecera === 'Otro' ? otroMedico.trim() : medicoCabecera,
+        doctorCabecera: medicoCabecera === 'Otro' ? otroMedico.trim() : medicoCabecera,
       };
 
       await authService.register(registrationData);
@@ -293,6 +305,25 @@ export default function MedicalInfoScreen() {
                 options={medicoOptions}
                 onChange={setMedicoCabecera}
               />
+
+              {clinicaCabecera === 'Otro' && (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Observaciones:</Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput style={styles.input} value={otroClinica} onChangeText={setOtroClinica} placeholder="Completá hospital o clínica de cabecera" />
+                  </View>
+                </View>
+              )}
+
+              {medicoCabecera === 'Otro' && (
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Observaciones:</Text>
+                  <View style={styles.inputContainer}>
+                    <TextInput style={styles.input} value={otroMedico} onChangeText={setOtroMedico} placeholder="Completá médico de cabecera" />
+                  </View>
+                </View>
+              )}
+
             </View>
           )}
 

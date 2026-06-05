@@ -186,28 +186,20 @@ export default function PacienteHomeScreen() {
 
         <Text style={styles.sectionTitle}>Accesos rápidos</Text>
         <View style={styles.grid}>
-          <QuickCard title="Pedir turno" subtitle="Elegí profesional y horario" icon="＋" color={theme.colors.primary} onPress={() => router.push('/paciente/solicitar')} />
-          <QuickCard title="Mis turnos" subtitle="Ver, cancelar o reprogramar" icon="□" color={theme.colors.secondary} onPress={() => router.push('/paciente/turnos')} />
-          <QuickCard title="Profesionales" subtitle="Buscar especialistas" icon="⌕" color={theme.colors.warning} onPress={() => router.push('/paciente/profesionales')} />
-          <QuickCard title="Historia" subtitle="Atenciones y documentos" icon="▤" color={theme.colors.success} onPress={() => router.push('/paciente/historia')} />
-          <QuickCard title="Ajustes" subtitle="Modo oscuro, idioma y sesión" icon="⚙" color={theme.colors.purple} onPress={() => router.push('/paciente/settings')} />
+          <QuickCard title="Pedir turno" subtitle="Elegí profesional, día y horario" icon="＋" color={theme.colors.primary} onPress={() => router.push('/paciente/solicitar')} featured />
+          <QuickCard title="Mis turnos" subtitle="Confirmados, pendientes y cancelados" icon="📆" color={theme.colors.secondary} onPress={() => router.push('/paciente/turnos')} />
+          <QuickCard title="Profesionales" subtitle="Cartilla médica por especialidad" icon="🩺" color={theme.colors.warning} onPress={() => router.push('/paciente/profesionales')} />
+          <QuickCard title="Historia clínica" subtitle="Atenciones y documentos" icon="📋" color={theme.colors.success} onPress={() => router.push('/paciente/historia')} />
+          <QuickCard title="Ajustes" subtitle="Tema, idioma y seguridad" icon="⚙️" color={theme.colors.purple} onPress={() => router.push('/paciente/settings')} />
         </View>
-
-        <MtCard style={styles.healthCard}>
-          <Text style={styles.healthTitle}>Estado del proyecto</Text>
-          <Text style={styles.healthText}>Frontend Expo + backend Railway. Modo honesto: sin perfiles demo, sin turnos demo y sin saludos inventados.</Text>
-          <MtButton title="Abrir ajustes" variant="secondary" onPress={() => router.push('/paciente/settings')} style={{ marginTop: 14 }} />
-          <MtButton title="Actualizar datos" variant="ghost" onPress={loadDashboard} style={{ marginTop: 10 }} />
-          <MtButton title="Cerrar sesión" variant="danger" onPress={handleLogout} style={{ marginTop: 10 }} />
-        </MtCard>
       </MtScreen>
       <MtBottomNav active="home" />
     </>
   );
 
-  function QuickCard({ title, subtitle, icon, color, onPress }: { title: string; subtitle: string; icon: string; color: string; onPress: () => void }) {
+  function QuickCard({ title, subtitle, icon, color, onPress, featured }: { title: string; subtitle: string; icon: string; color: string; onPress: () => void; featured?: boolean }) {
     return (
-      <Pressable style={styles.quickCard} onPress={onPress}>
+      <Pressable style={[styles.quickCard, featured && styles.quickCardFeatured]} onPress={onPress}>
         <View style={[styles.quickIcon, { backgroundColor: `${color}1A` }]}> 
           <Text style={[styles.quickIconText, { color }]}>{icon}</Text>
         </View>
@@ -260,6 +252,7 @@ function createStyles(theme: MediturnosTheme) {
     sectionTitle: { color: theme.colors.ink, fontWeight: '900', fontSize: 18, marginBottom: 12 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 18 },
     quickCard: { width: '48%', backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: 22, padding: 15, minHeight: 150, ...theme.shadow },
+    quickCardFeatured: { borderColor: theme.colors.primary, backgroundColor: theme.mode === 'dark' ? '#082F2B' : '#F0FDFA' },
     quickIcon: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
     quickIconText: { fontSize: 25, fontWeight: '900' },
     quickTitle: { color: theme.colors.ink, fontWeight: '900', fontSize: 15 },
