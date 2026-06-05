@@ -8,6 +8,7 @@ import { medicoService } from '../../api/staffService';
 import { TurnoResponse } from '../../api/appointmentService';
 import { useAuthStore } from '../../auth/authStore';
 import { useMtTheme } from '../../theme/themeStore';
+import { useTranslation } from '../../i18n/languageStore';
 
 export default function MedicoDashboard() {
   const usuarioId = useAuthStore((s) => s.usuarioId);
@@ -17,6 +18,7 @@ export default function MedicoDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const theme = useMtTheme();
+  const { t, language } = useTranslation();
 
   const load = useCallback(async () => {
     if (!usuarioId) return;
@@ -30,11 +32,11 @@ export default function MedicoDashboard() {
       setAgenda(agendaData);
       setNext(nextData);
     } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'No pudimos cargar la agenda médica.');
+      setError(e?.response?.data?.message || e?.message || language === 'en' ? 'We could not load the medical schedule.' : 'No pudimos cargar la agenda médica.');
     } finally {
       setLoading(false);
     }
-  }, [usuarioId]);
+  }, [usuarioId, language]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -44,11 +46,11 @@ export default function MedicoDashboard() {
     return { total: agenda.length, pendientes, atendidos };
   }, [agenda]);
 
-  if (loading) return <MtLoading text="Cargando panel médico..." />;
+  if (loading) return <MtLoading text={t('common.loading')} />;
 
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="PANEL MÉDICO" title={`Hola, ${nombre || 'doctor/a'}`} subtitle="Agenda, atención de consultas e historia clínica." />
+      <MtHeader eyebrow={t('doctor.panel')} title={`${t('patient.hello')}, ${nombre || t('role.professional')}`} subtitle={t('doctor.subtitle')} />
       {error ? (
         <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}>
           <Text style={{ color: theme.colors.danger, fontWeight: '900' }}>{error}</Text>
@@ -57,25 +59,25 @@ export default function MedicoDashboard() {
       ) : null}
 
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-        <MtStat label="Turnos hoy" value={stats.total} />
-        <MtStat label="Pendientes" value={stats.pendientes} tone="warning" />
-        <MtStat label="Atendidos" value={stats.atendidos} tone="success" />
+        <MtStat label={language === 'en' ? 'Today' : 'Turnos hoy'} value={stats.total} />
+        <MtStat label={language === 'en' ? 'Pending' : 'Pendientes'} value={stats.pendientes} tone="warning" />
+        <MtStat label={language === 'en' ? 'Completed' : 'Atendidos'} value={stats.atendidos} tone="success" />
       </View>
 
       <MtCard style={{ marginBottom: 14 }}>
-        <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18 }}>Acciones rápidas</Text>
+        <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18 }}>{t('doctor.quickActions')}</Text>
         <View style={{ gap: 10, marginTop: 14 }}>
-          <MtButton title="Ver agenda del día" onPress={() => router.push('/medico/agenda')} />
-          <MtButton title="Registrar consulta" variant="ghost" onPress={() => router.push('/medico/consulta')} />
-          <MtButton title="Buscar historia por DNI" variant="ghost" onPress={() => router.push('/medico/historia-paciente')} />
+          <MtButton title={t('doctor.todayAgenda')} onPress={() => router.push('/medico/agenda')} />
+          <MtButton title={t('doctor.registerConsultation')} variant="ghost" onPress={() => router.push('/medico/consulta')} />
+          <MtButton title={t('doctor.searchHistory')} variant="ghost" onPress={() => router.push('/medico/historia-paciente')} />
         </View>
       </MtCard>
 
-      <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18, marginBottom: 10 }}>Próximo turno</Text>
+      <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18, marginBottom: 10 }}>{t('doctor.next')}</Text>
       {next ? (
         <TurnoCard turno={next} primaryAction={{ title: 'Atender consulta', onPress: () => router.push({ pathname: '/medico/consulta', params: { turnoId: String(next.id) } }) }} />
       ) : (
-        <MtEmptyState title="Sin próximos turnos" subtitle="No hay consultas próximas asignadas para este usuario médico." />
+        <MtEmptyState title={language === 'en' ? 'No upcoming appointments' : 'Sin próximos turnos'} subtitle={language === 'en' ? 'There are no upcoming consultations assigned to this doctor.' : 'No hay consultas próximas asignadas para este usuario médico.'} />
       )}
       <RoleBottomNav role="medico" active="home" />
     </MtScreen>

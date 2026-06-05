@@ -31,7 +31,7 @@ export default function HistoriaPacienteMedicoScreen() {
 
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="MÉDICO" title="Historia del paciente" subtitle="Búsqueda por DNI desde backend." />
+      <MtHeader eyebrow="MÉDICO" title="Historia del paciente" subtitle="Búsqueda por DNI." />
       <MtCard style={{ gap: 12, marginBottom: 14 }}>
         <MtInput label="DNI del paciente" value={dni} onChangeText={setDni} keyboardType="numeric" />
         <MtButton title="Buscar historia" onPress={search} loading={loading} disabled={!dni.trim()} />

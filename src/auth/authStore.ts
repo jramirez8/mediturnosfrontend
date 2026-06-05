@@ -110,7 +110,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const token = pickString(response.data?.token, response.data?.accessToken, response.data?.jwt);
       if (!token) {
-        throw new Error('El backend respondió el login pero no devolvió JWT. Revisá AuthLoginResponse/token/accessToken/jwt.');
+        throw new Error('No pudimos iniciar sesión con la respuesta recibida.');
       }
 
       const uId = pickString(response.data?.usuarioId, response.data?.userId, response.data?.id, response.data?.usuario?.id);
@@ -122,7 +122,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const nombreCompleto = pickString(response.data?.nombreCompleto, response.data?.nombre, response.data?.usuario?.nombreCompleto);
 
       if (!normalizedRole) {
-        throw new Error('El backend devolvió un rol desconocido. No puedo enrutar al panel correcto.');
+        throw new Error('Tu usuario no tiene un rol válido asignado.');
       }
 
       await storage.setItem('access_token', token);

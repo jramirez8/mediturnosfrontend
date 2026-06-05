@@ -25,7 +25,7 @@ api.interceptors.response.use(
       error.message = 'El servidor tardó demasiado en responder.';
     }
     if (!error?.response && error?.message === 'Network Error') {
-      error.message = 'No se pudo conectar con el backend. Si estás en Web, revisá CORS. Si estás en Expo Go, revisá red/Railway.';
+      error.message = 'No pudimos conectarnos con el servicio. Revisá tu conexión e intentá nuevamente.';
     }
     return Promise.reject(error);
   }

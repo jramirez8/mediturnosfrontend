@@ -1,4 +1,6 @@
 import { api } from './client';
+import { mediaToFormData, absoluteApiUrl } from './uploadMedia';
+import { PickedMedia } from '../utils/mediaPicker';
 import { getCachedJson, setCachedJson } from '../db/cache';
 
 export type UserProfile = {
@@ -20,6 +22,10 @@ export type UserProfile = {
   hospitalClinicaCabecera?: string;
   medicoCabecera?: string;
   doctorCabecera?: string;
+  fotoPerfilUrl?: string;
+  carnetObraSocialUrl?: string;
+  fotoPerfilSizeBytes?: number;
+  carnetObraSocialSizeBytes?: number;
 };
 
 const normalizeProfile = (p: any): UserProfile => ({
@@ -41,6 +47,10 @@ const normalizeProfile = (p: any): UserProfile => ({
   hospitalClinicaCabecera: p.hospitalClinicaCabecera ?? p.institucionCabecera,
   medicoCabecera: p.doctorCabecera ?? p.medicoCabecera,
   doctorCabecera: p.doctorCabecera ?? p.medicoCabecera,
+  fotoPerfilUrl: absoluteApiUrl(p.fotoPerfilUrl),
+  carnetObraSocialUrl: absoluteApiUrl(p.carnetObraSocialUrl),
+  fotoPerfilSizeBytes: p.fotoPerfilSizeBytes ? Number(p.fotoPerfilSizeBytes) : undefined,
+  carnetObraSocialSizeBytes: p.carnetObraSocialSizeBytes ? Number(p.carnetObraSocialSizeBytes) : undefined,
 });
 
 function clean(value?: string | number | null) {
@@ -52,7 +62,7 @@ function clean(value?: string | number | null) {
 function requireNumber(value: unknown, fieldName: string) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new Error(`No tengo ${fieldName} real desde el backend. No voy a inventarlo.`);
+    throw new Error(`Falta seleccionar ${fieldName}.`);
   }
   return parsed;
 }
@@ -100,6 +110,28 @@ export const userService = {
     const response = await api.put<any>(endpoint, buildProfilePayload(current, data));
     const profile = normalizeProfile(response.data);
     await setCachedJson(cacheKey, profile);
+    await setCachedJson('profile:last', profile);
+    return profile;
+  },
+
+  uploadProfilePhoto: async (media: PickedMedia, usuarioId?: string | null) => {
+    const form = await mediaToFormData(media);
+    const response = await api.post<any>('/api/pacientes/perfil/me/foto-perfil', form, {
+      timeout: 30000,
+    });
+    const profile = normalizeProfile(response.data);
+    await setCachedJson(`profile:${usuarioId ?? 'me'}`, profile);
+    await setCachedJson('profile:last', profile);
+    return profile;
+  },
+
+  uploadOossCard: async (media: PickedMedia, usuarioId?: string | null) => {
+    const form = await mediaToFormData(media);
+    const response = await api.post<any>('/api/pacientes/perfil/me/carnet-obra-social', form, {
+      timeout: 30000,
+    });
+    const profile = normalizeProfile(response.data);
+    await setCachedJson(`profile:${usuarioId ?? 'me'}`, profile);
     await setCachedJson('profile:last', profile);
     return profile;
   },

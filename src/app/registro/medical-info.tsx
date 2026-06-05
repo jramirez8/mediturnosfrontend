@@ -136,7 +136,7 @@ export default function MedicalInfoScreen() {
         setProfesionales(pros);
       } catch (err) {
         if (!mounted) return;
-        setError(readableError(err, 'No pudimos cargar obras sociales, instituciones o profesionales desde el backend.'));
+        setError(readableError(err, 'No pudimos cargar obras sociales, instituciones o profesionales.'));
       } finally {
         if (mounted) setCatalogLoading(false);
       }
@@ -243,7 +243,7 @@ export default function MedicalInfoScreen() {
           {catalogLoading ? (
             <View style={styles.loadingBox}>
               <ActivityIndicator color="#0F766E" />
-              <Text style={styles.loadingText}>Cargando catálogos reales del backend...</Text>
+              <Text style={styles.loadingText}>Cargando catálogos...</Text>
             </View>
           ) : (
             <View style={styles.form}>

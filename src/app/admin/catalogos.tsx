@@ -117,7 +117,7 @@ export default function AdminCatalogosScreen() {
 
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="ADMIN" title="Catálogos" subtitle="ABM real de especialidades, obras sociales e instituciones." />
+      <MtHeader eyebrow="ADMIN" title="Catálogos" subtitle="ABM de especialidades, obras sociales e instituciones." />
       {message ? <AdminNotice type="success" title="Listo" message={message} /> : null}
       {error ? <AdminNotice type="danger" title="Revisá esta operación" message={error} /> : null}
 
@@ -129,7 +129,7 @@ export default function AdminCatalogosScreen() {
 
       {formOpen ? (
         <MtCard style={{ marginBottom: 14, borderColor: theme.colors.primary }}>
-          <AdminTitle title={form.id ? 'Editar elemento' : 'Nuevo elemento'} subtitle="Los cambios impactan en el backend y después se recarga la lista." />
+          <AdminTitle title={form.id ? 'Editar elemento' : 'Nuevo elemento'} subtitle="Los cambios se guardan y luego se recarga la lista." />
           <View style={{ gap: 12 }}>
             <MtInput label="Nombre" value={form.nombre} onChangeText={(nombre) => setForm((f) => ({ ...f, nombre }))} />
             {kind === 'OBRAS' ? <MtInput label="Código / sigla" value={form.codigo} onChangeText={(codigo) => setForm((f) => ({ ...f, codigo }))} placeholder="OSDE, IOMA, SWISS..." /> : null}
@@ -148,7 +148,7 @@ export default function AdminCatalogosScreen() {
       ) : null}
 
       <MtCard style={{ marginBottom: 14 }}>
-        <AdminTitle title="Resumen" subtitle="Totales reales del backend." />
+        <AdminTitle title="Resumen" subtitle="Resumen de registros cargados." />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <MtPill label={`Especialidades ${especialidades.length}`} selected={kind === 'ESPECIALIDADES'} onPress={() => setKind('ESPECIALIDADES')} />
           <MtPill label={`Obras sociales ${obras.length}`} selected={kind === 'OBRAS'} tone="success" onPress={() => setKind('OBRAS')} />

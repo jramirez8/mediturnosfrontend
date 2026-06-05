@@ -159,7 +159,7 @@ export default function AdminUsuariosScreen() {
 
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="ADMIN" title="Usuarios" subtitle="Alta, edición, cambio de rol, activación y baja lógica de usuarios reales." />
+      <MtHeader eyebrow="ADMIN" title="Usuarios" subtitle="Alta, edición, cambio de rol, activación y baja lógica de usuarios." />
       {message ? <AdminNotice type="success" title="Operación realizada" message={message} /> : null}
       {error ? <AdminNotice type="danger" title="Revisá esta operación" message={error} /> : null}
 

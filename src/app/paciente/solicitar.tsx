@@ -7,6 +7,7 @@ import { useAuthStore } from '../../auth/authStore';
 import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtLoading, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
+import { useTranslation } from '../../i18n/languageStore';
 import { readableError } from '../../utils/errors';
 import { chooseImageSource, PickedMedia } from '../../utils/mediaPicker';
 
@@ -24,8 +25,10 @@ type CalendarCell = {
   available: boolean;
 };
 
-const WEEKDAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const WEEKDAYS_ES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const WEEKDAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const MONTHS_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 function toIsoDate(date: Date) {
   const y = date.getFullYear();
@@ -77,6 +80,7 @@ export default function SolicitarTurnoScreen() {
   const { pacienteId } = useAuthStore();
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
+  const { t, language } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -120,7 +124,7 @@ export default function SolicitarTurnoScreen() {
 
       setProfessionals(nextData);
     } catch (error: any) {
-      setNotice({ type: 'error', title: 'No se pudieron cargar profesionales', message: readableError(error) });
+      setNotice({ type: 'error', title: language === 'en' ? 'Professionals could not be loaded' : 'No se pudieron cargar profesionales', message: readableError(error) });
     } finally {
       setLoading(false);
     }
@@ -145,7 +149,7 @@ export default function SolicitarTurnoScreen() {
       setSlots([]);
       setSelectedSlot(null);
       setSelectedDate('');
-      setNotice({ type: 'error', title: 'No se pudo cargar disponibilidad', message: readableError(error) });
+      setNotice({ type: 'error', title: language === 'en' ? 'Availability could not be loaded' : 'No se pudo cargar disponibilidad', message: readableError(error) });
     } finally {
       setSlotsLoading(false);
     }
@@ -185,7 +189,7 @@ export default function SolicitarTurnoScreen() {
         setDocumentation(media);
         setNotice(null);
       },
-      (message) => setNotice({ type: 'error', title: 'No pudimos adjuntar documentación', message }),
+      (message) => setNotice({ type: 'error', title: language === 'en' ? 'We could not attach the document' : 'No pudimos adjuntar documentación', message }),
     );
   };
 
@@ -194,19 +198,19 @@ export default function SolicitarTurnoScreen() {
     setCreatedTurno(null);
 
     if (!pacienteId) {
-      setNotice({ type: 'error', title: 'No pudimos identificarte', message: 'Cerrá sesión y volvé a iniciar sesión con una cuenta de paciente.' });
+      setNotice({ type: 'error', title: language === 'en' ? 'We could not identify you' : 'No pudimos identificarte', message: language === 'en' ? 'Sign out and sign in again with a patient account.' : 'Cerrá sesión y volvé a iniciar sesión con una cuenta de paciente.' });
       return;
     }
     if (!selectedProfessional) {
-      setNotice({ type: 'error', title: 'Falta profesional', message: 'Elegí un profesional para continuar.' });
+      setNotice({ type: 'error', title: language === 'en' ? 'Professional required' : 'Falta profesional', message: language === 'en' ? 'Choose a professional to continue.' : 'Elegí un profesional para continuar.' });
       return;
     }
     if (!selectedSlot) {
-      setNotice({ type: 'error', title: 'Falta horario', message: 'Elegí una fecha y un horario disponible.' });
+      setNotice({ type: 'error', title: language === 'en' ? 'Time required' : 'Falta horario', message: language === 'en' ? 'Choose an available date and time.' : 'Elegí una fecha y un horario disponible.' });
       return;
     }
     if (!motivo.trim() || !observaciones.trim()) {
-      setNotice({ type: 'error', title: 'Falta motivo', message: 'Motivo de consulta y observaciones son obligatorios para confirmar el turno.' });
+      setNotice({ type: 'error', title: language === 'en' ? 'Reason required' : 'Falta motivo', message: language === 'en' ? 'Reason for visit and notes are required to confirm the appointment.' : 'Motivo de consulta y observaciones son obligatorios para confirmar el turno.' });
       return;
     }
 
@@ -226,16 +230,19 @@ export default function SolicitarTurnoScreen() {
         fechaHora: selectedSlot.fechaHora,
         motivoConsulta: motivo.trim(),
         observaciones: obsFinal,
+        documentacion: documentation,
       });
 
       setCreatedTurno(created);
       setNotice({
         type: 'success',
-        title: 'Turno confirmado',
-        message: `Tu turno quedó registrado para el ${created.fecha || selectedSlot.fecha} a las ${created.hora || selectedSlot.hora} hs. N° ${created.id}.`,
+        title: language === 'en' ? 'Appointment confirmed' : 'Turno confirmado',
+        message: language === 'en'
+          ? `Your appointment was registered for ${created.fecha || selectedSlot.fecha} at ${created.hora || selectedSlot.hora}. #${created.id}.`
+          : `Tu turno quedó registrado para el ${created.fecha || selectedSlot.fecha} a las ${created.hora || selectedSlot.hora} hs. N° ${created.id}.`,
       });
     } catch (error: any) {
-      setNotice({ type: 'error', title: 'No se pudo solicitar el turno', message: readableError(error, 'El horario pudo haber sido tomado. Probá otro.') });
+      setNotice({ type: 'error', title: language === 'en' ? 'Appointment could not be requested' : 'No se pudo solicitar el turno', message: readableError(error, language === 'en' ? 'The time may no longer be available. Try another one.' : 'El horario pudo haber sido tomado. Probá otro.') });
     } finally {
       setSending(false);
     }
@@ -253,30 +260,33 @@ export default function SolicitarTurnoScreen() {
     setMonthCursor((current) => new Date(current.getFullYear(), current.getMonth() + delta, 1));
   };
 
-  if (loading) return <MtLoading text="Preparando solicitud..." />;
+  const weekdays = language === 'en' ? WEEKDAYS_EN : WEEKDAYS_ES;
+  const months = language === 'en' ? MONTHS_EN : MONTHS_ES;
+
+  if (loading) return <MtLoading text={t('common.loading')} />;
 
   return (
     <>
       <MtScreen scroll>
-        <MtHeader eyebrow="NUEVO TURNO" title="Solicitar turno" subtitle="Elegí profesional, fecha, horario y motivo de consulta." />
+        <MtHeader eyebrow={language === 'en' ? 'NEW APPOINTMENT' : 'NUEVO TURNO'} title={t('appointment.requestTitle')} subtitle={t('appointment.requestSubtitle')} />
 
         {!!notice && <NoticeBox notice={notice} styles={styles} />}
 
-        <Text style={styles.step}>1. Profesional</Text>
+        <Text style={styles.step}>{t('appointment.professionalStep')}</Text>
         <MtCard style={styles.block}>
           {!!selectedProfessional && (
             <View style={styles.selectedBox}>
-              <Text style={styles.selectedEyebrow}>Profesional seleccionado</Text>
+              <Text style={styles.selectedEyebrow}>{language === 'en' ? 'SELECTED PROFESSIONAL' : 'PROFESIONAL SELECCIONADO'}</Text>
               <Text style={styles.selectedName}>{selectedProfessional.apellido}, {selectedProfessional.nombre}</Text>
               <Text style={styles.selectedMeta}>{selectedProfessional.especialidad} · {selectedProfessional.institucion}</Text>
-              <Text style={styles.selectedHint}>Este profesional vino seleccionado desde cartilla. Podés mantenerlo o cambiarlo.</Text>
+              <Text style={styles.selectedHint}>{language === 'en' ? 'This professional was selected from the directory. You can keep it or choose another one.' : 'Este profesional vino seleccionado desde cartilla. Podés mantenerlo o cambiarlo.'}</Text>
             </View>
           )}
 
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Buscar por médico, especialidad o institución"
+            placeholder={t('professionals.searchPlaceholder')}
             placeholderTextColor={theme.colors.soft}
             style={styles.search}
           />
@@ -286,7 +296,7 @@ export default function SolicitarTurnoScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.proList}
-            ListEmptyComponent={<Text style={styles.muted}>No hay profesionales para ese filtro.</Text>}
+            ListEmptyComponent={<Text style={styles.muted}>{language === 'en' ? 'No professionals match this filter.' : 'No hay profesionales para ese filtro.'}</Text>}
             renderItem={({ item }) => {
               const selected = (selectedProfessional?.profesionalInstitucionId ?? selectedProfessional?.id) === (item.profesionalInstitucionId ?? item.id);
               return (
@@ -297,29 +307,29 @@ export default function SolicitarTurnoScreen() {
                   <Text style={styles.profName}>{item.apellido}, {item.nombre}</Text>
                   <Text style={styles.profSpecialty}>{item.especialidad}</Text>
                   <Text style={styles.profInstitution}>{item.institucion}</Text>
-                  {selected && <Text style={styles.selectedTag}>Seleccionado</Text>}
+                  {selected && <Text style={styles.selectedTag}>{language === 'en' ? 'Selected' : 'Seleccionado'}</Text>}
                 </Pressable>
               );
             }}
           />
         </MtCard>
 
-        <Text style={styles.step}>2. Fecha y horario</Text>
+        <Text style={styles.step}>{t('appointment.dateStep')}</Text>
         <MtCard style={styles.block}>
           {!selectedProfessional ? (
-            <Text style={styles.muted}>Primero seleccioná un profesional.</Text>
+            <Text style={styles.muted}>{language === 'en' ? 'Select a professional first.' : 'Primero seleccioná un profesional.'}</Text>
           ) : slotsLoading ? (
-            <Text style={styles.muted}>Buscando disponibilidad...</Text>
+            <Text style={styles.muted}>{t('common.loading')}</Text>
           ) : slots.length === 0 ? (
-            <MtEmptyState title="Sin disponibilidad" subtitle="No encontramos horarios para este profesional." />
+            <MtEmptyState title={language === 'en' ? 'No availability' : 'Sin disponibilidad'} subtitle={language === 'en' ? 'No time slots were found for this professional.' : 'No encontramos horarios para este profesional.'} />
           ) : (
             <View>
               <View style={styles.calendarTop}>
                 <Pressable onPress={() => moveMonth(-1)} style={styles.monthButton}><Text style={styles.monthButtonText}>‹</Text></Pressable>
-                <Text style={styles.monthTitle}>{MONTHS[monthCursor.getMonth()]} {monthCursor.getFullYear()}</Text>
+                <Text style={styles.monthTitle}>{months[monthCursor.getMonth()]} {monthCursor.getFullYear()}</Text>
                 <Pressable onPress={() => moveMonth(1)} style={styles.monthButton}><Text style={styles.monthButtonText}>›</Text></Pressable>
               </View>
-              <View style={styles.weekRow}>{WEEKDAYS.map((day) => <Text key={day} style={styles.weekDay}>{day}</Text>)}</View>
+              <View style={styles.weekRow}>{weekdays.map((day) => <Text key={day} style={styles.weekDay}>{day}</Text>)}</View>
               <View style={styles.calendarGrid}>
                 {calendarCells.map((cell) => {
                   const selected = cell.iso === selectedDate;
@@ -343,8 +353,8 @@ export default function SolicitarTurnoScreen() {
 
               <Pressable style={[styles.timeSelector, !selectedDate && { opacity: 0.55 }]} disabled={!selectedDate} onPress={() => setShowTimes((current) => !current)}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.dropdownLabel}>Horario</Text>
-                  <Text style={styles.dropdownValue}>{selectedSlot ? `${selectedSlot.hora} hs` : 'Elegí un horario disponible'}</Text>
+                  <Text style={styles.dropdownLabel}>{t('appointment.timeStep')}</Text>
+                  <Text style={styles.dropdownValue}>{selectedSlot ? `${selectedSlot.hora} hs` : (language === 'en' ? 'Choose an available time' : 'Elegí un horario disponible')}</Text>
                 </View>
                 <Text style={styles.dropdownChevron}>{showTimes ? '▲' : '▼'}</Text>
               </Pressable>
@@ -373,15 +383,15 @@ export default function SolicitarTurnoScreen() {
           )}
         </MtCard>
 
-        <Text style={styles.step}>3. Motivo</Text>
+        <Text style={styles.step}>{t('appointment.reasonStep')}</Text>
         <MtCard style={styles.block}>
-          <Text style={styles.label}>Motivo de consulta *</Text>
-          <TextInput value={motivo} onChangeText={setMotivo} placeholder="Ej: control general, dolor, estudio..." placeholderTextColor={theme.colors.soft} style={styles.input} />
-          <Text style={[styles.label, { marginTop: 14 }]}>Observaciones *</Text>
+          <Text style={styles.label}>{t('appointment.reason')} *</Text>
+          <TextInput value={motivo} onChangeText={setMotivo} placeholder={language === 'en' ? 'Example: checkup, pain, test...' : 'Ej: control general, dolor, estudio...'} placeholderTextColor={theme.colors.soft} style={styles.input} />
+          <Text style={[styles.label, { marginTop: 14 }]}>{t('appointment.observations')} *</Text>
           <TextInput
             value={observaciones}
             onChangeText={setObservaciones}
-            placeholder="Información adicional para el profesional"
+            placeholder={language === 'en' ? 'Additional information for the professional' : 'Información adicional para el profesional'}
             placeholderTextColor={theme.colors.soft}
             multiline
             textAlignVertical="top"
@@ -389,27 +399,27 @@ export default function SolicitarTurnoScreen() {
           />
         </MtCard>
 
-        <Text style={styles.step}>4. Adjuntar documentación</Text>
+        <Text style={styles.step}>{t('appointment.attachStep')}</Text>
         <MtCard style={styles.block}>
-          <Text style={styles.attachIntro}>📎 Opcional. Podés adjuntar una foto desde cámara o galería.</Text>
-          <MtButton title={documentation ? 'Cambiar documentación' : '📎 Adjuntar documentación'} variant="secondary" onPress={pickDocumentation} style={{ marginTop: 12 }} />
-          {documentation ? <Text style={styles.attachmentName}>Archivo seleccionado: {documentation.fileName ?? 'imagen'}</Text> : null}
+          <Text style={styles.attachIntro}>📎 {t('appointment.attachOptional')}</Text>
+          <MtButton title={documentation ? (language === 'en' ? 'Change document' : 'Cambiar documentación') : (language === 'en' ? '📎 Attach document' : '📎 Adjuntar documentación')} variant="secondary" onPress={pickDocumentation} style={{ marginTop: 12 }} />
+          {documentation ? <Text style={styles.attachmentName}>{language === 'en' ? 'Selected file:' : 'Archivo seleccionado:'} {documentation.fileName ?? 'imagen'}</Text> : null}
         </MtCard>
 
         <MtCard style={styles.summary}>
-          <Text style={styles.summaryTitle}>Resumen</Text>
-          <Text style={styles.summaryLine}>Profesional: {selectedProfessional ? `${selectedProfessional.apellido}, ${selectedProfessional.nombre}` : 'Sin seleccionar'}</Text>
-          <Text style={styles.summaryLine}>Especialidad: {selectedProfessional?.especialidad ?? '-'}</Text>
-          <Text style={styles.summaryLine}>Horario: {selectedSlot ? `${selectedSlot.fecha} ${selectedSlot.hora}` : '-'}</Text>
-          <Text style={styles.summaryLine}>Documentación: {documentation?.fileName ?? 'Sin adjuntar'}</Text>
+          <Text style={styles.summaryTitle}>{language === 'en' ? 'Summary' : 'Resumen'}</Text>
+          <Text style={styles.summaryLine}>{language === 'en' ? 'Professional:' : 'Profesional:'} {selectedProfessional ? `${selectedProfessional.apellido}, ${selectedProfessional.nombre}` : (language === 'en' ? 'Not selected' : 'Sin seleccionar')}</Text>
+          <Text style={styles.summaryLine}>{language === 'en' ? 'Specialty:' : 'Especialidad:'} {selectedProfessional?.especialidad ?? '-'}</Text>
+          <Text style={styles.summaryLine}>{language === 'en' ? 'Time:' : 'Horario:'} {selectedSlot ? `${selectedSlot.fecha} ${selectedSlot.hora}` : '-'}</Text>
+          <Text style={styles.summaryLine}>{language === 'en' ? 'Documentation:' : 'Documentación:'} {documentation?.fileName ?? (language === 'en' ? 'Not attached' : 'Sin adjuntar')}</Text>
 
           {createdTurno ? (
             <View style={styles.successActions}>
-              <MtButton title="Ver mis turnos" onPress={() => router.replace('/paciente/turnos')} />
-              <MtButton title="Solicitar otro" variant="ghost" onPress={resetForm} />
+              <MtButton title={language === 'en' ? 'View my appointments' : 'Ver mis turnos'} onPress={() => router.replace('/paciente/turnos')} />
+              <MtButton title={language === 'en' ? 'Request another' : 'Solicitar otro'} variant="ghost" onPress={resetForm} />
             </View>
           ) : (
-            <MtButton title="Confirmar solicitud" loading={sending} disabled={sending} onPress={handleConfirm} style={{ marginTop: 16 }} />
+            <MtButton title={t('appointment.confirm')} loading={sending} disabled={sending} onPress={handleConfirm} style={{ marginTop: 16 }} />
           )}
         </MtCard>
       </MtScreen>

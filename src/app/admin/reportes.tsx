@@ -87,11 +87,11 @@ export default function AdminReportesScreen() {
 
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="ADMIN" title="Reportes" subtitle="Indicadores operativos con datos reales de turnos y resumen del sistema." />
+      <MtHeader eyebrow="ADMIN" title="Reportes" subtitle="Indicadores operativos de turnos y resumen del sistema." />
       {error ? <AdminNotice type="danger" title="No pudimos cargar reportes" message={error} onRetry={load} /> : null}
 
       <MtCard style={{ marginBottom: 14 }}>
-        <AdminTitle title="Filtros" subtitle="No altera datos: solo filtra lo leído del backend." />
+        <AdminTitle title="Filtros" subtitle="No altera datos: solo filtra la información cargada." />
         <AdminTabs value={range} onChange={setRange} options={[{ value: 'TODOS', label: 'Todos' }, { value: 'HOY', label: 'Hoy', tone: 'success' }, { value: 'FUTUROS', label: 'Próximos', tone: 'warning' }, { value: 'HISTORICO', label: 'Histórico', tone: 'muted' }]} />
         <MtInput label="Buscar" value={query} onChangeText={setQuery} placeholder="paciente, médico, especialidad, estado..." />
       </MtCard>

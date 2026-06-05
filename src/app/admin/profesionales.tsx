@@ -20,7 +20,7 @@ const profesionalEmpty = {
 const secretariaEmpty = { id: undefined as number | undefined, email: '', password: '', nombre: '', apellido: '', dni: '', telefono: '', institucionId: '', activa: true, emailVerificado: true };
 const pacienteEmpty = {
   id: undefined as number | undefined,
-  email: '', password: '', nombre: '', apellido: '', dni: '', fechaNacimiento: '', telefono: '', tipoSangre: 'O_POSITIVO', obraSocialId: '', numeroCarnet: '', numeroHistoriaClinica: '', institucionCabeceraId: '', medicoCabeceraProfesionalId: '', activo: true, emailVerificado: true,
+  email: '', password: '', nombre: '', apellido: '', dni: '', fechaNacimiento: '', telefono: '', tipoSangre: 'O_POSITIVO', obraSocialId: '', numeroCarnet: '', institucionCabeceraId: '', medicoCabeceraProfesionalId: '', activo: true, emailVerificado: true,
 };
 
 function includesText(value: any, q: string) {
@@ -99,7 +99,7 @@ export default function AdminProfesionalesScreen() {
     setTab('PACIENTES'); setFormOpen(true); setMessage(null); setError(null);
     setPacForm({
       id: p.id, email: p.email || '', password: '', nombre: p.nombre, apellido: p.apellido, dni: p.dni || '', fechaNacimiento: p.fechaNacimiento || '', telefono: p.telefono || '', tipoSangre: p.tipoSangre || 'O_POSITIVO',
-      obraSocialId: String(obras.find((o) => o.nombre === p.obraSocial)?.id ?? ''), numeroCarnet: p.numeroCarnet || '', numeroHistoriaClinica: p.numeroHistoriaClinica || '',
+      obraSocialId: String(obras.find((o) => o.nombre === p.obraSocial)?.id ?? ''), numeroCarnet: p.numeroCarnet || '',
       institucionCabeceraId: String(instituciones.find((i) => i.nombre === p.institucionCabecera)?.id ?? ''),
       medicoCabeceraProfesionalId: String(profesionales.find((m) => `${m.nombre} ${m.apellido}`.trim() === p.medicoCabecera || `${m.apellido}, ${m.nombre}`.trim() === p.medicoCabecera)?.id ?? ''),
       activo: p.activo !== false, emailVerificado: true,
@@ -131,7 +131,6 @@ export default function AdminProfesionalesScreen() {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(pacForm.fechaNacimiento)) return 'La fecha de nacimiento debe tener formato AAAA-MM-DD.';
     if (!pacForm.telefono.trim()) return 'El teléfono es obligatorio.';
     if (!pacForm.obraSocialId) return 'Seleccioná obra social.';
-    if (!pacForm.id && !pacForm.numeroHistoriaClinica.trim()) return 'Ingresá número de historia clínica. Si tu backend ya la genera solo, podés poner AUTO temporalmente.';
     return null;
   };
 
@@ -169,7 +168,7 @@ export default function AdminProfesionalesScreen() {
     setSaving(true); setError(null); setMessage(null);
     const payload: any = {
       email: pacForm.email.trim(), nombre: pacForm.nombre.trim(), apellido: pacForm.apellido.trim(), dni: pacForm.dni.trim(), fechaNacimiento: pacForm.fechaNacimiento, telefono: pacForm.telefono.trim(), tipoSangre: pacForm.tipoSangre,
-      obraSocialId: Number(pacForm.obraSocialId), numeroCarnet: pacForm.numeroCarnet.trim() || undefined, numeroHistoriaClinica: pacForm.numeroHistoriaClinica.trim() || `HC-${Date.now()}`,
+      obraSocialId: Number(pacForm.obraSocialId), numeroCarnet: pacForm.numeroCarnet.trim() || undefined,
       institucionCabeceraId: pacForm.institucionCabeceraId ? Number(pacForm.institucionCabeceraId) : undefined,
       medicoCabeceraProfesionalId: pacForm.medicoCabeceraProfesionalId ? Number(pacForm.medicoCabeceraProfesionalId) : undefined,
       activo: pacForm.activo, emailVerificado: pacForm.emailVerificado,
@@ -199,7 +198,7 @@ export default function AdminProfesionalesScreen() {
 
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="ADMIN" title="Personal y pacientes" subtitle="Médicos, secretarías y pacientes con alta, edición y baja lógica real." />
+      <MtHeader eyebrow="ADMIN" title="Personal y pacientes" subtitle="Médicos, secretarías y pacientes con alta, edición y baja lógica." />
       {message ? <AdminNotice type="success" title="Listo" message={message} /> : null}
       {error ? <AdminNotice type="danger" title="Revisá esta operación" message={error} /> : null}
 
@@ -211,7 +210,7 @@ export default function AdminProfesionalesScreen() {
 
       {formOpen && tab === 'MEDICOS' ? (
         <MtCard style={{ marginBottom: 14, borderColor: theme.colors.primary }}>
-          <AdminTitle title={profForm.id ? 'Editar médico' : 'Crear médico'} subtitle="Crea usuario PROFESSIONAL y persona profesional en backend." />
+          <AdminTitle title={profForm.id ? 'Editar médico' : 'Crear médico'} subtitle="Crea el usuario médico y sus datos profesionales." />
           <View style={{ gap: 12 }}>
             <MtInput label="Email" value={profForm.email} onChangeText={(email) => setProfForm((f) => ({ ...f, email }))} autoCapitalize="none" keyboardType="email-address" />
             <MtInput label={profForm.id ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'} value={profForm.password} onChangeText={(password) => setProfForm((f) => ({ ...f, password }))} secureTextEntry placeholder={profForm.id ? 'No cambiar' : quickPassword('Medico')} />
@@ -261,7 +260,7 @@ export default function AdminProfesionalesScreen() {
             <MtSelect label="Grupo sanguíneo" value={pacForm.tipoSangre} placeholder="Seleccionar" options={sangreOptions} onChange={(tipoSangre) => setPacForm((f) => ({ ...f, tipoSangre }))} />
             <MtSelect label="Obra social" value={pacForm.obraSocialId} placeholder="Seleccionar obra social" options={obras.map((o) => ({ label: o.nombre, value: String(o.id) }))} onChange={(obraSocialId) => setPacForm((f) => ({ ...f, obraSocialId }))} />
             <MtInput label="N° carnet" value={pacForm.numeroCarnet} onChangeText={(numeroCarnet) => setPacForm((f) => ({ ...f, numeroCarnet }))} />
-            <MtInput label="N° historia clínica" value={pacForm.numeroHistoriaClinica} onChangeText={(numeroHistoriaClinica) => setPacForm((f) => ({ ...f, numeroHistoriaClinica }))} placeholder="HC-000001 / AUTO" />
+            <Text style={{ color: theme.colors.muted, fontWeight: '700', lineHeight: 20 }}>N° historia clínica: se genera automáticamente al guardar el paciente.</Text>
             <MtSelect label="Institución cabecera" value={pacForm.institucionCabeceraId} placeholder="Opcional" options={[{ label: 'Sin institución', value: '' }, ...instituciones.map((i) => ({ label: i.nombre, value: String(i.id) }))]} onChange={(institucionCabeceraId) => setPacForm((f) => ({ ...f, institucionCabeceraId }))} />
             <MtSelect label="Médico cabecera" value={pacForm.medicoCabeceraProfesionalId} placeholder="Opcional" options={[{ label: 'Sin médico', value: '' }, ...profesionales.map((p) => ({ label: `${p.apellido}, ${p.nombre}`, value: String(p.id) }))]} onChange={(medicoCabeceraProfesionalId) => setPacForm((f) => ({ ...f, medicoCabeceraProfesionalId }))} />
             <AdminTabs value={pacForm.activo ? 'SI' : 'NO'} onChange={(v) => setPacForm((f) => ({ ...f, activo: v === 'SI' }))} options={[{ value: 'SI', label: 'Activo', tone: 'success' }, { value: 'NO', label: 'Inactivo', tone: 'danger' }]} />

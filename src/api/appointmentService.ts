@@ -1,4 +1,6 @@
 import { api } from './client';
+import { mediaToFormData, absoluteApiUrl } from './uploadMedia';
+import { PickedMedia } from '../utils/mediaPicker';
 import { clearAppCache, getCachedJson, setCachedJson } from '../db/cache';
 
 export type AppointmentSlot = {
@@ -38,6 +40,11 @@ export type TurnoResponse = {
   habitos?: string;
   hallazgosExamenFisico?: string;
   conducta?: string;
+  documentacionId?: number;
+  documentacionUrl?: string;
+  documentacionNombreArchivo?: string;
+  documentacionMimeType?: string;
+  documentacionSizeBytes?: number;
 };
 
 function splitFechaHora(raw?: string | null) {
@@ -58,7 +65,7 @@ function buildFechaHora(fecha?: string, hora?: string, fechaHora?: string) {
 function ensureNumber(value: unknown, fieldName: string) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new Error(`Falta dato obligatorio para el backend: ${fieldName}.`);
+    throw new Error(`Falta completar ${fieldName}.`);
   }
   return parsed;
 }
@@ -114,6 +121,11 @@ const normalizeTurno = (t: any): TurnoResponse => {
     habitos: t?.habitos,
     hallazgosExamenFisico: t?.hallazgosExamenFisico,
     conducta: t?.conducta,
+    documentacionId: t?.documentacionId ? Number(t.documentacionId) : undefined,
+    documentacionUrl: absoluteApiUrl(t?.documentacionUrl),
+    documentacionNombreArchivo: t?.documentacionNombreArchivo,
+    documentacionMimeType: t?.documentacionMimeType,
+    documentacionSizeBytes: t?.documentacionSizeBytes ? Number(t.documentacionSizeBytes) : undefined,
   };
 };
 
@@ -133,7 +145,7 @@ async function fetchVerifiedTurno(id: number) {
   const verified = normalizeTurno(detail.data);
 
   if (!verified?.id || Number(verified.id) !== Number(id)) {
-    throw new Error('El backend respondió, pero no pude verificar el turno persistido.');
+    throw new Error('No pudimos verificar el turno guardado.');
   }
 
   return verified;
@@ -141,7 +153,7 @@ async function fetchVerifiedTurno(id: number) {
 
 async function verifyCreatedTurno(created: TurnoResponse) {
   if (!created?.id || Number.isNaN(Number(created.id))) {
-    throw new Error('El backend respondió la solicitud, pero no devolvió id de turno. No lo doy por confirmado.');
+    throw new Error('No pudimos confirmar la creación del turno.');
   }
 
   return fetchVerifiedTurno(Number(created.id));
@@ -150,9 +162,19 @@ async function verifyCreatedTurno(created: TurnoResponse) {
 async function verifyEstado(id: number, estadoEsperado: string) {
   const verified = await fetchVerifiedTurno(id);
   if (normalizeEstado(verified.estado) !== normalizeEstado(estadoEsperado)) {
-    throw new Error(`El backend respondió, pero el turno sigue en estado ${verified.estado}. No lo doy por ${estadoEsperado}.`);
+    throw new Error(`No pudimos confirmar el cambio de estado del turno.`);
   }
   return verified;
+}
+
+
+async function uploadTurnoDocument(turnoId: number, media: PickedMedia) {
+  const form = await mediaToFormData(media);
+  const response = await api.post(`/api/turnos/${turnoId}/adjuntos`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 30000,
+  });
+  return response.data;
 }
 
 export const appointmentService = {
@@ -215,6 +237,7 @@ export const appointmentService = {
     fechaHora?: string;
     motivoConsulta?: string;
     observaciones?: string;
+    documentacion?: PickedMedia | null;
   }) => {
     const payload = {
       pacienteId: ensureNumber(data.pacienteId, 'pacienteId'),
@@ -227,7 +250,12 @@ export const appointmentService = {
 
     const response = await api.post<any>('/api/turnos/solicitar', payload);
     const created = normalizeTurno(response.data);
-    const verified = await verifyCreatedTurno(created);
+    let verified = await verifyCreatedTurno(created);
+
+    if (data.documentacion) {
+      await uploadTurnoDocument(Number(verified.id), data.documentacion);
+      verified = await fetchVerifiedTurno(Number(verified.id));
+    }
 
     await clearAppCache();
     return verified;
@@ -244,6 +272,7 @@ export const appointmentService = {
     fechaHora?: string;
     motivoConsulta?: string;
     observaciones?: string;
+    documentacion?: PickedMedia | null;
   }) => {
     return appointmentService.solicitar({
       pacienteId: data.pacienteId,
@@ -255,6 +284,7 @@ export const appointmentService = {
       fechaHora: data.fechaHora,
       motivoConsulta: data.motivoConsulta,
       observaciones: data.observaciones,
+      documentacion: data.documentacion,
     });
   },
 
@@ -278,7 +308,7 @@ export const appointmentService = {
     const expectedFechaHora = payload.fechaHora.slice(0, 16);
 
     if (String(verified.fechaHora ?? '').slice(0, 16) !== expectedFechaHora) {
-      throw new Error('El backend respondió, pero no pude verificar la nueva fecha del turno.');
+      throw new Error('No pudimos verificar la nueva fecha del turno.');
     }
 
     await clearAppCache();

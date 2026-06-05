@@ -78,16 +78,18 @@ function createStyles(theme: MediturnosTheme) {
     placeholder: { color: theme.colors.soft, fontWeight: '700' },
     chevron: { color: theme.colors.primary, fontWeight: '900' },
     options: {
-      maxHeight: 230,
+      maxHeight: 260,
       borderWidth: 1,
       borderColor: theme.colors.border,
       borderRadius: 16,
-      backgroundColor: theme.colors.surface,
+      backgroundColor: theme.mode === 'dark' ? '#102824' : '#FFFFFF',
       overflow: 'hidden',
+      zIndex: 20,
+      elevation: 8,
     },
-    option: { paddingHorizontal: 14, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+    option: { paddingHorizontal: 14, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.colors.border, backgroundColor: theme.mode === 'dark' ? '#102824' : '#FFFFFF' },
     optionActive: { backgroundColor: theme.colors.primaryLight },
-    optionText: { color: theme.colors.ink, fontWeight: '800' },
-    optionTextActive: { color: theme.colors.primaryDark, fontWeight: '900' },
+    optionText: { color: theme.colors.ink, fontWeight: '900', fontSize: 15 },
+    optionTextActive: { color: theme.mode === 'dark' ? '#06201D' : theme.colors.primaryDark, fontWeight: '900' },
   });
 }

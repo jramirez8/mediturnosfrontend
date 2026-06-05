@@ -47,7 +47,7 @@ export default function ReprogramarScreen() {
         setNotice({
           type: 'error',
           title: 'No se puede reprogramar',
-          message: 'El backend no devolvió profesionalInstitucionId. No puedo pedir disponibilidad real para este turno.',
+          message: 'No encontramos la información necesaria para consultar disponibilidad de este turno.',
         });
         return;
       }
@@ -88,7 +88,7 @@ export default function ReprogramarScreen() {
       return;
     }
     if (!turno.profesionalId) {
-      setNotice({ type: 'error', title: 'No se puede reprogramar', message: 'El backend no devolvió profesionalId. No puedo reprogramar este turno.' });
+      setNotice({ type: 'error', title: 'No se puede reprogramar', message: 'No encontramos la información necesaria para reprogramar este turno.' });
       return;
     }
 
@@ -111,7 +111,7 @@ export default function ReprogramarScreen() {
         message: `Tu turno quedó reprogramado para el ${updated.fecha || selectedSlot.fecha} a las ${updated.hora || selectedSlot.hora} hs.`,
       });
     } catch (error: any) {
-      setNotice({ type: 'error', title: 'No se pudo reprogramar', message: readableError(error, 'El backend rechazó el horario o faltan datos del turno.') });
+      setNotice({ type: 'error', title: 'No se pudo reprogramar', message: readableError(error, 'El horario no está disponible o faltan datos del turno.') });
     } finally {
       setRescheduling(false);
     }

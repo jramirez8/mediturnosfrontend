@@ -5,14 +5,14 @@ import { MtButton, MtCard, MtHeader, MtScreen } from '../components/mediturnos';
 import { useAuthStore } from '../auth/authStore';
 import { humanRole, routeForRole } from '../auth/roles';
 import { ThemeMode, useThemeStore, useMtTheme } from '../theme/themeStore';
-import { useLanguageStore } from '../i18n/languageStore';
+import { useTranslation } from '../i18n/languageStore';
 
 export default function GlobalSettingsScreen() {
   const { token, role, nombreCompleto, hydrated, loadToken, logout } = useAuthStore();
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
   const { mode, setMode } = useThemeStore();
-  const { language, setLanguage } = useLanguageStore();
+  const { language, setLanguage, t } = useTranslation();
 
   useEffect(() => {
     if (!hydrated) loadToken();
@@ -34,37 +34,38 @@ export default function GlobalSettingsScreen() {
 
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="CONFIGURACIÓN" title="Ajustes" subtitle="Preferencias globales y cuenta." />
+      <MtHeader eyebrow="CONFIG" title={t('settings.title')} subtitle={t('settings.subtitle')} />
 
       <MtCard style={{ marginBottom: 14 }}>
-        <Text style={styles.cardTitle}>Cuenta</Text>
-        <Text style={styles.text}>{nombreCompleto || 'Usuario autenticado'}</Text>
-        <Text style={styles.muted}>Rol: {humanRole(role)}</Text>
-        <MtButton title="Volver a mi panel" onPress={() => router.replace(routeForRole(role) as any)} style={{ marginTop: 14 }} />
+        <Text style={styles.cardTitle}>{t('settings.account')}</Text>
+        <Text style={styles.text}>{nombreCompleto || 'Usuario'}</Text>
+        <Text style={styles.muted}>{t('role.admin')}: {humanRole(role)}</Text>
+        <MtButton title={language === 'en' ? 'Back to my panel' : 'Volver a mi panel'} onPress={() => router.replace(routeForRole(role) as any)} style={{ marginTop: 14 }} />
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>
-        <Text style={styles.cardTitle}>Apariencia</Text>
-        <Text style={styles.muted}>Modo visual de la app.</Text>
+        <Text style={styles.cardTitle}>{language === 'en' ? 'Appearance' : 'Apariencia'}</Text>
+        <Text style={styles.muted}>{language === 'en' ? 'Choose how the app looks.' : 'Elegí cómo se ve la app.'}</Text>
         <View style={styles.optionRow}>
           {(['light', 'dark', 'system'] as ThemeMode[]).map((item) => (
-            <Option key={item} label={item === 'light' ? 'Claro' : item === 'dark' ? 'Oscuro' : 'Sistema'} selected={mode === item} onPress={() => setMode(item)} />
+            <Option key={item} label={item === 'light' ? t('settings.light') : item === 'dark' ? t('settings.dark') : t('settings.system')} selected={mode === item} onPress={() => setMode(item)} />
           ))}
         </View>
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>
-        <Text style={styles.cardTitle}>Idioma</Text>
-        <Text style={styles.muted}>Interfaz visible en español para evitar mezcla de idiomas. La base multiidioma queda preparada internamente.</Text>
+        <Text style={styles.cardTitle}>{t('settings.language')}</Text>
+        <Text style={styles.muted}>{language === 'en' ? 'Choose the interface language.' : 'Elegí el idioma de la interfaz.'}</Text>
         <View style={styles.optionRow}>
-          <Option label="Español" selected={language === 'es'} onPress={() => setLanguage('es')} />
+          <Option label={t('settings.spanish')} selected={language === 'es'} onPress={() => setLanguage('es')} />
+          <Option label={t('settings.english')} selected={language === 'en'} onPress={() => setLanguage('en')} />
         </View>
       </MtCard>
 
       <MtCard>
-        <Text style={styles.cardTitle}>Sesión</Text>
-        <Text style={styles.muted}>Cierra sesión y limpia tokens/cache local.</Text>
-        <MtButton title="Cerrar sesión" variant="danger" onPress={close} style={{ marginTop: 14 }} />
+        <Text style={styles.cardTitle}>{language === 'en' ? 'Session' : 'Sesión'}</Text>
+        <Text style={styles.muted}>{language === 'en' ? 'Sign out safely from this device.' : 'Cerrá sesión de forma segura en este dispositivo.'}</Text>
+        <MtButton title={t('common.logout')} variant="danger" onPress={close} style={{ marginTop: 14 }} />
       </MtCard>
     </MtScreen>
   );

@@ -10,6 +10,7 @@ import { useAuthStore } from '../../auth/authStore';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 import { AdminNotice, AdminTitle } from '../../components/admin/AdminUi';
+import { useTranslation } from '../../i18n/languageStore';
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const theme = useMtTheme();
+  const { t, language } = useTranslation();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -35,11 +37,11 @@ export default function AdminDashboard() {
       setSummary(resumen);
       setTurnos(allTurnos);
     } catch (e: any) {
-      setError(readableError(e, 'No pudimos cargar el panel de administración.'));
+      setError(readableError(e, language === 'en' ? 'We could not load the administration panel.' : 'No pudimos cargar el panel de administración.'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [language]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -52,17 +54,17 @@ export default function AdminDashboard() {
   const turnosHoy = useMemo(() => turnos.filter((t) => isToday(t.fecha || t.fechaHora)).length, [turnos]);
 
   const stats = useMemo(() => [
-    { label: 'Usuarios', value: summary.usuarios ?? 0 },
-    { label: 'Pacientes', value: summary.pacientes ?? 0, tone: 'success' as const },
-    { label: 'Médicos', value: summary.profesionales ?? 0 },
-    { label: 'Secretarías', value: summary.secretarias ?? 0, tone: 'warning' as const },
-    { label: 'Turnos hoy', value: turnosHoy, tone: 'success' as const },
-    { label: 'Cancelados', value: estado.CANCELADO ?? 0, tone: 'danger' as const },
-    { label: 'Catálogos', value: (summary.instituciones ?? 0) + (summary.especialidades ?? 0) + (summary.obrasSociales ?? 0), tone: 'warning' as const },
-    { label: 'Atendidos', value: estado.ATENDIDO ?? 0, tone: 'success' as const },
-  ], [summary, estado, turnosHoy]);
+    { label: t('nav.users'), value: summary.usuarios ?? 0 },
+    { label: t('nav.patients'), value: summary.pacientes ?? 0, tone: 'success' as const },
+    { label: t('nav.doctors'), value: summary.profesionales ?? 0 },
+    { label: language === 'en' ? 'Secretaries' : 'Secretarías', value: summary.secretarias ?? 0, tone: 'warning' as const },
+    { label: language === 'en' ? 'Today' : 'Turnos hoy', value: turnosHoy, tone: 'success' as const },
+    { label: language === 'en' ? 'Cancelled' : 'Cancelados', value: estado.CANCELADO ?? 0, tone: 'danger' as const },
+    { label: t('nav.catalogs'), value: (summary.instituciones ?? 0) + (summary.especialidades ?? 0) + (summary.obrasSociales ?? 0), tone: 'warning' as const },
+    { label: language === 'en' ? 'Completed' : 'Atendidos', value: estado.ATENDIDO ?? 0, tone: 'success' as const },
+  ], [summary, estado, turnosHoy, t, language]);
 
-  if (loading) return <MtLoading text="Cargando panel admin real..." />;
+  if (loading) return <MtLoading text={t('common.loading')} />;
 
   const ActionCard = ({ title, subtitle, icon, path, danger }: { title: string; subtitle: string; icon: string; path: string; danger?: boolean }) => (
     <Pressable onPress={() => router.push(path as any)} style={{ width: '48%' }}>
@@ -76,26 +78,26 @@ export default function AdminDashboard() {
 
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="PANEL ADMIN" title={`Hola, ${nombre || 'Administrador'}`} subtitle="Centro de control real: altas, ediciones, bajas lógicas, catálogos y reportes del sistema." />
+      <MtHeader eyebrow={t('admin.panel')} title={`${t('patient.hello')}, ${nombre || t('role.admin')}`} subtitle={t('admin.subtitle')} />
 
-      {error ? <AdminNotice type="danger" title="Error cargando administración" message={error} onRetry={load} /> : null}
+      {error ? <AdminNotice type="danger" title={language === 'en' ? 'Administration could not be loaded' : 'Error cargando administración'} message={error} onRetry={load} /> : null}
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
         {stats.map((stat) => <MtStat key={stat.label} label={stat.label} value={stat.value} tone={stat.tone} />)}
       </View>
 
       <MtCard style={{ marginBottom: 14 }}>
-        <AdminTitle title="Acciones administrativas" subtitle="Todo lo que ves acá pega contra endpoints reales del backend. No hay panel de cartón." />
+        <AdminTitle title={t('admin.actions')} subtitle={t('admin.actionsSub')} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-          <ActionCard icon="👥" title="Usuarios" subtitle="Crear, editar, activar/desactivar y cambiar rol." path="/admin/usuarios" />
-          <ActionCard icon="🩺" title="Personal" subtitle="Médicos, secretarías y pacientes desde una vista operativa." path="/admin/profesionales" />
-          <ActionCard icon="▤" title="Catálogos" subtitle="Especialidades, obras sociales e instituciones." path="/admin/catalogos" />
-          <ActionCard icon="📊" title="Reportes" subtitle="Indicadores por estado, especialidad y profesional." path="/admin/reportes" />
+          <ActionCard icon="👥" title={t('nav.users')} subtitle={language === 'en' ? 'Create, edit, activate/deactivate and change roles.' : 'Crear, editar, activar/desactivar y cambiar rol.'} path="/admin/usuarios" />
+          <ActionCard icon="🩺" title={language === 'en' ? 'Staff' : 'Personal'} subtitle={language === 'en' ? 'Doctors, secretaries and patients from one operational view.' : 'Médicos, secretarías y pacientes desde una vista operativa.'} path="/admin/profesionales" />
+          <ActionCard icon="▤" title={t('nav.catalogs')} subtitle={language === 'en' ? 'Specialties, health insurance and institutions.' : 'Especialidades, obras sociales e instituciones.'} path="/admin/catalogos" />
+          <ActionCard icon="📊" title={t('nav.reports')} subtitle={language === 'en' ? 'Indicators by status, specialty and professional.' : 'Indicadores por estado, especialidad y profesional.'} path="/admin/reportes" />
         </View>
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>
-        <AdminTitle title="Estado de turnos" subtitle="Lectura operativa para detectar desvíos rápido." />
+        <AdminTitle title={t('admin.appointmentStatus')} subtitle={t('admin.appointmentStatusSub')} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {['PENDIENTE', 'CONFIRMADO', 'REPROGRAMADO', 'CANCELADO', 'ATENDIDO', 'AUSENTE'].map((key) => (
             <View key={key} style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: 14, paddingVertical: 10, paddingHorizontal: 12 }}>
@@ -106,7 +108,7 @@ export default function AdminDashboard() {
         </View>
       </MtCard>
 
-      <MtButton title="Actualizar panel" onPress={load} variant="ghost" />
+      <MtButton title={t('admin.refresh')} onPress={load} variant="ghost" />
       <RoleBottomNav role="admin" active="home" />
     </MtScreen>
   );

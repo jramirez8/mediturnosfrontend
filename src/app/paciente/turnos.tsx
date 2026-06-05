@@ -80,7 +80,7 @@ export default function MisTurnosScreen() {
       // Refresco real para que la pantalla quede alineada con MySQL, no con estado local.
       await fetchAppointments(false);
     } catch (error: any) {
-      setNotice({ type: 'error', title: 'No se pudo cancelar', message: readableError(error, 'El backend no confirmó la cancelación del turno.') });
+      setNotice({ type: 'error', title: 'No se pudo cancelar', message: readableError(error, 'No pudimos confirmar la cancelación del turno.') });
     } finally {
       setCancelingId(null);
     }

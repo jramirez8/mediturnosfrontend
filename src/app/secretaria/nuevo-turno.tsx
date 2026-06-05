@@ -71,7 +71,7 @@ export default function SecretariaNuevoTurnoScreen() {
 
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="SECRETARÍA" title="Nuevo turno" subtitle="Alta operativa usando paciente existente y disponibilidad real." />
+      <MtHeader eyebrow="SECRETARÍA" title="Nuevo turno" subtitle="Alta operativa usando paciente existente y disponibilidad disponible." />
       {message ? <MtCard style={{ borderColor: theme.colors.success, marginBottom: 14 }}><Text style={{ color: theme.colors.success, fontWeight: '900' }}>{message}</Text><MtButton title="Ver turnos" onPress={() => router.replace('/secretaria/turnos')} style={{ marginTop: 12 }} /></MtCard> : null}
       {error ? <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}><Text style={{ color: theme.colors.danger, fontWeight: '900' }}>{error}</Text></MtCard> : null}
 

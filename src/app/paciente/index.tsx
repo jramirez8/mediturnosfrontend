@@ -10,6 +10,7 @@ import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 import { clearAppCache, purgeLegacyCache } from '../../db/cache';
 import { logoutAndGoToLogin } from '../../utils/session';
+import { useTranslation } from '../../i18n/languageStore';
 
 type DashboardError = {
   profile?: string;
@@ -24,6 +25,7 @@ export default function PacienteHomeScreen() {
   const [loading, setLoading] = useState(true);
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
+  const { t } = useTranslation();
 
   useEffect(() => {
     let alive = true;
@@ -57,7 +59,7 @@ export default function PacienteHomeScreen() {
         if (!alive) return;
         setProfile(null);
         setAppointments([]);
-        nextErrors.profile = readableError(error, 'No se pudo cargar el perfil desde el backend.');
+        nextErrors.profile = readableError(error, 'No pudimos cargar tu perfil.');
         setErrors(nextErrors);
         return;
       }
@@ -70,7 +72,7 @@ export default function PacienteHomeScreen() {
       } catch (error) {
         if (!alive) return;
         setAppointments([]);
-        nextErrors.appointments = readableError(error, 'No se pudieron cargar los turnos desde el backend.');
+        nextErrors.appointments = readableError(error, 'No pudimos cargar tus turnos.');
       }
 
       if (!alive) return;
@@ -104,27 +106,23 @@ export default function PacienteHomeScreen() {
     await handleLogout();
   };
 
-  if (loading) return <MtLoading text="Consultando backend real..." />;
+  if (loading) return <MtLoading text={t('common.loading')} />;
 
   if (hasBlockingError) {
     return (
       <MtScreen scroll>
         <MtHeader
-          eyebrow="MÓDULO PACIENTE"
-          title="No cargo datos falsos"
-          subtitle="El backend devolvió error al cargar tu perfil. Prefiero frenarte acá antes que mostrar 'Hola Paciente' inventado."
+          eyebrow={t('patient.eyebrow')}
+          title={t('patient.profileErrorTitle')}
+          subtitle={t('patient.profileErrorSub')}
         />
         <MtCard style={styles.errorCard}>
-          <Text style={styles.errorTitle}>Error real del backend</Text>
+          <Text style={styles.errorTitle}>{t('common.errorTitle')}</Text>
           <Text style={styles.errorText}>{errors.profile}</Text>
           {errors.appointments ? <Text style={styles.errorText}>Turnos: {errors.appointments}</Text> : null}
           <View style={{ height: 14 }} />
-          <MtButton title="Reintentar" onPress={loadDashboard} />
-          <MtButton title="Limpiar sesión y volver al login" variant="danger" onPress={hardReset} style={{ marginTop: 10 }} />
-        </MtCard>
-        <MtCard style={styles.healthCard}>
-          <Text style={styles.healthTitle}>Qué significa esto</Text>
-          <Text style={styles.healthText}>La sesión existe, pero alguno de estos endpoints está fallando: /api/pacientes/perfil/me o /api/pacientes/perfil/{usuarioId}. Ya no hay fallback demo ni saludo inventado.</Text>
+          <MtButton title={t('common.retry')} onPress={loadDashboard} />
+          <MtButton title={t('common.logout')} variant="danger" onPress={hardReset} style={{ marginTop: 10 }} />
         </MtCard>
       </MtScreen>
     );
@@ -137,9 +135,9 @@ export default function PacienteHomeScreen() {
     <>
       <MtScreen scroll>
         <MtHeader
-          eyebrow="MÓDULO PACIENTE"
-          title={`Hola, ${fullName} 👋`}
-          subtitle="Tu centro de control para turnos, profesionales, perfil e historia clínica."
+          eyebrow={t('patient.eyebrow')}
+          title={`${t('patient.hello')}, ${fullName} 👋`}
+          subtitle={t('patient.subtitle')}
           right={
             <Pressable style={styles.avatar} onPress={() => router.push('/paciente/perfil')}>
               <Text style={styles.avatarText}>{initials}</Text>
@@ -149,14 +147,14 @@ export default function PacienteHomeScreen() {
 
         {errors.appointments ? (
           <MtCard style={styles.warningCard}>
-            <Text style={styles.warningTitle}>Turnos no disponibles</Text>
+            <Text style={styles.warningTitle}>{t('nav.appointments')}</Text>
             <Text style={styles.warningText}>{errors.appointments}</Text>
-            <MtButton title="Reintentar turnos" variant="secondary" onPress={loadDashboard} style={{ marginTop: 10 }} />
+            <MtButton title={t('common.retry')} variant="secondary" onPress={loadDashboard} style={{ marginTop: 10 }} />
           </MtCard>
         ) : null}
 
         <View style={styles.statsRow}>
-          <MtStat label="Próximos" value={upcomingCount} />
+          <MtStat label={t('patient.nextAppointment')} value={upcomingCount} />
           <MtStat label="Atenciones" value={doneCount} tone="success" />
           <MtStat label="HC" value={profile?.numeroHistoriaClinica ?? `#${profile?.pacienteId ?? profile?.id}`} tone="warning" />
         </View>
@@ -164,8 +162,8 @@ export default function PacienteHomeScreen() {
         <MtCard style={styles.nextCard}>
           <View style={styles.cardTop}>
             <View>
-              <Text style={styles.cardLabel}>Próximo turno</Text>
-              <Text style={styles.nextTitle}>{nextAppointment ? nextAppointment.especialidad : 'Sin turno agendado'}</Text>
+              <Text style={styles.cardLabel}>{t('patient.nextAppointment')}</Text>
+              <Text style={styles.nextTitle}>{nextAppointment ? nextAppointment.especialidad : t('patient.noNext')}</Text>
             </View>
             <Text style={styles.cardIcon}>📅</Text>
           </View>
@@ -178,19 +176,19 @@ export default function PacienteHomeScreen() {
             </>
           ) : (
             <>
-              <Text style={styles.nextLine}>No hay turnos próximos devueltos por el backend.</Text>
-              <MtButton title="Solicitar turno" onPress={() => router.push('/paciente/solicitar')} style={{ marginTop: 16 }} />
+              <Text style={styles.nextLine}>{t('patient.noNextHelp')}</Text>
+              <MtButton title={t('patient.requestAppointment')} onPress={() => router.push('/paciente/solicitar')} style={{ marginTop: 16 }} />
             </>
           )}
         </MtCard>
 
-        <Text style={styles.sectionTitle}>Accesos rápidos</Text>
+        <Text style={styles.sectionTitle}>{t('patient.quick')}</Text>
         <View style={styles.grid}>
-          <QuickCard title="Pedir turno" subtitle="Elegí profesional, día y horario" icon="＋" color={theme.colors.primary} onPress={() => router.push('/paciente/solicitar')} featured />
-          <QuickCard title="Mis turnos" subtitle="Confirmados, pendientes y cancelados" icon="📆" color={theme.colors.secondary} onPress={() => router.push('/paciente/turnos')} />
-          <QuickCard title="Profesionales" subtitle="Cartilla médica por especialidad" icon="🩺" color={theme.colors.warning} onPress={() => router.push('/paciente/profesionales')} />
-          <QuickCard title="Historia clínica" subtitle="Atenciones y documentos" icon="📋" color={theme.colors.success} onPress={() => router.push('/paciente/historia')} />
-          <QuickCard title="Ajustes" subtitle="Tema, idioma y seguridad" icon="⚙️" color={theme.colors.purple} onPress={() => router.push('/paciente/settings')} />
+          <QuickCard title={t('patient.quickRequest')} subtitle={t('patient.quickRequestSub')} icon="＋" color={theme.colors.primary} onPress={() => router.push('/paciente/solicitar')} featured />
+          <QuickCard title={t('patient.quickAppointments')} subtitle={t('patient.quickAppointmentsSub')} icon="📆" color={theme.colors.secondary} onPress={() => router.push('/paciente/turnos')} />
+          <QuickCard title={t('patient.quickProfessionals')} subtitle={t('patient.quickProfessionalsSub')} icon="🩺" color={theme.colors.warning} onPress={() => router.push('/paciente/profesionales')} />
+          <QuickCard title={t('patient.quickHistory')} subtitle={t('patient.quickHistorySub')} icon="📋" color={theme.colors.success} onPress={() => router.push('/paciente/historia')} />
+          <QuickCard title={t('common.settings')} subtitle={t('patient.quickSettingsSub')} icon="⚙️" color={theme.colors.purple} onPress={() => router.push('/paciente/settings')} />
         </View>
       </MtScreen>
       <MtBottomNav active="home" />
@@ -215,6 +213,7 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
   const logout = useAuthStore((state) => state.logout);
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
+  const { t } = useTranslation();
 
   const leave = async () => {
     await logoutAndGoToLogin(logout);
@@ -223,16 +222,16 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
   return (
     <MtScreen scroll>
       <MtHeader
-        eyebrow="ERROR CONTROLADO"
-        title="El dashboard falló"
-        subtitle="No tapo el error con mocks. Podés reintentar o cerrar sesión sin quedar atrapado."
+        eyebrow={t('patient.eyebrow')}
+        title={t('patient.profileErrorTitle')}
+        subtitle={t('patient.profileErrorSub')}
       />
       <MtCard style={styles.errorCard}>
         <Text style={styles.errorTitle}>Error</Text>
         <Text style={styles.errorText}>{error.message}</Text>
         <View style={{ height: 14 }} />
-        <MtButton title="Reintentar" onPress={retry} />
-        <MtButton title="Cerrar sesión" variant="danger" onPress={leave} style={{ marginTop: 10 }} />
+        <MtButton title={t('common.retry')} onPress={retry} />
+        <MtButton title={t('common.logout')} variant="danger" onPress={leave} style={{ marginTop: 10 }} />
       </MtCard>
     </MtScreen>
   );

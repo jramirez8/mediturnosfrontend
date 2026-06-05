@@ -5,11 +5,11 @@ import { userService, UserProfile } from '../../api/userService';
 import { useAuthStore } from '../../auth/authStore';
 import { catalogService, CatalogItem } from '../../api/catalogService';
 import { Professional } from '../../api/professionalService';
-import { storage } from '../../api/storage';
 import { MtBottomNav, MtButton, MtCard, MtHeader, MtInput, MtLoading, MtScreen } from '../../components/mediturnos';
 import { MtSelect, MtSelectOption } from '../../components/MtSelect';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
+import { useTranslation } from '../../i18n/languageStore';
 import { readableError } from '../../utils/errors';
 import { chooseImageSource, PickedMedia } from '../../utils/mediaPicker';
 
@@ -46,6 +46,7 @@ export default function PerfilScreen() {
   const [profesionales, setProfesionales] = useState<Professional[]>([]);
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
+  const { t, language } = useTranslation();
 
   useEffect(() => {
     loadAll();
@@ -66,21 +67,21 @@ export default function PerfilScreen() {
     try {
       setLoading(true);
       setCatalogLoading(true);
-      const [data, obras, insts, pros, savedPhoto] = await Promise.all([
+      const [data, obras, insts, pros] = await Promise.all([
         userService.getProfile(usuarioId),
         catalogService.obrasSociales(),
         catalogService.instituciones(),
         catalogService.profesionales(),
-        storage.getItem('profile_photo_uri'),
       ]);
       setProfile(data);
       setObrasSociales(obras);
       setInstituciones(insts);
       setProfesionales(pros);
-      setPhotoUri(savedPhoto);
+      setPhotoUri(data.fotoPerfilUrl ?? null);
+      setCarnet(data.carnetObraSocialUrl ? { uri: data.carnetObraSocialUrl, fileName: 'carnet-obra-social.jpg', mimeType: 'image/jpeg' } : null);
       fillForm(data, obras);
     } catch (error: any) {
-      Alert.alert('No se pudo cargar perfil', readableError(error));
+      Alert.alert(language === 'en' ? 'We could not load your profile' : 'No se pudo cargar perfil', readableError(error));
     } finally {
       setCatalogLoading(false);
       setLoading(false);
@@ -89,13 +90,13 @@ export default function PerfilScreen() {
 
   const obraSocialOptions = useMemo<MtSelectOption[]>(() => [
     ...obrasSociales.map((obra) => ({ label: obra.nombre, value: String(obra.id) })),
-    { label: 'Otro', value: OTRO },
-  ], [obrasSociales]);
+    { label: t('common.other'), value: OTRO },
+  ], [obrasSociales, t]);
 
   const institucionOptions = useMemo<MtSelectOption[]>(() => [
     ...instituciones.map((inst) => ({ label: inst.nombre, value: inst.nombre })),
-    { label: 'Otro', value: OTRO },
-  ], [instituciones]);
+    { label: t('common.other'), value: OTRO },
+  ], [instituciones, t]);
 
   const medicoOptions = useMemo<MtSelectOption[]>(() => {
     const seen = new Set<string>();
@@ -107,16 +108,17 @@ export default function PerfilScreen() {
         seen.add(key);
         return true;
       });
-    return [...items, { label: 'Otro', value: OTRO }];
-  }, [profesionales]);
+    return [...items, { label: t('common.other'), value: OTRO }];
+  }, [profesionales, t]);
 
   const needsOtherDetails = obraSocialId === OTRO || institucionCabecera === OTRO || medicoCabecera === OTRO;
 
   const pickProfilePhoto = () => {
     chooseImageSource(
       async (media) => {
-        setPhotoUri(media.uri);
-        await storage.setItem('profile_photo_uri', media.uri);
+        const updated = await userService.uploadProfilePhoto(media, usuarioId);
+        setProfile(updated);
+        setPhotoUri(updated.fotoPerfilUrl ?? media.uri);
       },
       (message) => Alert.alert('No pudimos cargar la foto', message),
     );
@@ -124,8 +126,16 @@ export default function PerfilScreen() {
 
   const pickCarnet = () => {
     chooseImageSource(
-      (media) => setCarnet(media),
-      (message) => Alert.alert('No pudimos adjuntar el carnet', message),
+      async (media) => {
+        const updated = await userService.uploadOossCard(media, usuarioId);
+        setProfile(updated);
+        setCarnet({
+          uri: updated.carnetObraSocialUrl ?? media.uri,
+          fileName: media.fileName ?? 'carnet-obra-social.jpg',
+          mimeType: 'image/jpeg',
+        });
+      },
+      (message) => Alert.alert(language === 'en' ? 'We could not attach the card' : 'No pudimos adjuntar el carnet', message),
     );
   };
 
@@ -134,13 +144,13 @@ export default function PerfilScreen() {
       setSaving(true);
 
       if (needsOtherDetails && !observacionesOtro.trim()) {
-        Alert.alert('Faltan observaciones', 'Cuando elegís “Otro”, completá el campo Observaciones con los datos faltantes.');
+        Alert.alert(language === 'en' ? 'Missing notes' : 'Faltan observaciones', language === 'en' ? 'When you choose Other, complete the Notes field with the missing information.' : 'Cuando elegís “Otro”, completá el campo Observaciones con los datos faltantes.');
         return;
       }
 
       const selectedObraSocialId = obraSocialId === OTRO ? profile?.obraSocialId : Number(obraSocialId);
       if (!selectedObraSocialId || Number.isNaN(Number(selectedObraSocialId))) {
-        Alert.alert('Obra social requerida', 'Seleccioná una obra social del listado. Si falta una obra social nueva, cargá “Otro” y pedí su alta en backend.');
+        Alert.alert(language === 'en' ? 'Health insurance required' : 'Obra social requerida', language === 'en' ? 'Select a health insurance option from the list. If it is missing, choose Other and add the details in Notes.' : 'Seleccioná una obra social del listado. Si no aparece, elegí “Otro” y completá los datos en Observaciones.');
         return;
       }
 
@@ -160,28 +170,23 @@ export default function PerfilScreen() {
         doctorCabecera: doctor,
       });
       setProfile(updated);
-      Alert.alert('Perfil actualizado', 'Los cambios quedaron guardados.');
+      Alert.alert(t('profile.saved'), t('profile.savedMsg'));
     } catch (error: any) {
-      Alert.alert('No se pudo guardar', readableError(error));
+      Alert.alert(language === 'en' ? 'Could not save' : 'No se pudo guardar', readableError(error));
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) return <MtLoading text="Cargando perfil..." />;
+  if (loading) return <MtLoading text={t('common.loading')} />;
 
   return (
     <>
       <MtScreen scroll>
         <MtHeader
-          eyebrow="MI PERFIL"
-          title="Datos personales"
-          subtitle="Mantené actualizada tu información de contacto y cobertura médica."
-          right={
-            <Pressable style={styles.settingsChip} onPress={() => router.push('/paciente/settings')}>
-              <Text style={styles.settingsChipText}>⚙ Ajustes</Text>
-            </Pressable>
-          }
+          eyebrow={t('profile.eyebrow')}
+          title={t('profile.title')}
+          subtitle={t('profile.subtitle')}
         />
 
         <MtCard style={styles.heroCard}>
@@ -198,27 +203,27 @@ export default function PerfilScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{profile?.nombre} {profile?.apellido}</Text>
             <Text style={styles.meta}>DNI {profile?.dni || '-'}</Text>
-            <Text style={styles.meta}>Historia clínica {profile?.numeroHistoriaClinica ?? `HC-${String(profile?.id ?? 0).padStart(6, '0')}`}</Text>
+            <Text style={styles.meta}>{language === 'en' ? 'Medical record' : 'Historia clínica'} {profile?.numeroHistoriaClinica ?? `HC-${String(profile?.id ?? 0).padStart(6, '0')}`}</Text>
           </View>
         </MtCard>
 
         <MtCard style={styles.section}>
-          <Text style={styles.sectionTitle}>Información editable</Text>
-          {catalogLoading ? <Text style={styles.muted}>Cargando catálogos del backend...</Text> : null}
+          <Text style={styles.sectionTitle}>{t('profile.editableInfo')}</Text>
+          {catalogLoading ? <Text style={styles.muted}>{t('common.loading')}</Text> : null}
           <View style={styles.form}>
-            <MtInput label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-            <MtInput label="Teléfono" value={telefono} onChangeText={setTelefono} keyboardType="phone-pad" />
-            <MtSelect label="Obra social" value={obraSocialId} placeholder="Seleccioná obra social" options={obraSocialOptions} onChange={setObraSocialId} />
-            <MtInput label="N° Carnet" value={numeroAfiliado} onChangeText={setNumeroAfiliado} />
-            <MtSelect label="Institución de cabecera" value={institucionCabecera} placeholder="Seleccioná institución" options={institucionOptions} onChange={setInstitucionCabecera} />
-            <MtSelect label="Médico de cabecera" value={medicoCabecera} placeholder="Seleccioná médico" options={medicoOptions} onChange={setMedicoCabecera} />
+            <MtInput label={t('profile.email')} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+            <MtInput label={t('profile.phone')} value={telefono} onChangeText={setTelefono} keyboardType="phone-pad" />
+            <MtSelect label={t('profile.healthInsurance')} value={obraSocialId} placeholder={language === 'en' ? 'Select health insurance' : 'Seleccioná obra social'} options={obraSocialOptions} onChange={setObraSocialId} />
+            <MtInput label={t('profile.memberNumber')} value={numeroAfiliado} onChangeText={setNumeroAfiliado} />
+            <MtSelect label={t('profile.mainInstitution')} value={institucionCabecera} placeholder={language === 'en' ? 'Select institution' : 'Seleccioná institución'} options={institucionOptions} onChange={setInstitucionCabecera} />
+            <MtSelect label={t('profile.mainDoctor')} value={medicoCabecera} placeholder={language === 'en' ? 'Select doctor' : 'Seleccioná médico'} options={medicoOptions} onChange={setMedicoCabecera} />
             {needsOtherDetails ? (
               <View style={{ gap: 8 }}>
-                <Text style={styles.inputLabel}>Observaciones:</Text>
+                <Text style={styles.inputLabel}>{t('profile.observations')}</Text>
                 <TextInput
                   value={observacionesOtro}
                   onChangeText={setObservacionesOtro}
-                  placeholder="Completá acá los datos que no figuran en el listado"
+                  placeholder={t('profile.observationsPlaceholder')}
                   placeholderTextColor={theme.colors.soft}
                   multiline
                   textAlignVertical="top"
@@ -229,13 +234,13 @@ export default function PerfilScreen() {
           </View>
 
           <View style={styles.attachBox}>
-            <Text style={styles.attachTitle}>Carnet de obra social</Text>
-            <Text style={styles.attachText}>Adjuntá una foto del carnet desde cámara o galería.</Text>
-            <MtButton title={carnet ? 'Cambiar carnet adjunto' : '📎 Adjuntar carnet de OOSS'} variant="secondary" onPress={pickCarnet} style={{ marginTop: 12 }} />
-            {carnet ? <Text style={styles.attachmentName}>Archivo seleccionado: {carnet.fileName ?? 'imagen'}</Text> : null}
+            <Text style={styles.attachTitle}>{t('profile.cardTitle')}</Text>
+            <Text style={styles.attachText}>{t('profile.cardHelp')}</Text>
+            <MtButton title={carnet ? t('profile.changeCard') : t('profile.attachCard')} variant="secondary" onPress={pickCarnet} style={{ marginTop: 12 }} />
+            {carnet ? <Text style={styles.attachmentName}>{t('profile.selectedFile')} {carnet.fileName ?? 'imagen'}</Text> : null}
           </View>
 
-          <MtButton title="Guardar" loading={saving} onPress={handleSave} style={{ marginTop: 18 }} />
+          <MtButton title={t('common.save')} loading={saving} onPress={handleSave} style={{ marginTop: 18 }} />
         </MtCard>
       </MtScreen>
       <MtBottomNav active="perfil" />

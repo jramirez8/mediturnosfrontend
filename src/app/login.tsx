@@ -18,7 +18,7 @@ export default function LoginScreen() {
   const { login, loginWithDeviceAuth, loading } = useAuthStore();
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   useEffect(() => {
     let alive = true;
@@ -49,15 +49,15 @@ export default function LoginScreen() {
     }
 
     Alert.alert(
-      'Activar ingreso con biometría',
-      'Podés entrar la próxima vez con huella, rostro, PIN o patrón. Guardamos tu usuario y la sesión, nunca tu contraseña.',
+      language === 'en' ? 'Enable biometric sign-in' : 'Activar ingreso con biometría',
+      language === 'en' ? 'Next time you can sign in with fingerprint, face, PIN or pattern. We store your user and session, never your password.' : 'Podés entrar la próxima vez con huella, rostro, PIN o patrón. Guardamos tu usuario y la sesión, nunca tu contraseña.',
       [
-        { text: 'Ahora no', style: 'cancel', onPress: () => router.replace(route as any) },
+        { text: language === 'en' ? 'Not now' : 'Ahora no', style: 'cancel', onPress: () => router.replace(route as any) },
         {
-          text: 'Activar',
+          text: language === 'en' ? 'Enable' : 'Activar',
           onPress: async () => {
             try {
-              const auth = await authenticateDevice('Activar ingreso con biometría');
+              const auth = await authenticateDevice(language === 'en' ? 'Enable biometric sign-in' : 'Activar ingreso con biometría');
               if (auth.success) await saveCurrentSessionForDeviceAuth(identifier);
             } catch (error) {
               console.warn('No se pudo activar biometría', error);
@@ -75,7 +75,7 @@ export default function LoginScreen() {
     setDebugMessage(null);
 
     if (!email.trim() || !password) {
-      setErrorMessage('Ingresá email/DNI y contraseña para continuar.');
+      setErrorMessage(language === 'en' ? 'Enter email/ID and password to continue.' : 'Ingresá email/DNI y contraseña para continuar.');
       return;
     }
 
@@ -83,7 +83,7 @@ export default function LoginScreen() {
       const result = await login(email.trim(), password);
       await askBiometricSetup(result.route, email.trim());
     } catch (error: any) {
-      const message = readableError(error, 'Revisá tus credenciales o el estado del backend.');
+      const message = readableError(error, language === 'en' ? 'Check your credentials and try again.' : 'Revisá tus credenciales e intentá nuevamente.');
       const debug = debugErrorPayload(error);
       console.error('LOGIN_REAL_ERROR', debug);
       setErrorMessage(message);
@@ -98,7 +98,7 @@ export default function LoginScreen() {
       const result = await loginWithDeviceAuth();
       router.replace(result.route as any);
     } catch (error: any) {
-      setErrorMessage(readableError(error, 'No pudimos ingresar con el método del dispositivo. Ingresá con contraseña una vez más.'));
+      setErrorMessage(readableError(error, language === 'en' ? 'We could not sign in with your device method. Sign in with password once more.' : 'No pudimos ingresar con el método del dispositivo. Ingresá con contraseña una vez más.'));
     }
   };
 
@@ -115,17 +115,17 @@ export default function LoginScreen() {
 
         <MtCard style={styles.loginCard}>
           <Text style={styles.title}>{t('login.title')}</Text>
-          <Text style={styles.helper}>Ingresá con tu email o DNI. La contraseña nunca queda precargada.</Text>
+          <Text style={styles.helper}>{language === 'en' ? 'Sign in with your email or ID. Your password is never prefilled.' : 'Ingresá con tu email o DNI. La contraseña nunca queda precargada.'}</Text>
 
           <View style={styles.form}>
             <MtInput
-              label="Email o DNI"
+              label={t('login.email')}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              placeholder="tu@email.com o DNI"
+              placeholder={language === 'en' ? 'your@email.com or ID' : 'tu@email.com o DNI'}
             />
             <MtInput
               label={t('login.password')}
@@ -137,15 +137,15 @@ export default function LoginScreen() {
           </View>
 
           {!!biometricEmail && (
-            <Text style={styles.biometricHint}>Biometría activada para {biometricEmail}. Tu clave no se muestra ni se guarda como texto.</Text>
+            <Text style={styles.biometricHint}>{language === 'en' ? 'Device sign-in enabled for' : 'Biometría activada para'} {biometricEmail}. {language === 'en' ? 'Your password is never shown or stored as text.' : 'Tu clave no se muestra ni se guarda como texto.'}</Text>
           )}
 
           {errorMessage ? (
             <View style={styles.errorBox}>
-              <Text style={styles.errorTitle}>No pudimos iniciar sesión</Text>
+              <Text style={styles.errorTitle}>{language === 'en' ? 'We could not sign in' : 'No pudimos iniciar sesión'}</Text>
               <Text style={styles.errorText}>
                 {debugMessage?.includes('HTTP 400') || debugMessage?.includes('HTTP 401')
-                  ? 'El usuario o la contraseña no son correctos. Revisá los datos e intentá nuevamente.'
+                  ? t('login.errorInvalid')
                   : errorMessage}
               </Text>
             </View>
@@ -154,7 +154,7 @@ export default function LoginScreen() {
           <MtButton title={t('login.submit')} onPress={handleLogin} loading={loading} style={{ marginTop: 18 }} />
           <Pressable style={styles.biometricButton} onPress={handleBiometricLogin} disabled={loading}>
             <Text style={styles.biometricIcon}>☝️</Text>
-            <Text style={styles.biometricText}>Ingresar con biometría / PIN</Text>
+            <Text style={styles.biometricText}>{t('login.biometric')}</Text>
           </Pressable>
           <MtButton title={t('login.createAccount')} variant="ghost" onPress={() => router.push('/registro')} style={{ marginTop: 10 }} />
           <Text style={styles.forgot} onPress={() => router.push('/forgot-password')}>{t('login.forgot')}</Text>

@@ -23,20 +23,16 @@ export default function SettingsScreen() {
   return (
     <>
       <MtScreen scroll>
-        <MtHeader
-          eyebrow="CONFIGURACIÓN"
-          title="Ajustes"
-          subtitle="Tema, sesión y preferencias visibles de la app. La interfaz queda en español para no mezclar idiomas."
-        />
+        <MtHeader eyebrow="CONFIG" title={t('settings.title')} subtitle={t('settings.subtitle')} />
 
         <MtCard style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.title')}</Text>
-          <Text style={styles.sectionSubtitle}>{t('settings.subtitle')}</Text>
+          <Text style={styles.sectionTitle}>{language === 'en' ? 'Appearance' : 'Apariencia'}</Text>
+          <Text style={styles.sectionSubtitle}>{language === 'en' ? 'Choose light, dark or system theme.' : 'Elegí modo claro, oscuro o seguir el sistema.'}</Text>
 
           <View style={styles.preferenceRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.preferenceTitle}>{t('settings.darkMode')}</Text>
-              <Text style={styles.preferenceHint}>{t('settings.darkModeHint')}</Text>
+              <Text style={styles.preferenceHint}>{language === 'en' ? 'Use dark colors throughout the app.' : 'Usa colores oscuros en toda la app.'}</Text>
             </View>
             <Switch
               value={mode === 'dark'}
@@ -48,8 +44,8 @@ export default function SettingsScreen() {
 
           <View style={styles.preferenceRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.preferenceTitle}>Seguir sistema</Text>
-              <Text style={styles.preferenceHint}>Toma claro/oscuro del dispositivo cuando está disponible.</Text>
+              <Text style={styles.preferenceTitle}>{t('settings.system')}</Text>
+              <Text style={styles.preferenceHint}>{language === 'en' ? 'Follow the device appearance setting.' : 'Usa la apariencia configurada en el dispositivo.'}</Text>
             </View>
             <Switch
               value={mode === 'system'}
@@ -62,17 +58,18 @@ export default function SettingsScreen() {
 
         <MtCard style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings.language')}</Text>
-          <Text style={styles.sectionSubtitle}>{t('settings.languageHint')}</Text>
+          <Text style={styles.sectionSubtitle}>{language === 'en' ? 'Choose Spanish or English.' : 'Elegí español o inglés.'}</Text>
           <View style={styles.languageRow}>
             <LanguageButton label={t('settings.spanish')} selected={language === 'es'} onPress={() => setLanguage('es')} styles={styles} />
+            <LanguageButton label={t('settings.english')} selected={language === 'en'} onPress={() => setLanguage('en')} styles={styles} />
           </View>
         </MtCard>
 
         <MtCard style={styles.section}>
-          <Text style={styles.sectionTitle}>Cuenta</Text>
-          <Text style={styles.sectionSubtitle}>Desde acá sí o sí se ve el cierre de sesión, sin esconderlo abajo del dashboard.</Text>
-          <MtButton title="Cerrar sesión" variant="danger" onPress={handleLogout} />
-          <MtButton title="Volver al perfil" variant="ghost" onPress={() => router.push('/paciente/perfil')} style={{ marginTop: 10 }} />
+          <Text style={styles.sectionTitle}>{language === 'en' ? 'Account' : 'Cuenta'}</Text>
+          <Text style={styles.sectionSubtitle}>{language === 'en' ? 'Sign out from this device.' : 'Cerrá sesión en este dispositivo.'}</Text>
+          <MtButton title={t('common.logout')} variant="danger" onPress={handleLogout} />
+          <MtButton title={language === 'en' ? 'Back to profile' : 'Volver al perfil'} variant="ghost" onPress={() => router.push('/paciente/perfil')} style={{ marginTop: 10 }} />
         </MtCard>
       </MtScreen>
       <MtBottomNav active="perfil" />
