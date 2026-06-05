@@ -10,6 +10,7 @@ export default function ForgotPasswordScreen() {
   const params = useLocalSearchParams<{ identifier?: string }>();
   const [identifier, setIdentifier] = useState(params.identifier ?? '');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleRequestReset = async () => {
     if (!identifier.trim()) {
@@ -19,11 +20,18 @@ export default function ForgotPasswordScreen() {
 
     try {
       setLoading(true);
-      await authService.forgotPassword(identifier.trim());
+      setErrorMessage(null);
+      const response = await authService.forgotPassword(identifier.trim());
+
+      if (response?.emailEnviado === false) {
+        setErrorMessage(response?.mensaje || response?.message || 'No pudimos enviar el correo de recuperación.');
+        return;
+      }
+
       router.push('/forgot-password-success');
     } catch (error: any) {
       console.error('Forgot password error:', error);
-      Alert.alert('No se pudo procesar', readableError(error, 'Revisá el backend o intentá nuevamente.'));
+      setErrorMessage(readableError(error, 'No pudimos enviar el correo. Revisá el DNI/email e intentá nuevamente.'));
     } finally {
       setLoading(false);
     }
@@ -50,6 +58,13 @@ export default function ForgotPasswordScreen() {
             placeholder="DNI o email"
           />
 
+          {errorMessage && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorTitle}>No pudimos enviar el correo</Text>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
+
           <MtButton title="Solicitar recuperación" onPress={handleRequestReset} loading={loading} style={{ marginTop: 18 }} />
           <MtButton title="Volver" variant="ghost" onPress={() => router.back()} style={{ marginTop: 10 }} />
         </MtCard>
@@ -68,4 +83,14 @@ const styles = StyleSheet.create({
   title: { fontSize: 30, fontWeight: '900', color: mt.colors.ink, textAlign: 'center' },
   subtitle: { fontSize: 15, color: mt.colors.muted, textAlign: 'center', marginTop: 8, lineHeight: 21 },
   card: { padding: 22 },
+  errorBox: {
+    borderWidth: 1,
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 14,
+  },
+  errorTitle: { color: '#991b1b', fontWeight: '900', fontSize: 15, marginBottom: 6 },
+  errorText: { color: '#7f1d1d', fontWeight: '600', fontSize: 14, lineHeight: 20 },
 });

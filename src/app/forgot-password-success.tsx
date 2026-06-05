@@ -24,7 +24,7 @@ export default function ForgotPasswordSuccessScreen() {
 
         <Text style={styles.title}>¡Solicitud enviada!</Text>
         <Text style={styles.subtitle}>
-          Revisá tu correo. Si tenés el token a mano, podés cargarlo manualmente.
+          Te enviamos un enlace para crear una nueva contraseña. Revisá la bandeja de entrada y también spam/no deseado.
         </Text>
 
         <View style={styles.footer}>
@@ -35,12 +35,6 @@ export default function ForgotPasswordSuccessScreen() {
             <Text style={styles.buttonText}>Ir al correo</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.push('/reset-password')}
-          >
-            <Text style={styles.backButtonText}>Ya tengo token</Text>
-          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.backButton}
