@@ -7,6 +7,7 @@ import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtLoading, MtPil
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
+import { addAppointmentToDeviceCalendar } from '../../utils/calendar';
 
 type Tab = 'proximos' | 'historial' | 'todos';
 type Notice = { type: 'success' | 'error' | 'warning'; title: string; message: string };
@@ -86,6 +87,25 @@ export default function MisTurnosScreen() {
     }
   };
 
+  const handleConfirmAttendance = async (turno: TurnoResponse) => {
+    try {
+      const updated = await appointmentService.confirmarAsistencia(turno.id);
+      setAppointments((prev) => prev.map((item) => Number(item.id) === Number(updated.id) ? updated : item));
+      setNotice({ type: 'success', title: 'Asistencia confirmada', message: 'Gracias por confirmar. Te esperamos en el horario indicado.' });
+    } catch (error: any) {
+      setNotice({ type: 'error', title: 'No se pudo confirmar asistencia', message: readableError(error, 'Intentá nuevamente en unos segundos.') });
+    }
+  };
+
+  const handleAddCalendar = async (turno: TurnoResponse) => {
+    try {
+      await addAppointmentToDeviceCalendar(turno);
+      setNotice({ type: 'success', title: 'Agregado al calendario', message: 'El turno se agregó al calendario del dispositivo con recordatorio 3 horas antes.' });
+    } catch (error: any) {
+      setNotice({ type: 'error', title: 'No se pudo agregar al calendario', message: readableError(error, 'Revisá los permisos del calendario.') });
+    }
+  };
+
   if (loading) return <MtLoading text="Buscando tus turnos..." />;
 
   return (
@@ -123,6 +143,9 @@ export default function MisTurnosScreen() {
               onCancelRequest={() => handleCancelRequest(item)}
               onCancelConfirm={() => handleCancelConfirm(item)}
               onCancelAbort={() => { setConfirmingCancelId(null); setNotice(null); }}
+              onConfirmAttendance={() => handleConfirmAttendance(item)}
+              onAddCalendar={() => handleAddCalendar(item)}
+              onFeedback={() => router.push({ pathname: '/paciente/feedback', params: { id: item.id } })}
               styles={styles}
             />
           )}
@@ -151,6 +174,9 @@ function AppointmentCard({
   onCancelRequest,
   onCancelConfirm,
   onCancelAbort,
+  onConfirmAttendance,
+  onAddCalendar,
+  onFeedback,
   styles,
 }: {
   item: TurnoResponse;
@@ -159,6 +185,9 @@ function AppointmentCard({
   onCancelRequest: () => void;
   onCancelConfirm: () => void;
   onCancelAbort: () => void;
+  onConfirmAttendance: () => void;
+  onAddCalendar: () => void;
+  onFeedback: () => void;
   styles: ReturnType<typeof createStyles>;
 }) {
   const estado = String(item.estado).toUpperCase();
@@ -188,6 +217,17 @@ function AppointmentCard({
         <MtButton title="Detalle" variant="ghost" onPress={() => router.push({ pathname: '/paciente/turno-detalle', params: { id: item.id } })} style={{ flex: 1 }} />
         {!isFinal && <MtButton title="Reprogramar" variant="secondary" onPress={() => router.push({ pathname: '/paciente/reprogramar', params: { id: item.id } })} style={{ flex: 1 }} />}
       </View>
+
+      {!isFinal && (
+        <View style={styles.actions}>
+          <MtButton title={item.asistenciaConfirmada ? 'Asistencia confirmada' : 'Confirmar asistencia'} variant="secondary" onPress={onConfirmAttendance} disabled={!!item.asistenciaConfirmada} style={{ flex: 1 }} />
+          <MtButton title="Agregar al calendario" variant="ghost" onPress={onAddCalendar} style={{ flex: 1 }} />
+        </View>
+      )}
+
+      {estado === 'ATENDIDO' && (
+        <MtButton title="Calificar atención" variant="secondary" onPress={onFeedback} style={{ marginTop: 10 }} />
+      )}
 
       {!isFinal && !confirmingCancel && (
         <MtButton title="Cancelar turno" variant="danger" onPress={onCancelRequest} style={{ marginTop: 10 }} />

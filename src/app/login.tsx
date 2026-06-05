@@ -15,7 +15,11 @@ export default function LoginScreen() {
   const [biometricEmail, setBiometricEmail] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [debugMessage, setDebugMessage] = useState<string | null>(null);
-  const { login, loginWithDeviceAuth, loading } = useAuthStore();
+  const [twoFactorUserId, setTwoFactorUserId] = useState<string | null>(null);
+  const [twoFactorDestination, setTwoFactorDestination] = useState<string | null>(null);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const { login, loginWithDeviceAuth, verifyTwoFactor, loading } = useAuthStore();
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
   const { t, language } = useTranslation();
@@ -72,6 +76,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     setErrorMessage(null);
+    setInfoMessage(null);
     setDebugMessage(null);
 
     if (!email.trim() || !password) {
@@ -81,6 +86,14 @@ export default function LoginScreen() {
 
     try {
       const result = await login(email.trim(), password);
+      if (result.requiresTwoFactor && result.usuarioId) {
+        setTwoFactorUserId(result.usuarioId);
+        setTwoFactorDestination(result.destination ?? null);
+        setPassword('');
+        setTwoFactorCode('');
+        setInfoMessage(language === 'en' ? `We sent a verification code to ${result.destination ?? 'your email'}.` : `Te enviamos un código de verificación a ${result.destination ?? 'tu correo'}.`);
+        return;
+      }
       await askBiometricSetup(result.route, email.trim());
     } catch (error: any) {
       const message = readableError(error, language === 'en' ? 'Check your credentials and try again.' : 'Revisá tus credenciales e intentá nuevamente.');
@@ -91,8 +104,24 @@ export default function LoginScreen() {
     }
   };
 
+  const handleVerifyTwoFactor = async () => {
+    setErrorMessage(null);
+    setInfoMessage(null);
+    if (!twoFactorUserId || !twoFactorCode.trim()) {
+      setErrorMessage(language === 'en' ? 'Enter the verification code.' : 'Ingresá el código de verificación.');
+      return;
+    }
+    try {
+      const result = await verifyTwoFactor(twoFactorUserId, twoFactorCode.trim());
+      router.replace(result.route as any);
+    } catch (error: any) {
+      setErrorMessage(readableError(error, language === 'en' ? 'Invalid or expired code.' : 'Código inválido o vencido.'));
+    }
+  };
+
   const handleBiometricLogin = async () => {
     setErrorMessage(null);
+    setInfoMessage(null);
     setDebugMessage(null);
     try {
       const result = await loginWithDeviceAuth();
@@ -127,18 +156,35 @@ export default function LoginScreen() {
               autoCorrect={false}
               placeholder={language === 'en' ? 'your@email.com or ID' : 'tu@email.com o DNI'}
             />
-            <MtInput
-              label={t('login.password')}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              placeholder="••••••••"
-            />
+            {!twoFactorUserId ? (
+              <MtInput
+                label={t('login.password')}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                placeholder="••••••••"
+              />
+            ) : (
+              <MtInput
+                label={language === 'en' ? 'Verification code' : 'Código de verificación'}
+                value={twoFactorCode}
+                onChangeText={setTwoFactorCode}
+                keyboardType="number-pad"
+                placeholder="123456"
+              />
+            )}
           </View>
 
           {!!biometricEmail && (
             <Text style={styles.biometricHint}>{language === 'en' ? 'Device sign-in enabled for' : 'Biometría activada para'} {biometricEmail}. {language === 'en' ? 'Your password is never shown or stored as text.' : 'Tu clave no se muestra ni se guarda como texto.'}</Text>
           )}
+
+          {infoMessage ? (
+            <View style={[styles.errorBox, { borderColor: theme.colors.success, backgroundColor: theme.mode === 'dark' ? '#063D35' : '#ECFDF5' }]}>
+              <Text style={[styles.errorTitle, { color: theme.colors.success }]}>{language === 'en' ? 'Verification required' : 'Verificación requerida'}</Text>
+              <Text style={styles.errorText}>{infoMessage}</Text>
+            </View>
+          ) : null}
 
           {errorMessage ? (
             <View style={styles.errorBox}>
@@ -151,7 +197,10 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          <MtButton title={t('login.submit')} onPress={handleLogin} loading={loading} style={{ marginTop: 18 }} />
+          <MtButton title={twoFactorUserId ? (language === 'en' ? 'Validate code' : 'Validar código') : t('login.submit')} onPress={twoFactorUserId ? handleVerifyTwoFactor : handleLogin} loading={loading} style={{ marginTop: 18 }} />
+          {!!twoFactorUserId && (
+            <MtButton title={language === 'en' ? 'Use another account' : 'Usar otra cuenta'} variant="ghost" onPress={() => { setTwoFactorUserId(null); setTwoFactorDestination(null); setTwoFactorCode(''); setErrorMessage(null); setInfoMessage(null); }} style={{ marginTop: 8 }} />
+          )}
           <Pressable style={styles.biometricButton} onPress={handleBiometricLogin} disabled={loading}>
             <Text style={styles.biometricIcon}>☝️</Text>
             <Text style={styles.biometricText}>{t('login.biometric')}</Text>

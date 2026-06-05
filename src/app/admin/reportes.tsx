@@ -133,6 +133,7 @@ export default function AdminReportesScreen() {
         {topEntries(byDate, 10).map(([label, value]) => <Bar key={label} label={label || 'Sin fecha'} value={value} total={filtered.length} />)}
       </MtCard>
 
+      <MtButton title="Exportar reportes · Próximamente" disabled variant="ghost" onPress={() => {}} />
       <MtButton title="Actualizar reportes" onPress={load} variant="ghost" />
       <RoleBottomNav role="admin" active="reportes" />
     </MtScreen>

@@ -93,6 +93,8 @@ export default function AdminDashboard() {
           <ActionCard icon="🩺" title={language === 'en' ? 'Staff' : 'Personal'} subtitle={language === 'en' ? 'Doctors, secretaries and patients from one operational view.' : 'Médicos, secretarías y pacientes desde una vista operativa.'} path="/admin/profesionales" />
           <ActionCard icon="▤" title={t('nav.catalogs')} subtitle={language === 'en' ? 'Specialties, health insurance and institutions.' : 'Especialidades, obras sociales e instituciones.'} path="/admin/catalogos" />
           <ActionCard icon="📊" title={t('nav.reports')} subtitle={language === 'en' ? 'Indicators by status, specialty and professional.' : 'Indicadores por estado, especialidad y profesional.'} path="/admin/reportes" />
+          <ActionCard icon="🗓️" title={language === 'en' ? 'Availability' : 'Disponibilidad'} subtitle={language === 'en' ? 'Working hours, slot duration and blocked dates.' : 'Horarios de atención, duración y bloqueos.'} path="/admin/agenda-avanzada" />
+          <ActionCard icon="🧾" title={language === 'en' ? 'Audit' : 'Auditoría'} subtitle={language === 'en' ? 'Track relevant system actions.' : 'Seguimiento de acciones importantes.'} path="/admin/auditoria" />
         </View>
       </MtCard>
 

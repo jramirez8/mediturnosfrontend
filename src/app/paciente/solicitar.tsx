@@ -9,6 +9,7 @@ import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { useTranslation } from '../../i18n/languageStore';
 import { readableError } from '../../utils/errors';
+import { waitlistService } from '../../api/waitlistService';
 import { chooseImageSource, PickedMedia } from '../../utils/mediaPicker';
 
 type Notice = {
@@ -248,6 +249,27 @@ export default function SolicitarTurnoScreen() {
     }
   };
 
+  const handleJoinWaitlist = async () => {
+    if (!pacienteId || !selectedProfessional) {
+      setNotice({ type: 'error', title: language === 'en' ? 'Missing information' : 'Faltan datos', message: language === 'en' ? 'Choose a professional before joining the waitlist.' : 'Elegí un profesional antes de anotarte en lista de espera.' });
+      return;
+    }
+    try {
+      setSending(true);
+      await waitlistService.join({
+        pacienteId,
+        profesionalInstitucionId: selectedProfessional.profesionalInstitucionId ?? selectedProfessional.id,
+        especialidadId: selectedProfessional.especialidadId ?? 1,
+        observaciones: query || undefined,
+      });
+      setNotice({ type: 'success', title: language === 'en' ? 'Added to waitlist' : 'Te anotamos en lista de espera', message: language === 'en' ? 'We will notify you by email when a compatible slot opens.' : 'Te vamos a avisar por email cuando se libere un horario compatible.' });
+    } catch (error: any) {
+      setNotice({ type: 'error', title: language === 'en' ? 'Waitlist failed' : 'No pudimos anotarte', message: readableError(error, language === 'en' ? 'Try again later.' : 'Intentá nuevamente más tarde.') });
+    } finally {
+      setSending(false);
+    }
+  };
+
   const resetForm = () => {
     setCreatedTurno(null);
     setNotice(null);
@@ -321,7 +343,10 @@ export default function SolicitarTurnoScreen() {
           ) : slotsLoading ? (
             <Text style={styles.muted}>{t('common.loading')}</Text>
           ) : slots.length === 0 ? (
-            <MtEmptyState title={language === 'en' ? 'No availability' : 'Sin disponibilidad'} subtitle={language === 'en' ? 'No time slots were found for this professional.' : 'No encontramos horarios para este profesional.'} />
+            <View style={{ gap: 12 }}>
+              <MtEmptyState title={language === 'en' ? 'No availability' : 'Sin disponibilidad'} subtitle={language === 'en' ? 'No time slots were found for this professional.' : 'No encontramos horarios para este profesional.'} />
+              <MtButton title={language === 'en' ? 'Join waitlist' : 'Anotarme en lista de espera'} variant="secondary" loading={sending} onPress={handleJoinWaitlist} />
+            </View>
           ) : (
             <View>
               <View style={styles.calendarTop}>

@@ -8,6 +8,9 @@ import { authenticateDevice, getBiometricInfo, promoteDeviceSessionToActive } fr
 type LoginResult = {
   role: string | null;
   route: string;
+  requiresTwoFactor?: boolean;
+  usuarioId?: string | null;
+  destination?: string | null;
 };
 
 type AuthState = {
@@ -21,6 +24,7 @@ type AuthState = {
   hydrated: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   loginWithDeviceAuth: () => Promise<LoginResult>;
+  verifyTwoFactor: (usuarioId: string, codigo: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
   loadToken: () => Promise<void>;
   fetchPacienteId: (uId: string) => Promise<string | null>;
@@ -108,12 +112,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const response = await api.post('/api/auth/login', { identificador: email, email, password });
 
+      const uId = pickString(response.data?.usuarioId, response.data?.userId, response.data?.id, response.data?.usuario?.id);
+
+      if (response.data?.requiereSegundoFactor || response.data?.requiresTwoFactor) {
+        return {
+          role: pickString(response.data?.role, response.data?.rol),
+          route: '/login',
+          requiresTwoFactor: true,
+          usuarioId: uId,
+          destination: pickString(response.data?.segundoFactorDestino, response.data?.twoFactorDestination),
+        };
+      }
+
       const token = pickString(response.data?.token, response.data?.accessToken, response.data?.jwt);
       if (!token) {
         throw new Error('No pudimos iniciar sesión con la respuesta recibida.');
       }
 
-      const uId = pickString(response.data?.usuarioId, response.data?.userId, response.data?.id, response.data?.usuario?.id);
+
       const pId = pickString(response.data?.pacienteId, response.data?.paciente?.id);
       const profId = pickString(response.data?.profesionalId, response.data?.profesional?.id);
       const rawRole = pickString(response.data?.role, response.data?.rol, response.data?.tipoUsuario, response.data?.usuario?.rol);
@@ -146,6 +162,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+
+  verifyTwoFactor: async (usuarioId, codigo) => {
+    set({ loading: true, token: null, usuarioId: null, pacienteId: null, profesionalId: null, role: null, nombreCompleto: null, hydrated: true });
+    try {
+      const response = await api.post('/api/auth/2fa/verify', { usuarioId: Number(usuarioId), codigo });
+      const token = pickString(response.data?.token, response.data?.accessToken, response.data?.jwt);
+      if (!token) throw new Error('No pudimos validar el segundo factor.');
+
+      const uId = pickString(response.data?.usuarioId, response.data?.userId, response.data?.id, response.data?.usuario?.id);
+      const pId = pickString(response.data?.pacienteId, response.data?.paciente?.id);
+      const profId = pickString(response.data?.profesionalId, response.data?.profesional?.id);
+      const rawRole = pickString(response.data?.role, response.data?.rol, response.data?.tipoUsuario, response.data?.usuario?.rol);
+      const normalizedRole = normalizeRole(rawRole);
+      const role = normalizedRole ?? rawRole;
+      const nombreCompleto = pickString(response.data?.nombreCompleto, response.data?.nombre, response.data?.usuario?.nombreCompleto);
+      if (!normalizedRole) throw new Error('Tu usuario no tiene un rol válido asignado.');
+
+      await storage.setItem('access_token', token);
+      if (uId) await storage.setItem('usuario_id', uId);
+      if (role) await storage.setItem('role', role);
+      if (nombreCompleto) await storage.setItem('nombre_completo', nombreCompleto);
+      if (profId) await storage.setItem('profesional_id', profId);
+      if (pId) await storage.setItem('paciente_id', pId);
+
+      set({ token, usuarioId: uId, pacienteId: pId, profesionalId: profId, role, nombreCompleto, hydrated: true });
+      return { role, route: routeForRole(role) };
+    } finally {
+      set({ loading: false });
+    }
+  },
 
   loginWithDeviceAuth: async () => {
     set({ loading: true });

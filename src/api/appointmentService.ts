@@ -45,6 +45,9 @@ export type TurnoResponse = {
   documentacionNombreArchivo?: string;
   documentacionMimeType?: string;
   documentacionSizeBytes?: number;
+  asistenciaConfirmada?: boolean;
+  asistenciaConfirmadaEn?: string;
+  recordatorioTresHorasEnviado?: boolean;
 };
 
 function splitFechaHora(raw?: string | null) {
@@ -126,6 +129,9 @@ const normalizeTurno = (t: any): TurnoResponse => {
     documentacionNombreArchivo: t?.documentacionNombreArchivo,
     documentacionMimeType: t?.documentacionMimeType,
     documentacionSizeBytes: t?.documentacionSizeBytes ? Number(t.documentacionSizeBytes) : undefined,
+    asistenciaConfirmada: Boolean(t?.asistenciaConfirmada),
+    asistenciaConfirmadaEn: t?.asistenciaConfirmadaEn,
+    recordatorioTresHorasEnviado: Boolean(t?.recordatorioTresHorasEnviado),
   };
 };
 
@@ -332,5 +338,15 @@ export const appointmentService = {
   cancelar: async (id: number) => {
     // Cancelar NO debe borrar el turno: debe pasar a estado CANCELADO para que quede en historial.
     return appointmentService.actualizarEstado(id, 'CANCELADO');
+  },
+
+  confirmarAsistencia: async (id: number) => {
+    await api.put<any>(`/api/turnos/${id}/confirmar-asistencia`);
+    const verified = await fetchVerifiedTurno(id);
+    if (!verified.asistenciaConfirmada && normalizeEstado(verified.estado) !== 'CONFIRMADO') {
+      throw new Error('No pudimos confirmar la asistencia del turno.');
+    }
+    await clearAppCache();
+    return verified;
   },
 };
