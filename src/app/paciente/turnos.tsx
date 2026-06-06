@@ -198,11 +198,13 @@ function AppointmentCard({
     <MtCard style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.avatarMini}><Text style={styles.avatarMiniText}>Dr</Text></View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.specialty}>{item.especialidad}</Text>
-          <Text style={styles.doctor}>{item.profesionalNombre}</Text>
-          <Text style={styles.place}>{item.institucionNombre}</Text>
+        <View style={styles.cardTextBlock}>
+          <Text style={styles.specialty} numberOfLines={1} ellipsizeMode="tail">{item.especialidad}</Text>
+          <Text style={styles.doctor} numberOfLines={1} ellipsizeMode="tail">{item.profesionalNombre}</Text>
+          <Text style={styles.place} numberOfLines={1} ellipsizeMode="tail">{item.institucionNombre}</Text>
         </View>
+      </View>
+      <View style={styles.statusRow}>
         <MtPill label={estado} tone={tone as any} />
       </View>
 
@@ -219,9 +221,9 @@ function AppointmentCard({
       </View>
 
       {!isFinal && (
-        <View style={styles.actions}>
-          <MtButton title={item.asistenciaConfirmada ? 'Asistencia confirmada' : 'Confirmar asistencia'} variant="secondary" onPress={onConfirmAttendance} disabled={!!item.asistenciaConfirmada} style={{ flex: 1 }} />
-          <MtButton title="Agregar al calendario" variant="ghost" onPress={onAddCalendar} style={{ flex: 1 }} />
+        <View style={styles.actionsColumn}>
+          <MtButton title={item.asistenciaConfirmada ? 'Asistencia OK' : 'Confirmar asistencia'} variant="secondary" onPress={onConfirmAttendance} disabled={!!item.asistenciaConfirmada} />
+          <MtButton title="Agregar al calendario" variant="ghost" onPress={onAddCalendar} />
         </View>
       )}
 
@@ -253,21 +255,24 @@ function createStyles(theme: MediturnosTheme) {
     list: { gap: 14, paddingBottom: 120 },
     card: { gap: 12 },
     cardHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+    cardTextBlock: { flex: 1, flexShrink: 1, minWidth: 0, width: 0 },
+    statusRow: { alignSelf: 'flex-start', marginTop: -2 },
     avatarMini: { width: 46, height: 46, borderRadius: 16, backgroundColor: theme.colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
     avatarMiniText: { color: theme.colors.primaryDark, fontWeight: '900' },
-    specialty: { color: theme.colors.primary, fontWeight: '900', fontSize: 13 },
-    doctor: { color: theme.colors.ink, fontWeight: '900', fontSize: 16, marginTop: 2 },
-    place: { color: theme.colors.muted, fontSize: 13, marginTop: 2 },
+    specialty: { color: theme.colors.primary, backgroundColor: 'transparent', fontWeight: '900', fontSize: 15, lineHeight: 19, includeFontPadding: false },
+    doctor: { color: theme.colors.ink, backgroundColor: 'transparent', fontWeight: '900', fontSize: 18, marginTop: 2, lineHeight: 22, includeFontPadding: false },
+    place: { color: theme.colors.muted, backgroundColor: 'transparent', fontSize: 14, marginTop: 2, lineHeight: 18, includeFontPadding: false },
     dateBox: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', backgroundColor: theme.colors.bg, padding: 12, borderRadius: 16 },
     dateText: { color: theme.colors.ink, fontWeight: '800' },
     reason: { color: theme.colors.muted, lineHeight: 20 },
-    actions: { flexDirection: 'row', gap: 10 },
+    actions: { flexDirection: 'row', gap: 10, alignItems: 'stretch' },
+    actionsColumn: { gap: 10 },
     cancelBox: { borderRadius: 18, borderWidth: 1, borderColor: theme.colors.danger, backgroundColor: theme.mode === 'dark' ? '#3F1111' : '#FEF2F2', padding: 14, marginTop: 10, gap: 8 },
     cancelTitle: { color: theme.mode === 'dark' ? '#FEE2E2' : '#991B1B', fontWeight: '900', fontSize: 15 },
     cancelText: { color: theme.mode === 'dark' ? '#FEE2E2' : '#991B1B', fontWeight: '700', lineHeight: 20 },
     cancelActions: { flexDirection: 'row', gap: 10, marginTop: 4 },
     noticeBox: { borderRadius: 18, borderWidth: 1, padding: 14, marginBottom: 14 },
-    noticeSuccess: { backgroundColor: theme.mode === 'dark' ? '#063D35' : '#ECFDF5', borderColor: theme.colors.success },
+    noticeSuccess: { backgroundColor: theme.mode === 'dark' ? '#24143E' : '#F3EEFF', borderColor: theme.colors.success },
     noticeWarning: { backgroundColor: theme.mode === 'dark' ? '#422B05' : '#FFFBEB', borderColor: theme.colors.warning },
     noticeError: { backgroundColor: theme.mode === 'dark' ? '#3F1111' : '#FEF2F2', borderColor: theme.colors.danger },
     noticeTitle: { fontWeight: '900', fontSize: 15, marginBottom: 4 },

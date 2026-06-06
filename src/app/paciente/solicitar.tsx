@@ -514,7 +514,7 @@ function createStyles(theme: MediturnosTheme) {
     summaryLine: { color: theme.colors.primaryDark, lineHeight: 22, fontWeight: '700' },
     successActions: { gap: 10, marginTop: 16 },
     noticeBox: { borderRadius: 18, borderWidth: 1, padding: 14, marginBottom: 14 },
-    noticeSuccess: { backgroundColor: theme.mode === 'dark' ? '#063D35' : '#ECFDF5', borderColor: theme.colors.success },
+    noticeSuccess: { backgroundColor: theme.mode === 'dark' ? '#24143E' : '#F3EEFF', borderColor: theme.colors.success },
     noticeError: { backgroundColor: theme.mode === 'dark' ? '#3F1111' : '#FEF2F2', borderColor: theme.colors.danger },
     noticeTitle: { fontWeight: '900', fontSize: 15, marginBottom: 4 },
     noticeMessage: { fontWeight: '700', lineHeight: 20 },

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { feedbackService } from '../../api/feedbackService';
-import { MtButton, MtCard, MtHeader, MtScreen } from '../../components/mediturnos';
+import { MtBottomNav, MtButton, MtCard, MtHeader, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
@@ -32,7 +32,8 @@ export default function FeedbackScreen() {
   };
 
   return (
-    <MtScreen>
+    <>
+      <MtScreen>
       <MtHeader eyebrow="EXPERIENCIA" title="Calificar atención" subtitle="Tu opinión ayuda a mejorar la atención del centro médico." />
       <MtCard style={{ gap: 16 }}>
         <Text style={styles.label}>Puntuación</Text>
@@ -48,7 +49,9 @@ export default function FeedbackScreen() {
         <MtButton title="Guardar calificación" onPress={save} loading={saving} disabled={saving || !!message} />
         <MtButton title="Volver a mis turnos" variant="ghost" onPress={() => router.replace('/paciente/turnos')} />
       </MtCard>
-    </MtScreen>
+      </MtScreen>
+      <MtBottomNav active="turnos" />
+    </>
   );
 }
 

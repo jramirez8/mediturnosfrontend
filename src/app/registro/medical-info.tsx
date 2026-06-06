@@ -242,7 +242,7 @@ export default function MedicalInfoScreen() {
 
           {catalogLoading ? (
             <View style={styles.loadingBox}>
-              <ActivityIndicator color="#0F766E" />
+              <ActivityIndicator color="#7C3AED" />
               <Text style={styles.loadingText}>Cargando catálogos...</Text>
             </View>
           ) : (
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 },
   header: { marginBottom: 24 },
-  kicker: { color: '#0F766E', fontSize: 13, fontWeight: '900', letterSpacing: 1.2, marginBottom: 8 },
+  kicker: { color: '#7C3AED', fontSize: 13, fontWeight: '900', letterSpacing: 1.2, marginBottom: 8 },
   title: { fontSize: 28, fontWeight: '900', color: '#111827', marginBottom: 8 },
   subtitle: { fontSize: 15, color: '#6b7280', lineHeight: 21 },
   form: { gap: 18, flex: 1 },
@@ -362,25 +362,25 @@ const styles = StyleSheet.create({
   disabledSelect: { opacity: 0.6 },
   selectText: { color: '#111827', fontSize: 15, fontWeight: '700', flex: 1 },
   placeholderText: { color: '#9ca3af', fontWeight: '600' },
-  chevron: { color: '#0F766E', fontSize: 12, fontWeight: '900' },
+  chevron: { color: '#7C3AED', fontSize: 12, fontWeight: '900' },
   optionList: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 12, overflow: 'hidden', backgroundColor: '#ffffff', marginTop: 4 },
   optionItem: { paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  optionItemActive: { backgroundColor: '#CCFBF1' },
+  optionItemActive: { backgroundColor: '#EDE7FF' },
   optionText: { color: '#374151', fontSize: 14, fontWeight: '600' },
-  optionTextActive: { color: '#115E59', fontWeight: '900' },
+  optionTextActive: { color: '#4C1D95', fontWeight: '900' },
   dateRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   dateColumn: { flex: 0.9 },
   dateColumnWide: { flex: 1.25 },
-  loadingBox: { borderWidth: 1, borderColor: '#DDEBE8', backgroundColor: '#F0FDFA', borderRadius: 16, padding: 18, alignItems: 'center', gap: 10 },
-  loadingText: { color: '#115E59', fontWeight: '700', textAlign: 'center' },
-  infoBox: { borderWidth: 1, borderColor: '#DDEBE8', backgroundColor: '#F0FDFA', borderRadius: 14, padding: 14 },
-  infoTitle: { color: '#115E59', fontWeight: '900', fontSize: 15, marginBottom: 4 },
+  loadingBox: { borderWidth: 1, borderColor: '#E4D8FA', backgroundColor: '#F8F5FF', borderRadius: 16, padding: 18, alignItems: 'center', gap: 10 },
+  loadingText: { color: '#4C1D95', fontWeight: '700', textAlign: 'center' },
+  infoBox: { borderWidth: 1, borderColor: '#E4D8FA', backgroundColor: '#F8F5FF', borderRadius: 14, padding: 14 },
+  infoTitle: { color: '#4C1D95', fontWeight: '900', fontSize: 15, marginBottom: 4 },
   infoText: { color: '#334155', fontSize: 13, lineHeight: 19, fontWeight: '600' },
   errorBox: { borderWidth: 1, borderColor: '#EF4444', backgroundColor: '#FEF2F2', borderRadius: 16, padding: 16, marginBottom: 20 },
   errorTitle: { color: '#991B1B', fontWeight: '900', fontSize: 17, marginBottom: 8 },
   errorText: { color: '#7F1D1D', fontWeight: '700', fontSize: 15, lineHeight: 21 },
   footer: { marginTop: 36, gap: 12 },
-  button: { backgroundColor: '#0F766E', paddingVertical: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', minHeight: 56 },
+  button: { backgroundColor: '#7C3AED', paddingVertical: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', minHeight: 56 },
   disabled: { opacity: 0.7 },
   buttonText: { color: 'white', fontSize: 16, fontWeight: '800' },
   backButton: { paddingVertical: 12, alignItems: 'center' },

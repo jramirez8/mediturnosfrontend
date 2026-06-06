@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { storage } from '../api/storage';
 
-export type AppLanguage = 'es' | 'en';
+export type AppLanguage = 'es' | 'en' | 'pt';
 const LANGUAGE_KEY = 'mediturnos_language';
 
 type Dictionary = Record<string, string>;
@@ -54,13 +54,33 @@ const es: Dictionary = {
   'login.title': 'Iniciar sesión',
   'login.subtitle': 'Turnos médicos simples, rápidos y seguros.',
   'login.helper': 'Ingresá con tu usuario para gestionar turnos, perfil e historia clínica.',
+  'login.welcome': 'Bienvenido de nuevo',
   'login.email': 'Email o DNI',
+  'login.emailPlaceholder': 'DNI o email',
   'login.password': 'Contraseña',
   'login.submit': 'Ingresar',
   'login.biometric': 'Ingresar con biometría / PIN',
   'login.createAccount': 'Crear cuenta',
   'login.forgot': '¿Olvidaste tu contraseña?',
   'login.errorInvalid': 'El usuario o la contraseña no son correctos. Revisá los datos e intentá nuevamente.',
+  'login.requiredFields': 'Ingresá tu DNI/email y contraseña para continuar.',
+  'login.checkCredentials': 'Revisá tus credenciales e intentá nuevamente.',
+  'login.enableSecureTitle': 'Activar ingreso seguro',
+  'login.enableSecureText': 'La próxima vez podés ingresar con huella, rostro, PIN o patrón. Guardamos tu usuario y la sesión, nunca tu contraseña.',
+  'login.notNow': 'Ahora no',
+  'login.enable': 'Activar',
+  'login.enableSecureAction': 'Activar ingreso seguro',
+  'login.codeSent': 'Te enviamos un código de verificación a {destination}.',
+  'login.yourEmail': 'tu correo',
+  'login.verificationCode': 'Código de verificación',
+  'login.enterCode': 'Ingresá el código de verificación.',
+  'login.invalidCode': 'Código inválido o vencido.',
+  'login.deviceLoginError': 'No pudimos ingresar con el método del dispositivo. Ingresá con tu contraseña una vez más.',
+  'login.verificationRequired': 'Verificación requerida',
+  'login.signInErrorTitle': 'No pudimos iniciar sesión',
+  'login.secureEnabledFor': 'Ingreso seguro activado para',
+  'login.validateCode': 'Validar código',
+  'login.useAnotherAccount': 'Usar otra cuenta',
 
   'settings.title': 'Ajustes',
   'settings.subtitle': 'Personalizá la app y administrá tu sesión.',
@@ -69,10 +89,20 @@ const es: Dictionary = {
   'settings.language': 'Idioma',
   'settings.spanish': 'Español',
   'settings.english': 'Inglés',
+  'settings.portuguese': 'Portugués',
   'settings.light': 'Claro',
   'settings.dark': 'Oscuro',
   'settings.system': 'Sistema',
   'settings.account': 'Cuenta',
+  'settings.appearance': 'Apariencia',
+  'settings.appearanceHelp': 'Elegí modo claro, oscuro o seguir el sistema.',
+  'settings.darkHint': 'Usa colores oscuros en toda la app.',
+  'settings.systemHint': 'Usa la apariencia configurada en el dispositivo.',
+  'settings.languageHelp': 'Elegí el idioma de la interfaz.',
+  'settings.session': 'Sesión',
+  'settings.sessionHelp': 'Cerrá sesión de forma segura en este dispositivo.',
+  'settings.backToPanel': 'Volver a mi panel',
+  'settings.backToProfile': 'Volver al perfil',
 
   'profile.eyebrow': 'MI PERFIL',
   'profile.title': 'Datos personales',
@@ -205,13 +235,33 @@ const en: Dictionary = {
   'login.title': 'Sign in',
   'login.subtitle': 'Simple, fast and secure medical appointments.',
   'login.helper': 'Sign in to manage appointments, profile and medical history.',
+  'login.welcome': 'Welcome back',
   'login.email': 'Email or ID',
+  'login.emailPlaceholder': 'Email or ID',
   'login.password': 'Password',
   'login.submit': 'Sign in',
   'login.biometric': 'Sign in with biometrics / PIN',
   'login.createAccount': 'Create account',
   'login.forgot': 'Forgot your password?',
   'login.errorInvalid': 'The user or password is incorrect. Check your details and try again.',
+  'login.requiredFields': 'Enter your email/ID and password to continue.',
+  'login.checkCredentials': 'Check your credentials and try again.',
+  'login.enableSecureTitle': 'Enable secure device sign-in',
+  'login.enableSecureText': 'Next time you can sign in with fingerprint, face, PIN or pattern. We store your user and session, never your password.',
+  'login.notNow': 'Not now',
+  'login.enable': 'Enable',
+  'login.enableSecureAction': 'Enable secure sign-in',
+  'login.codeSent': 'We sent a verification code to {destination}.',
+  'login.yourEmail': 'your email',
+  'login.verificationCode': 'Verification code',
+  'login.enterCode': 'Enter the verification code.',
+  'login.invalidCode': 'Invalid or expired code.',
+  'login.deviceLoginError': 'We could not sign in with your device method. Sign in with your password once more.',
+  'login.verificationRequired': 'Verification required',
+  'login.signInErrorTitle': 'We could not sign in',
+  'login.secureEnabledFor': 'Secure device sign-in enabled for',
+  'login.validateCode': 'Validate code',
+  'login.useAnotherAccount': 'Use another account',
 
   'settings.title': 'Settings',
   'settings.subtitle': 'Customize the app and manage your session.',
@@ -220,10 +270,20 @@ const en: Dictionary = {
   'settings.language': 'Language',
   'settings.spanish': 'Spanish',
   'settings.english': 'English',
+  'settings.portuguese': 'Portuguese',
   'settings.light': 'Light',
   'settings.dark': 'Dark',
   'settings.system': 'System',
   'settings.account': 'Account',
+  'settings.appearance': 'Appearance',
+  'settings.appearanceHelp': 'Choose light, dark or system theme.',
+  'settings.darkHint': 'Use dark colors throughout the app.',
+  'settings.systemHint': 'Follow the device appearance setting.',
+  'settings.languageHelp': 'Choose the interface language.',
+  'settings.session': 'Session',
+  'settings.sessionHelp': 'Sign out safely from this device.',
+  'settings.backToPanel': 'Back to my panel',
+  'settings.backToProfile': 'Back to profile',
 
   'profile.eyebrow': 'MY PROFILE',
   'profile.title': 'Personal details',
@@ -308,10 +368,191 @@ const en: Dictionary = {
   'admin.refresh': 'Refresh panel',
 };
 
-const dictionaries: Record<AppLanguage, Dictionary> = { es, en };
+const pt: Dictionary = {
+  'common.save': 'Salvar alterações',
+  'common.back': 'Voltar',
+  'common.cancel': 'Cancelar',
+  'common.loading': 'Carregando...',
+  'common.retry': 'Tentar novamente',
+  'common.logout': 'Sair',
+  'common.settings': 'Configurações',
+  'common.continue': 'Continuar',
+  'common.confirm': 'Confirmar',
+  'common.optional': 'Opcional',
+  'common.required': 'Obrigatório',
+  'common.gallery': 'Galeria',
+  'common.camera': 'Câmera',
+  'common.other': 'Outro',
+  'common.search': 'Buscar',
+  'common.clear': 'Limpar',
+  'common.update': 'Atualizar',
+  'common.edit': 'Editar',
+  'common.create': 'Criar',
+  'common.delete': 'Excluir',
+  'common.activate': 'Ativar',
+  'common.deactivate': 'Desativar',
+  'common.active': 'Ativo',
+  'common.inactive': 'Inativo',
+  'common.errorTitle': 'Não foi possível concluir a operação',
+
+  'nav.home': 'Início',
+  'nav.profile': 'Perfil',
+  'nav.appointments': 'Consultas',
+  'nav.history': 'Histórico',
+  'nav.agenda': 'Agenda',
+  'nav.consultation': 'Atendimento',
+  'nav.patients': 'Pacientes',
+  'nav.new': 'Novo',
+  'nav.users': 'Usuários',
+  'nav.doctors': 'Médicos',
+  'nav.catalogs': 'Catálogos',
+  'nav.reports': 'Relatórios',
+
+  'role.patient': 'Paciente',
+  'role.professional': 'Médico',
+  'role.secretary': 'Secretaria',
+  'role.admin': 'Administrador',
+
+  'login.title': 'Entrar',
+  'login.subtitle': 'Consultas médicas simples, rápidas e seguras.',
+  'login.helper': 'Entre com seu usuário para gerenciar consultas, perfil e histórico clínico.',
+  'login.welcome': 'Bem-vindo novamente',
+  'login.email': 'Email ou DNI',
+  'login.emailPlaceholder': 'DNI ou email',
+  'login.password': 'Senha',
+  'login.submit': 'Entrar',
+  'login.biometric': 'Entrar com biometria / PIN',
+  'login.createAccount': 'Criar conta',
+  'login.forgot': 'Esqueceu sua senha?',
+  'login.errorInvalid': 'O usuário ou a senha estão incorretos. Confira os dados e tente novamente.',
+  'login.requiredFields': 'Informe seu DNI/email e senha para continuar.',
+  'login.checkCredentials': 'Confira suas credenciais e tente novamente.',
+  'login.enableSecureTitle': 'Ativar acesso seguro',
+  'login.enableSecureText': 'Na próxima vez, você poderá entrar com digital, rosto, PIN ou padrão. Guardamos seu usuário e a sessão, nunca sua senha.',
+  'login.notNow': 'Agora não',
+  'login.enable': 'Ativar',
+  'login.enableSecureAction': 'Ativar acesso seguro',
+  'login.codeSent': 'Enviamos um código de verificação para {destination}.',
+  'login.yourEmail': 'seu email',
+  'login.verificationCode': 'Código de verificação',
+  'login.enterCode': 'Informe o código de verificação.',
+  'login.invalidCode': 'Código inválido ou expirado.',
+  'login.deviceLoginError': 'Não foi possível entrar com o método do dispositivo. Entre com sua senha mais uma vez.',
+  'login.verificationRequired': 'Verificação necessária',
+  'login.signInErrorTitle': 'Não foi possível entrar',
+  'login.secureEnabledFor': 'Acesso seguro ativado para',
+  'login.validateCode': 'Validar código',
+  'login.useAnotherAccount': 'Usar outra conta',
+
+  'settings.title': 'Configurações',
+  'settings.subtitle': 'Personalize o app e gerencie sua sessão.',
+  'settings.darkMode': 'Modo escuro',
+  'settings.theme': 'Tema',
+  'settings.language': 'Idioma',
+  'settings.spanish': 'Espanhol',
+  'settings.english': 'Inglês',
+  'settings.portuguese': 'Português',
+  'settings.light': 'Claro',
+  'settings.dark': 'Escuro',
+  'settings.system': 'Sistema',
+  'settings.account': 'Conta',
+  'settings.appearance': 'Aparência',
+  'settings.appearanceHelp': 'Escolha modo claro, escuro ou seguir o sistema.',
+  'settings.darkHint': 'Usa cores escuras em todo o app.',
+  'settings.systemHint': 'Usa a aparência configurada no dispositivo.',
+  'settings.languageHelp': 'Escolha o idioma da interface.',
+  'settings.session': 'Sessão',
+  'settings.sessionHelp': 'Saia com segurança deste dispositivo.',
+  'settings.backToPanel': 'Voltar ao meu painel',
+  'settings.backToProfile': 'Voltar ao perfil',
+
+  'profile.eyebrow': 'MEU PERFIL',
+  'profile.title': 'Dados pessoais',
+  'profile.subtitle': 'Mantenha atualizadas suas informações de contato e cobertura médica.',
+  'profile.editableInfo': 'Informações editáveis',
+  'profile.email': 'Email',
+  'profile.phone': 'Telefone',
+  'profile.healthInsurance': 'Plano de saúde',
+  'profile.memberNumber': 'Nº da carteirinha',
+  'profile.mainInstitution': 'Instituição de referência',
+  'profile.mainDoctor': 'Médico de referência',
+  'profile.observations': 'Observações:',
+  'profile.observationsPlaceholder': 'Complete aqui os dados que não aparecem na lista',
+  'profile.cardTitle': 'Carteirinha do plano de saúde',
+  'profile.cardHelp': 'Anexe uma foto da carteirinha pela câmera ou galeria.',
+  'profile.attachCard': '📎 Anexar carteirinha',
+  'profile.changeCard': 'Trocar carteirinha anexada',
+  'profile.selectedFile': 'Arquivo selecionado:',
+  'profile.saved': 'Perfil atualizado',
+  'profile.savedMsg': 'As alterações foram salvas.',
+
+  'patient.eyebrow': 'MÓDULO PACIENTE',
+  'patient.hello': 'Olá',
+  'patient.subtitle': 'Gerencie suas consultas, profissionais, perfil e histórico clínico.',
+  'patient.nextAppointment': 'Próxima consulta',
+  'patient.noNext': 'Nenhuma consulta agendada',
+  'patient.noNextHelp': 'Você não tem consultas próximas registradas.',
+  'patient.requestAppointment': 'Solicitar consulta',
+  'patient.quick': 'Acessos rápidos',
+  'patient.quickRequest': 'Marcar consulta',
+  'patient.quickRequestSub': 'Escolha profissional, dia e horário',
+  'patient.quickAppointments': 'Minhas consultas',
+  'patient.quickAppointmentsSub': 'Confirmadas, pendentes e canceladas',
+  'patient.quickProfessionals': 'Profissionais',
+  'patient.quickProfessionalsSub': 'Guia médico por especialidade',
+  'patient.quickHistory': 'Histórico clínico',
+  'patient.quickHistorySub': 'Atendimentos e documentos',
+  'patient.quickSettingsSub': 'Tema, idioma e segurança',
+  'patient.profileErrorTitle': 'Não foi possível carregar seu perfil',
+  'patient.profileErrorSub': 'Tente novamente ou entre outra vez para continuar.',
+
+  'appointment.requestTitle': 'Solicitar consulta',
+  'appointment.requestSubtitle': 'Escolha profissional, data, horário e motivo da consulta.',
+  'appointment.professionalStep': '1. Profissional',
+  'appointment.dateStep': '2. Data',
+  'appointment.timeStep': 'Horário disponível',
+  'appointment.reasonStep': '3. Motivo',
+  'appointment.attachStep': '4. Anexar documentação',
+  'appointment.attachOptional': 'Opcional. Você pode anexar uma imagem da câmera ou galeria.',
+  'appointment.reason': 'Motivo da consulta',
+  'appointment.observations': 'Observações',
+  'appointment.confirm': 'Confirmar solicitação',
+  'appointment.successTitle': 'Solicitação enviada',
+  'appointment.successMessage': 'A consulta foi registrada corretamente.',
+
+  'professionals.title': 'Ver profissionais',
+  'professionals.subtitle': 'Busque por nome, especialidade ou instituição.',
+  'professionals.searchPlaceholder': 'Buscar por médico, especialidade ou instituição',
+
+  'doctor.panel': 'PAINEL MÉDICO',
+  'doctor.subtitle': 'Agenda, atendimentos e histórico clínico.',
+  'doctor.quickActions': 'Ações rápidas',
+  'doctor.todayAgenda': 'Ver agenda do dia',
+  'doctor.registerConsultation': 'Registrar atendimento',
+  'doctor.searchHistory': 'Buscar histórico por DNI',
+  'doctor.next': 'Próxima consulta',
+
+  'secretary.panel': 'PAINEL SECRETARIA',
+  'secretary.subtitle': 'Operação diária de consultas e pacientes.',
+  'secretary.quickActions': 'Ações rápidas',
+  'secretary.createAppointment': 'Criar consulta',
+  'secretary.manageAppointments': 'Gerenciar consultas',
+  'secretary.searchPatient': 'Buscar paciente',
+  'secretary.latestAppointments': 'Últimas consultas',
+
+  'admin.panel': 'PAINEL ADMIN',
+  'admin.subtitle': 'Gestão geral de usuários, profissionais, catálogos e relatórios.',
+  'admin.actions': 'Ações administrativas',
+  'admin.actionsSub': 'Gerencie altas, edições, baixas lógicas e relatórios em um só lugar.',
+  'admin.appointmentStatus': 'Estado das consultas',
+  'admin.appointmentStatusSub': 'Resumo operacional para detectar desvios rapidamente.',
+  'admin.refresh': 'Atualizar painel',
+};
+
+const dictionaries: Record<AppLanguage, Dictionary> = { es, en, pt };
 
 function normalizeLanguage(value?: string | null): AppLanguage {
-  return value === 'en' ? 'en' : 'es';
+  return value === 'en' || value === 'pt' ? value : 'es';
 }
 
 type LanguageState = {
@@ -320,8 +561,13 @@ type LanguageState = {
   setLanguage: (language: AppLanguage) => Promise<void>;
   toggleLanguage: () => Promise<void>;
   loadLanguage: () => Promise<void>;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 };
+
+function interpolate(text: string, params?: Record<string, string | number>) {
+  if (!params) return text;
+  return Object.entries(params).reduce((acc, [key, value]) => acc.split(`{${key}}`).join(String(value)), text);
+}
 
 export const useLanguageStore = create<LanguageState>((set, get) => ({
   language: 'es',
@@ -333,7 +579,8 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
   },
 
   toggleLanguage: async () => {
-    await get().setLanguage(get().language === 'es' ? 'en' : 'es');
+    const current = get().language;
+    await get().setLanguage(current === 'es' ? 'en' : current === 'en' ? 'pt' : 'es');
   },
 
   loadLanguage: async () => {
@@ -341,12 +588,12 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
     set({ language: saved, hydrated: true });
   },
 
-  t: (key) => {
+  t: (key, params) => {
     const language = get().language;
-    return dictionaries[language][key] ?? dictionaries.es[key] ?? key;
+    const text = dictionaries[language][key] ?? dictionaries.es[key] ?? key;
+    return interpolate(text, params);
   },
 }));
-
 
 const literalEn: Record<string, string> = {
   'Inicio': 'Home',
@@ -416,9 +663,83 @@ const literalEn: Record<string, string> = {
   'No hay secretarías para mostrar.': 'There are no secretaries to show.',
 };
 
+const literalPt: Record<string, string> = {
+  'Inicio': 'Início',
+  'Perfil': 'Perfil',
+  'Turnos': 'Consultas',
+  'Historia': 'Histórico',
+  'Ajustes': 'Configurações',
+  'Usuarios': 'Usuários',
+  'Médicos': 'Médicos',
+  'Profesionales': 'Profissionais',
+  'Secretarías': 'Secretarias',
+  'Pacientes': 'Pacientes',
+  'Catálogos': 'Catálogos',
+  'Reportes': 'Relatórios',
+  'Guardar': 'Salvar',
+  'Guardar cambios': 'Salvar alterações',
+  'Reintentar': 'Tentar novamente',
+  'Cerrar sesión': 'Sair',
+  'Editar': 'Editar',
+  'Activar': 'Ativar',
+  'Desactivar': 'Desativar',
+  'Activo': 'Ativo',
+  'Inactivo': 'Inativo',
+  'ACTIVO': 'ATIVO',
+  'INACTIVO': 'INATIVO',
+  'Crear': 'Criar',
+  'Cancelar': 'Cancelar',
+  'Actualizar': 'Atualizar',
+  'Email': 'Email',
+  'DNI': 'DNI',
+  'Teléfono': 'Telefone',
+  'Nombre': 'Nome',
+  'Apellido': 'Sobrenome',
+  'Contraseña inicial': 'Senha inicial',
+  'Nueva contraseña (opcional)': 'Nova senha (opcional)',
+  'No cambiar': 'Não alterar',
+  'Buscar': 'Buscar',
+  'Institución': 'Instituição',
+  'Instituciones': 'Instituições',
+  'Especialidades': 'Especialidades',
+  'Obras sociales': 'Planos de saúde',
+  'Obra social': 'Plano de saúde',
+  'Matrícula': 'Registro profissional',
+  'N° carnet': 'Nº da carteirinha',
+  'Grupo sanguíneo': 'Grupo sanguíneo',
+  'Fecha nacimiento (AAAA-MM-DD)': 'Data de nascimento (AAAA-MM-DD)',
+  'Historia clínica': 'Histórico clínico',
+  'Médico cabecera': 'Médico de referência',
+  'Institución cabecera': 'Instituição de referência',
+  'Sin seleccionar': 'Não selecionado',
+  'Sin institución': 'Sem instituição',
+  'Sin médico': 'Sem médico',
+  'Seleccionar': 'Selecionar',
+  'Seleccionar institución': 'Selecionar instituição',
+  'Seleccionar obra social': 'Selecionar plano de saúde',
+  'Opcional': 'Opcional',
+  'Resumen': 'Resumo',
+  'Filtros': 'Filtros',
+  'Operación realizada': 'Operação realizada',
+  'Acciones rápidas': 'Ações rápidas',
+  'Últimos turnos': 'Últimas consultas',
+  'Sin médicos': 'Sem médicos',
+  'Sin pacientes': 'Sem pacientes',
+  'Sin secretarías': 'Sem secretarias',
+  'No hay profesionales para mostrar.': 'Não há profissionais para mostrar.',
+  'No hay pacientes para mostrar.': 'Não há pacientes para mostrar.',
+  'No hay secretarías para mostrar.': 'Não há secretarias para mostrar.',
+};
+
 export function translateLiteral(value: string | undefined, language: AppLanguage): string | undefined {
-  if (!value || language !== 'en') return value;
-  return literalEn[value] ?? value;
+  if (!value) return value;
+  if (language === 'en') return literalEn[value] ?? value;
+  if (language === 'pt') return literalPt[value] ?? value;
+  return value;
+}
+
+export function languageCopy(language: AppLanguage, esText: string, enText: string, ptText: string): string {
+  return language === 'en' ? enText : language === 'pt' ? ptText : esText;
 }
 
 export function useTranslation() {

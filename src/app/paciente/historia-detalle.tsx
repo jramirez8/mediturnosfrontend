@@ -1,185 +1,141 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { medicalHistoryService } from '../../api/medicalHistoryService';
 import { TurnoResponse } from '../../api/appointmentService';
+import { MtBottomNav, MtButton, MtCard, MtLoading, MtScreen } from '../../components/mediturnos';
+import { MediturnosTheme } from '../../constants/mediturnosTheme';
+import { useMtTheme } from '../../theme/themeStore';
+
+function initials(name?: string) {
+  const parts = String(name ?? '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return (parts[0]?.slice(0, 2) || 'DR').toUpperCase();
+}
 
 export default function HistoriaDetalleScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams();
+  const theme = useMtTheme();
+  const styles = useMemo(() => createStyles(theme), [theme.mode]);
   const [record, setRecord] = useState<TurnoResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) fetchDetail();
+    let alive = true;
+
+    const fetchDetail = async () => {
+      if (!id) {
+        setLoading(false);
+        setError('No se recibió el identificador de la atención.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await medicalHistoryService.getRecordDetail(Number(id));
+        if (alive) setRecord(data);
+      } catch (e) {
+        console.error('Error fetching history detail:', e);
+        if (alive) setError('No se pudo cargar el detalle de la atención.');
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+
+    fetchDetail();
+    return () => { alive = false; };
   }, [id]);
 
-  const fetchDetail = async () => {
-    try {
-      setLoading(true);
-      const data = await medicalHistoryService.getRecordDetail(Number(id));
-      setRecord(data);
-    } catch (error) {
-      console.error("Error fetching history detail:", error);
-      Alert.alert("Error", "No se pudo cargar el detalle de la atención.");
-    } finally {
-      setLoading(false);
-    }
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/paciente/historia');
   };
 
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#0F766E" />
-      </View>
-    );
-  }
-
-  if (!record) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <Text style={styles.errorText}>No se encontró el registro.</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={{color: '#0F766E', marginTop: 20}}>Volver</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  if (loading) return <MtLoading text="Cargando detalle de atención..." />;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-           <Text style={{color: 'white', fontSize: 20}}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detalle de atención</Text>
-      </View>
+    <>
+      <MtScreen scroll style={styles.screen}>
+        <View style={styles.headerRow}>
+          <Pressable style={styles.backButton} onPress={goBack}>
+            <Ionicons name="arrow-back" size={23} color={theme.colors.ink} />
+          </Pressable>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.eyebrow}>HISTORIA CLÍNICA</Text>
+            <Text style={styles.title} numberOfLines={1}>Detalle de atención</Text>
+          </View>
+        </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.doctorCard}>
-          <View style={styles.doctorHeader}>
-            <View style={styles.avatarContainer}>
-               <Text style={{color: 'white', fontSize: 24}}>DR</Text>
+        {error || !record ? (
+          <MtCard style={styles.centerCard}>
+            <Ionicons name="alert-circle-outline" size={42} color={theme.colors.danger} />
+            <Text style={styles.errorTitle}>No se encontró el registro</Text>
+            <Text style={styles.errorText}>{error ?? 'No hay datos para mostrar.'}</Text>
+            <MtButton title="Volver a Mi historia" variant="ghost" onPress={() => router.replace('/paciente/historia')} />
+          </MtCard>
+        ) : (
+          <>
+            <View style={styles.doctorCard}>
+              <View style={styles.avatarContainer}>
+                <Text style={styles.avatarText}>{initials(record.profesionalNombre)}</Text>
+              </View>
+              <View style={styles.doctorInfo}>
+                <Text style={styles.doctorName} numberOfLines={1} ellipsizeMode="tail">{record.profesionalNombre}</Text>
+                <Text style={styles.specialty} numberOfLines={1} ellipsizeMode="tail">{record.especialidad}</Text>
+                <Text style={styles.dateTime}>{record.fecha} · {record.hora} hs</Text>
+              </View>
             </View>
-            <View style={styles.doctorInfo}>
-              <Text style={styles.doctorName}>{record.profesionalNombre}</Text>
-              <Text style={styles.specialty}>{record.especialidad}</Text>
-              <Text style={styles.dateTime}>{record.fecha} - {record.hora}</Text>
-            </View>
-          </View>
-        </View>
 
-        <View style={styles.detailsList}>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Motivo de consulta</Text>
-            <Text style={styles.detailValue}>{record.motivoConsulta || 'No especificado'}</Text>
-          </View>
+            <DetailItem label="Motivo de consulta" value={record.motivoConsulta || 'No especificado'} styles={styles} />
+            <DetailItem label="Sede de atención" value={record.institucionNombre || 'Sin sede cargada'} styles={styles} />
+            <DetailItem label="Diagnóstico" value={record.diagnostico || 'Sin diagnóstico cargado aún.'} styles={styles} />
+            <DetailItem label="Observaciones" value={record.observaciones || 'Sin observaciones críticas.'} styles={styles} />
+            <DetailItem label="Archivos adjuntos" value="No hay archivos adjuntos para esta consulta." muted styles={styles} />
 
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Sede de atención</Text>
-            <Text style={styles.detailValue}>{record.institucionNombre}</Text>
-          </View>
-
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Diagnóstico</Text>
-            <Text style={styles.detailValue}>
-              {record.diagnostico || 'Sin diagnóstico cargado aún.'}
-            </Text>
-          </View>
-
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Observaciones</Text>
-            <Text style={styles.detailValue}>{record.observaciones || 'Sin observaciones críticas'}</Text>
-          </View>
-
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Archivos adjuntos</Text>
-            <Text style={[styles.detailValue, {fontStyle: 'italic', color: '#6b7280'}]}>
-                No hay archivos adjuntos para esta consulta.
-            </Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.backFooterButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backFooterButtonText}>Volver</Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      {/* Barra de Navegación Inferior */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/paciente')}>
-          <Text style={styles.navText}>Inicio</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/paciente/perfil')}>
-          <Text style={styles.navText}>Perfil</Text>
-        </TouchableOpacity>
-        <View style={styles.fabContainer}>
-          <TouchableOpacity style={styles.fab} onPress={() => router.push('/paciente/solicitar')}>
-            <Text style={{color: 'white', fontSize: 24}}>+</Text>
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/paciente/turnos')}>
-          <Text style={styles.navText}>Turnos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={[styles.navText, { color: '#0F766E' }]}>Historia</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+            <MtButton title="Volver a Mi historia" variant="ghost" onPress={() => router.replace('/paciente/historia')} style={{ marginTop: 8 }} />
+          </>
+        )}
+      </MtScreen>
+      <MtBottomNav active="historia" />
+    </>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
-  center: { justifyContent: 'center', alignItems: 'center' },
-  header: {
-    backgroundColor: '#0F766E',
-    paddingTop: 60,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  backButton: { padding: 4 },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#ffffff' },
-  scrollContent: { padding: 24, paddingBottom: 100 },
-  doctorCard: { backgroundColor: '#0F766E', borderRadius: 20, padding: 20, marginBottom: 24, elevation: 4 },
-  doctorHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  avatarContainer: {
-    width: 56,
-    height: 56,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  doctorInfo: { flex: 1 },
-  doctorName: { fontSize: 17, fontWeight: 'bold', color: '#ffffff', marginBottom: 2 },
-  specialty: { fontSize: 13, color: '#CCFBF1', marginBottom: 2 },
-  dateTime: { fontSize: 12, color: '#e9d5ff' },
-  detailsList: { gap: 16 },
-  detailItem: { backgroundColor: '#ECFDF5', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#99F6E4' },
-  detailLabel: { fontSize: 12, color: '#0F766E', fontWeight: '600', marginBottom: 4 },
-  detailValue: { fontSize: 14, color: '#1f2937', lineHeight: 20 },
-  errorText: { color: '#ef4444', fontSize: 16 },
-  backFooterButton: { marginTop: 24, backgroundColor: 'white', paddingVertical: 16, borderRadius: 12, alignItems: 'center', borderWidth: 2, borderColor: '#CCFBF1' },
-  backFooterButtonText: { color: '#0F766E', fontSize: 16, fontWeight: '600' },
-  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 70, backgroundColor: '#ffffff', flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#f3f4f6' },
-  navItem: { flex: 1, alignItems: 'center' },
-  navText: { fontSize: 11, color: '#9ca3af' },
-  fabContainer: { width: 60, alignItems: 'center', marginTop: -30 },
-  fab: { width: 50, height: 50, backgroundColor: '#0F766E', borderRadius: 25, alignItems: 'center', justifyContent: 'center', elevation: 4 },
-});
+function DetailItem({ label, value, muted, styles }: { label: string; value: string; muted?: boolean; styles: ReturnType<typeof createStyles> }) {
+  return (
+    <MtCard style={styles.detailItem}>
+      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={[styles.detailValue, muted && styles.detailMuted]}>{value}</Text>
+    </MtCard>
+  );
+}
+
+function createStyles(theme: MediturnosTheme) {
+  const isDark = theme.mode === 'dark';
+
+  return StyleSheet.create({
+    screen: { gap: 14 },
+    headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 },
+    backButton: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, ...theme.shadow },
+    eyebrow: { color: theme.colors.primary, fontSize: 12, fontWeight: '900', letterSpacing: 2.4, marginBottom: 3 },
+    title: { color: theme.colors.ink, backgroundColor: 'transparent', fontSize: 29, lineHeight: 34, fontWeight: '900', letterSpacing: -0.4 },
+    doctorCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: theme.colors.primary, borderRadius: 26, padding: 18, shadowColor: theme.colors.primary, shadowOpacity: isDark ? 0.18 : 0.24, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 5 },
+    avatarContainer: { width: 62, height: 62, backgroundColor: 'rgba(255,255,255,0.20)', borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    avatarText: { color: '#FFFFFF', backgroundColor: 'transparent', fontSize: 21, fontWeight: '900' },
+    doctorInfo: { flex: 1, flexShrink: 1, minWidth: 0, width: 0 },
+    doctorName: { fontSize: 21, lineHeight: 26, fontWeight: '900', color: '#FFFFFF', backgroundColor: 'transparent', includeFontPadding: false },
+    specialty: { fontSize: 15, lineHeight: 20, color: 'rgba(255,255,255,0.84)', backgroundColor: 'transparent', marginTop: 2, includeFontPadding: false },
+    dateTime: { fontSize: 13, color: 'rgba(255,255,255,0.80)', backgroundColor: 'transparent', fontWeight: '800', marginTop: 4 },
+    detailItem: { padding: 16 },
+    detailLabel: { fontSize: 13, color: theme.colors.primary, backgroundColor: 'transparent', fontWeight: '900', marginBottom: 5 },
+    detailValue: { fontSize: 15, color: theme.colors.ink, backgroundColor: 'transparent', lineHeight: 22, fontWeight: '700' },
+    detailMuted: { color: theme.colors.muted, fontStyle: 'italic' },
+    centerCard: { minHeight: 240, alignItems: 'center', justifyContent: 'center', gap: 10 },
+    errorTitle: { color: theme.colors.ink, backgroundColor: 'transparent', fontSize: 18, fontWeight: '900', textAlign: 'center' },
+    errorText: { color: theme.colors.muted, backgroundColor: 'transparent', textAlign: 'center', lineHeight: 20, marginBottom: 6 },
+  });
+}

@@ -40,12 +40,12 @@ export default function GlobalSettingsScreen() {
         <Text style={styles.cardTitle}>{t('settings.account')}</Text>
         <Text style={styles.text}>{nombreCompleto || 'Usuario'}</Text>
         <Text style={styles.muted}>{t('role.admin')}: {humanRole(role)}</Text>
-        <MtButton title={language === 'en' ? 'Back to my panel' : 'Volver a mi panel'} onPress={() => router.replace(routeForRole(role) as any)} style={{ marginTop: 14 }} />
+        <MtButton title={t('settings.backToPanel')} onPress={() => router.replace(routeForRole(role) as any)} style={{ marginTop: 14 }} />
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>
-        <Text style={styles.cardTitle}>{language === 'en' ? 'Appearance' : 'Apariencia'}</Text>
-        <Text style={styles.muted}>{language === 'en' ? 'Choose how the app looks.' : 'Elegí cómo se ve la app.'}</Text>
+        <Text style={styles.cardTitle}>{t('settings.appearance')}</Text>
+        <Text style={styles.muted}>{t('settings.appearanceHelp')}</Text>
         <View style={styles.optionRow}>
           {(['light', 'dark', 'system'] as ThemeMode[]).map((item) => (
             <Option key={item} label={item === 'light' ? t('settings.light') : item === 'dark' ? t('settings.dark') : t('settings.system')} selected={mode === item} onPress={() => setMode(item)} />
@@ -55,16 +55,17 @@ export default function GlobalSettingsScreen() {
 
       <MtCard style={{ marginBottom: 14 }}>
         <Text style={styles.cardTitle}>{t('settings.language')}</Text>
-        <Text style={styles.muted}>{language === 'en' ? 'Choose the interface language.' : 'Elegí el idioma de la interfaz.'}</Text>
+        <Text style={styles.muted}>{t('settings.languageHelp')}</Text>
         <View style={styles.optionRow}>
           <Option label={t('settings.spanish')} selected={language === 'es'} onPress={() => setLanguage('es')} />
           <Option label={t('settings.english')} selected={language === 'en'} onPress={() => setLanguage('en')} />
+          <Option label={t('settings.portuguese')} selected={language === 'pt'} onPress={() => setLanguage('pt')} />
         </View>
       </MtCard>
 
       <MtCard>
-        <Text style={styles.cardTitle}>{language === 'en' ? 'Session' : 'Sesión'}</Text>
-        <Text style={styles.muted}>{language === 'en' ? 'Sign out safely from this device.' : 'Cerrá sesión de forma segura en este dispositivo.'}</Text>
+        <Text style={styles.cardTitle}>{t('settings.session')}</Text>
+        <Text style={styles.muted}>{t('settings.sessionHelp')}</Text>
         <MtButton title={t('common.logout')} variant="danger" onPress={close} style={{ marginTop: 14 }} />
       </MtCard>
     </MtScreen>

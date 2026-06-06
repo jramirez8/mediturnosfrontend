@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Mediturnos",
+    "slug": "mediturnos-mobile",
+    "splash": {
+      "image": "./assets/images/splash-mediturnos.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#0D2B44"
+    },
+    "icon": "./assets/images/icon.png",
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0D2B44"
+      }
+    },
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}

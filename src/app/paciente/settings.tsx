@@ -26,13 +26,13 @@ export default function SettingsScreen() {
         <MtHeader eyebrow="CONFIG" title={t('settings.title')} subtitle={t('settings.subtitle')} />
 
         <MtCard style={styles.section}>
-          <Text style={styles.sectionTitle}>{language === 'en' ? 'Appearance' : 'Apariencia'}</Text>
-          <Text style={styles.sectionSubtitle}>{language === 'en' ? 'Choose light, dark or system theme.' : 'Elegí modo claro, oscuro o seguir el sistema.'}</Text>
+          <Text style={styles.sectionTitle}>{t('settings.appearance')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('settings.appearanceHelp')}</Text>
 
           <View style={styles.preferenceRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.preferenceTitle}>{t('settings.darkMode')}</Text>
-              <Text style={styles.preferenceHint}>{language === 'en' ? 'Use dark colors throughout the app.' : 'Usa colores oscuros en toda la app.'}</Text>
+              <Text style={styles.preferenceHint}>{t('settings.darkHint')}</Text>
             </View>
             <Switch
               value={mode === 'dark'}
@@ -45,7 +45,7 @@ export default function SettingsScreen() {
           <View style={styles.preferenceRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.preferenceTitle}>{t('settings.system')}</Text>
-              <Text style={styles.preferenceHint}>{language === 'en' ? 'Follow the device appearance setting.' : 'Usa la apariencia configurada en el dispositivo.'}</Text>
+              <Text style={styles.preferenceHint}>{t('settings.systemHint')}</Text>
             </View>
             <Switch
               value={mode === 'system'}
@@ -58,18 +58,19 @@ export default function SettingsScreen() {
 
         <MtCard style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings.language')}</Text>
-          <Text style={styles.sectionSubtitle}>{language === 'en' ? 'Choose Spanish or English.' : 'Elegí español o inglés.'}</Text>
+          <Text style={styles.sectionSubtitle}>{t('settings.languageHelp')}</Text>
           <View style={styles.languageRow}>
             <LanguageButton label={t('settings.spanish')} selected={language === 'es'} onPress={() => setLanguage('es')} styles={styles} />
             <LanguageButton label={t('settings.english')} selected={language === 'en'} onPress={() => setLanguage('en')} styles={styles} />
+            <LanguageButton label={t('settings.portuguese')} selected={language === 'pt'} onPress={() => setLanguage('pt')} styles={styles} />
           </View>
         </MtCard>
 
         <MtCard style={styles.section}>
-          <Text style={styles.sectionTitle}>{language === 'en' ? 'Account' : 'Cuenta'}</Text>
-          <Text style={styles.sectionSubtitle}>{language === 'en' ? 'Sign out from this device.' : 'Cerrá sesión en este dispositivo.'}</Text>
+          <Text style={styles.sectionTitle}>{t('settings.account')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('settings.sessionHelp')}</Text>
           <MtButton title={t('common.logout')} variant="danger" onPress={handleLogout} />
-          <MtButton title={language === 'en' ? 'Back to profile' : 'Volver al perfil'} variant="ghost" onPress={() => router.push('/paciente/perfil')} style={{ marginTop: 10 }} />
+          <MtButton title={t('settings.backToProfile')} variant="ghost" onPress={() => router.push('/paciente/perfil')} style={{ marginTop: 10 }} />
         </MtCard>
       </MtScreen>
       <MtBottomNav active="perfil" />
@@ -93,8 +94,8 @@ function createStyles(theme: MediturnosTheme) {
     preferenceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 14, marginTop: 14 },
     preferenceTitle: { color: theme.colors.ink, fontWeight: '900', fontSize: 15 },
     preferenceHint: { color: theme.colors.muted, lineHeight: 19, marginTop: 4, fontSize: 13 },
-    languageRow: { flexDirection: 'row', gap: 10 },
-    languageButton: { flex: 1, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, borderRadius: 16, paddingVertical: 12, alignItems: 'center' },
+    languageRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
+    languageButton: { flexGrow: 1, minWidth: 120, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, borderRadius: 16, paddingVertical: 12, alignItems: 'center' },
     languageButtonSelected: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryLight },
     languageButtonText: { color: theme.colors.muted, fontWeight: '900' },
     languageButtonTextSelected: { color: theme.colors.primaryDark },

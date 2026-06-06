@@ -17,7 +17,7 @@ export function RoleGuard({ allowed }: { allowed: AppRole[] }) {
   if (!hydrated) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0F766E" />
+        <ActivityIndicator size="large" color="#7C3AED" />
       </View>
     );
   }

@@ -1,34 +1,43 @@
-import React, { useEffect } from 'react';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useThemeStore, useResolvedThemeMode } from '../theme/themeStore';
-import { useLanguageStore } from '../i18n/languageStore';
+import { useEffect, useState } from "react";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
 
-function AppBoot() {
-  const loadTheme = useThemeStore((state) => state.loadTheme);
-  const loadLanguage = useLanguageStore((state) => state.loadLanguage);
-
-  useEffect(() => {
-    loadTheme();
-    loadLanguage();
-  }, [loadTheme, loadLanguage]);
-
-  return null;
-}
+// Evita que Expo esconda el splash nativo antes de que la app esté lista.
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const resolvedMode = useResolvedThemeMode();
+  const [appReady, setAppReady] = useState(false);
+
+  useEffect(() => {
+    async function prepareApp() {
+      try {
+        // Acá podés cargar lo importante antes de mostrar la app:
+        // - fuentes
+        // - idioma guardado
+        // - token de SecureStore
+        // - sesión de usuario
+        // - SQLite inicial
+        await new Promise((resolve) => setTimeout(resolve, 900));
+      } finally {
+        setAppReady(true);
+        await SplashScreen.hideAsync();
+      }
+    }
+
+    prepareApp();
+  }, []);
+
+  if (!appReady) {
+    // No renderizamos nada: mientras tanto se ve el splash nativo.
+    return <View style={{ flex: 1, backgroundColor: "#0D2B44" }} />;
+  }
 
   return (
     <>
-      <AppBoot />
-      <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: resolvedMode === 'dark' ? '#071312' : '#F6FAF9' },
-        }}
-      />
+      <StatusBar style="light" />
+      <Stack screenOptions={{ headerShown: false }} />
     </>
   );
 }

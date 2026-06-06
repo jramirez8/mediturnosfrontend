@@ -2,11 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useMtTheme } from '../theme/themeStore';
 import { MediturnosTheme } from '../constants/mediturnosTheme';
+import { translateLiteral, useTranslation } from '../i18n/languageStore';
 
-export type MtSelectOption = {
-  label: string;
-  value: string;
-};
+export type MtSelectOption = { label: string; value: string };
 
 export function MtSelect({
   label,
@@ -25,15 +23,18 @@ export function MtSelect({
 }) {
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
+  const { language } = useTranslation();
   const [open, setOpen] = useState(false);
   const selected = options.find((option) => option.value === value);
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label}>{translateLiteral(label, language)}</Text>
       <Pressable disabled={disabled} onPress={() => setOpen((current) => !current)} style={[styles.button, disabled && { opacity: 0.55 }]}> 
-        <Text style={[styles.value, !selected && styles.placeholder]}>{selected?.label ?? placeholder}</Text>
-        <Text style={styles.chevron}>{open ? '▲' : '▼'}</Text>
+        <Text style={[styles.value, !selected && styles.placeholder]}>{selected?.label ? translateLiteral(selected.label, language) : translateLiteral(placeholder, language)}</Text>
+        <View style={styles.chevronBubble}>
+          <Text style={styles.chevron}>{open ? '⌃' : '⌄'}</Text>
+        </View>
       </Pressable>
       {open ? (
         <ScrollView style={styles.options} nestedScrollEnabled>
@@ -48,7 +49,7 @@ export function MtSelect({
                   setOpen(false);
                 }}
               >
-                <Text style={[styles.optionText, active && styles.optionTextActive]}>{option.label}</Text>
+                <Text style={[styles.optionText, active && styles.optionTextActive]}>{translateLiteral(option.label, language)}</Text>
               </Pressable>
             );
           })}
@@ -59,15 +60,16 @@ export function MtSelect({
 }
 
 function createStyles(theme: MediturnosTheme) {
+  const isDark = theme.mode === 'dark';
   return StyleSheet.create({
     wrap: { gap: 8 },
-    label: { color: theme.colors.ink, fontWeight: '900', fontSize: 13 },
+    label: { color: theme.colors.ink, fontWeight: '900', fontSize: 13, marginLeft: 2 },
     button: {
-      minHeight: 52,
+      minHeight: 54,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      borderRadius: 16,
-      backgroundColor: theme.colors.surface,
+      borderRadius: 18,
+      backgroundColor: isDark ? 'rgba(255,255,255,0.045)' : 'rgba(255,255,255,0.86)',
       paddingHorizontal: 14,
       paddingVertical: 12,
       flexDirection: 'row',
@@ -76,20 +78,25 @@ function createStyles(theme: MediturnosTheme) {
     },
     value: { flex: 1, color: theme.colors.ink, fontWeight: '800', fontSize: 15 },
     placeholder: { color: theme.colors.soft, fontWeight: '700' },
-    chevron: { color: theme.colors.primary, fontWeight: '900' },
+    chevronBubble: { width: 28, height: 28, borderRadius: 14, backgroundColor: theme.colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
+    chevron: { color: theme.colors.primary, fontWeight: '900', fontSize: 18, lineHeight: 18 },
     options: {
       maxHeight: 260,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      borderRadius: 16,
-      backgroundColor: theme.mode === 'dark' ? '#102824' : '#FFFFFF',
+      borderRadius: 18,
+      backgroundColor: isDark ? '#1F1434' : '#FFFFFF',
       overflow: 'hidden',
       zIndex: 20,
-      elevation: 8,
+      elevation: 10,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.16,
+      shadowRadius: 18,
     },
-    option: { paddingHorizontal: 14, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.colors.border, backgroundColor: theme.mode === 'dark' ? '#102824' : '#FFFFFF' },
+    option: { paddingHorizontal: 14, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.colors.border, backgroundColor: isDark ? '#1F1434' : '#FFFFFF' },
     optionActive: { backgroundColor: theme.colors.primaryLight },
     optionText: { color: theme.colors.ink, fontWeight: '900', fontSize: 15 },
-    optionTextActive: { color: theme.mode === 'dark' ? '#06201D' : theme.colors.primaryDark, fontWeight: '900' },
+    optionTextActive: { color: theme.mode === 'dark' ? '#FFFFFF' : theme.colors.primaryDark, fontWeight: '900' },
   });
 }

@@ -1,17 +1,51 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../auth/authStore';
-import { MtButton, MtCard, MtInput, MtScreen } from '../components/mediturnos';
-import { MediturnosTheme } from '../constants/mediturnosTheme';
-import { useMtTheme } from '../theme/themeStore';
 import { useTranslation } from '../i18n/languageStore';
 import { debugErrorPayload, readableError } from '../utils/errors';
-import { canUseDeviceAuth, getBiometricInfo, saveCurrentSessionForDeviceAuth, authenticateDevice } from '../utils/deviceAuth';
+import {
+  authenticateDevice,
+  canUseDeviceAuth,
+  getBiometricInfo,
+  saveCurrentSessionForDeviceAuth,
+} from '../utils/deviceAuth';
+
+const logo = require('../../assets/images/mediturnos-login-logo-transparent.png');
+
+const palette = {
+  ink: '#24104F',
+  muted: '#7F7897',
+  softMuted: '#A19BB6',
+  purple: '#7C3AED',
+  purpleDark: '#5B21B6',
+  purpleDeep: '#4C1D95',
+  purpleSoft: '#F3ECFF',
+  purpleBorder: '#D8CBF6',
+  white: '#FFFFFF',
+  danger: '#DC2626',
+  dangerBg: '#FFF1F2',
+  success: '#16A34A',
+  successBg: '#F3EEFF',
+};
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [focused, setFocused] = useState<'identifier' | 'password' | 'twoFactor' | null>(null);
   const [biometricEmail, setBiometricEmail] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [debugMessage, setDebugMessage] = useState<string | null>(null);
@@ -19,28 +53,33 @@ export default function LoginScreen() {
   const [twoFactorDestination, setTwoFactorDestination] = useState<string | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
   const { login, loginWithDeviceAuth, verifyTwoFactor, loading } = useAuthStore();
-  const theme = useMtTheme();
-  const styles = useMemo(() => createStyles(theme), [theme.mode]);
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     let alive = true;
+
     getBiometricInfo().then((info) => {
       if (!alive) return;
+
       if (info.enabled && info.email) {
         setBiometricEmail(info.email);
-        setEmail(info.email);
+        setIdentifier(info.email);
       } else {
         setBiometricEmail(null);
-        setEmail('');
+        setIdentifier('');
       }
+
       setPassword('');
     });
-    return () => { alive = false; };
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  const askBiometricSetup = async (route: string, identifier: string) => {
+  const askBiometricSetup = async (route: string, userIdentifier: string) => {
     if (Platform.OS === 'web') {
       router.replace(route as any);
       return;
@@ -53,16 +92,20 @@ export default function LoginScreen() {
     }
 
     Alert.alert(
-      language === 'en' ? 'Enable biometric sign-in' : 'Activar ingreso con biometría',
-      language === 'en' ? 'Next time you can sign in with fingerprint, face, PIN or pattern. We store your user and session, never your password.' : 'Podés entrar la próxima vez con huella, rostro, PIN o patrón. Guardamos tu usuario y la sesión, nunca tu contraseña.',
+      t('login.enableSecureTitle'),
+      t('login.enableSecureText'),
       [
-        { text: language === 'en' ? 'Not now' : 'Ahora no', style: 'cancel', onPress: () => router.replace(route as any) },
         {
-          text: language === 'en' ? 'Enable' : 'Activar',
+          text: t('login.notNow'),
+          style: 'cancel',
+          onPress: () => router.replace(route as any),
+        },
+        {
+          text: t('login.enable'),
           onPress: async () => {
             try {
-              const auth = await authenticateDevice(language === 'en' ? 'Enable biometric sign-in' : 'Activar ingreso con biometría');
-              if (auth.success) await saveCurrentSessionForDeviceAuth(identifier);
+              const auth = await authenticateDevice(t('login.enableSecureAction'));
+              if (auth.success) await saveCurrentSessionForDeviceAuth(userIdentifier);
             } catch (error) {
               console.warn('No se pudo activar biometría', error);
             } finally {
@@ -79,24 +122,27 @@ export default function LoginScreen() {
     setInfoMessage(null);
     setDebugMessage(null);
 
-    if (!email.trim() || !password) {
-      setErrorMessage(language === 'en' ? 'Enter email/ID and password to continue.' : 'Ingresá email/DNI y contraseña para continuar.');
+    if (!identifier.trim() || !password) {
+      setErrorMessage(t('login.requiredFields'));
       return;
     }
 
     try {
-      const result = await login(email.trim(), password);
+      const result = await login(identifier.trim(), password);
       if (result.requiresTwoFactor && result.usuarioId) {
         setTwoFactorUserId(result.usuarioId);
         setTwoFactorDestination(result.destination ?? null);
         setPassword('');
         setTwoFactorCode('');
-        setInfoMessage(language === 'en' ? `We sent a verification code to ${result.destination ?? 'your email'}.` : `Te enviamos un código de verificación a ${result.destination ?? 'tu correo'}.`);
+        setInfoMessage(
+          t('login.codeSent', { destination: result.destination ?? t('login.yourEmail') }),
+        );
         return;
       }
-      await askBiometricSetup(result.route, email.trim());
+
+      await askBiometricSetup(result.route, identifier.trim());
     } catch (error: any) {
-      const message = readableError(error, language === 'en' ? 'Check your credentials and try again.' : 'Revisá tus credenciales e intentá nuevamente.');
+      const message = readableError(error, t('login.checkCredentials'));
       const debug = debugErrorPayload(error);
       console.error('LOGIN_REAL_ERROR', debug);
       setErrorMessage(message);
@@ -107,15 +153,17 @@ export default function LoginScreen() {
   const handleVerifyTwoFactor = async () => {
     setErrorMessage(null);
     setInfoMessage(null);
+
     if (!twoFactorUserId || !twoFactorCode.trim()) {
-      setErrorMessage(language === 'en' ? 'Enter the verification code.' : 'Ingresá el código de verificación.');
+      setErrorMessage(t('login.enterCode'));
       return;
     }
+
     try {
       const result = await verifyTwoFactor(twoFactorUserId, twoFactorCode.trim());
       router.replace(result.route as any);
     } catch (error: any) {
-      setErrorMessage(readableError(error, language === 'en' ? 'Invalid or expired code.' : 'Código inválido o vencido.'));
+      setErrorMessage(readableError(error, t('login.invalidCode')));
     }
   };
 
@@ -123,135 +171,427 @@ export default function LoginScreen() {
     setErrorMessage(null);
     setInfoMessage(null);
     setDebugMessage(null);
+
     try {
       const result = await loginWithDeviceAuth();
       router.replace(result.route as any);
     } catch (error: any) {
-      setErrorMessage(readableError(error, language === 'en' ? 'We could not sign in with your device method. Sign in with password once more.' : 'No pudimos ingresar con el método del dispositivo. Ingresá con contraseña una vez más.'));
+      setErrorMessage(
+        readableError(
+          error,
+          t('login.deviceLoginError'),
+        ),
+      );
     }
   };
 
+  const invalidCredentials = debugMessage?.includes('HTTP 400') || debugMessage?.includes('HTTP 401');
+
   return (
-    <MtScreen scroll bottomSpace={false}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <View style={styles.hero}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>M</Text>
-          </View>
-          <Text style={styles.brand}>Mediturnos</Text>
-          <Text style={styles.subtitle}>{t('login.subtitle')}</Text>
-        </View>
+    <View style={styles.page}>
+      <View style={styles.topGlow} />
+      <View style={styles.topWave} />
+      <View style={styles.bottomWave} />
+      <View style={styles.bottomWaveTwo} />
 
-        <MtCard style={styles.loginCard}>
-          <Text style={styles.title}>{t('login.title')}</Text>
-          <Text style={styles.helper}>{language === 'en' ? 'Sign in with your email or ID. Your password is never prefilled.' : 'Ingresá con tu email o DNI. La contraseña nunca queda precargada.'}</Text>
-
-          <View style={styles.form}>
-            <MtInput
-              label={t('login.email')}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder={language === 'en' ? 'your@email.com or ID' : 'tu@email.com o DNI'}
-            />
-            {!twoFactorUserId ? (
-              <MtInput
-                label={t('login.password')}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                placeholder="••••••••"
-              />
-            ) : (
-              <MtInput
-                label={language === 'en' ? 'Verification code' : 'Código de verificación'}
-                value={twoFactorCode}
-                onChangeText={setTwoFactorCode}
-                keyboardType="number-pad"
-                placeholder="123456"
-              />
-            )}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.logoWrap}>
+            <Image source={logo} resizeMode="contain" style={styles.logo} />
           </View>
 
-          {!!biometricEmail && (
-            <Text style={styles.biometricHint}>{language === 'en' ? 'Device sign-in enabled for' : 'Biometría activada para'} {biometricEmail}. {language === 'en' ? 'Your password is never shown or stored as text.' : 'Tu clave no se muestra ni se guarda como texto.'}</Text>
-          )}
+          <View style={styles.card}>
+            <Text style={styles.title}>{t('login.title')}</Text>
+            <Text style={styles.subtitle}>{t('login.welcome')}</Text>
 
-          {infoMessage ? (
-            <View style={[styles.errorBox, { borderColor: theme.colors.success, backgroundColor: theme.mode === 'dark' ? '#063D35' : '#ECFDF5' }]}>
-              <Text style={[styles.errorTitle, { color: theme.colors.success }]}>{language === 'en' ? 'Verification required' : 'Verificación requerida'}</Text>
-              <Text style={styles.errorText}>{infoMessage}</Text>
+            <View style={styles.formBlock}>
+              <Text style={styles.label}>{t('login.email')}</Text>
+              <View style={[styles.inputShell, focused === 'identifier' && styles.inputShellFocused]}>
+                <TextInput
+                  value={identifier}
+                  onChangeText={setIdentifier}
+                  onFocus={() => setFocused('identifier')}
+                  onBlur={() => setFocused(null)}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  placeholder={t('login.emailPlaceholder')}
+                  placeholderTextColor={palette.softMuted}
+                  underlineColorAndroid="transparent"
+                  selectionColor={palette.purple}
+                  style={styles.input}
+                />
+              </View>
+
+              {!twoFactorUserId ? (
+                <>
+                  <Text style={styles.label}>{t('login.password')}</Text>
+                  <View style={[styles.inputShell, focused === 'password' && styles.inputShellFocused]}>
+                    <TextInput
+                      value={password}
+                      onChangeText={setPassword}
+                      onFocus={() => setFocused('password')}
+                      onBlur={() => setFocused(null)}
+                      secureTextEntry={!showPassword}
+                      placeholder={t('login.password')}
+                      placeholderTextColor={palette.softMuted}
+                      underlineColorAndroid="transparent"
+                      selectionColor={palette.purple}
+                      style={styles.input}
+                    />
+                    <Pressable hitSlop={10} onPress={() => setShowPassword((value) => !value)} style={styles.eyeButton}>
+                      <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color={palette.purpleDeep} />
+                    </Pressable>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.label}>{t('login.verificationCode')}</Text>
+                  <View style={[styles.inputShell, focused === 'twoFactor' && styles.inputShellFocused]}>
+                    <TextInput
+                      value={twoFactorCode}
+                      onChangeText={setTwoFactorCode}
+                      onFocus={() => setFocused('twoFactor')}
+                      onBlur={() => setFocused(null)}
+                      keyboardType="number-pad"
+                      placeholder="123456"
+                      placeholderTextColor={palette.softMuted}
+                      underlineColorAndroid="transparent"
+                      selectionColor={palette.purple}
+                      style={styles.input}
+                    />
+                  </View>
+                </>
+              )}
             </View>
-          ) : null}
 
-          {errorMessage ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorTitle}>{language === 'en' ? 'We could not sign in' : 'No pudimos iniciar sesión'}</Text>
-              <Text style={styles.errorText}>
-                {debugMessage?.includes('HTTP 400') || debugMessage?.includes('HTTP 401')
-                  ? t('login.errorInvalid')
-                  : errorMessage}
+            <Pressable style={styles.forgotButton} onPress={() => router.push('/forgot-password')}>
+              <Text style={styles.forgotText}>{t('login.forgot')}</Text>
+            </Pressable>
+
+            {infoMessage ? (
+              <View style={[styles.messageBox, styles.infoBox]}>
+                <Text style={[styles.messageTitle, styles.infoTitle]}>{t('login.verificationRequired')}</Text>
+                <Text style={styles.messageText}>{infoMessage}</Text>
+                {twoFactorDestination ? <Text style={styles.messageFoot}>{twoFactorDestination}</Text> : null}
+              </View>
+            ) : null}
+
+            {errorMessage ? (
+              <View style={[styles.messageBox, styles.errorBox]}>
+                <Text style={[styles.messageTitle, styles.errorTitle]}>{t('login.signInErrorTitle')}</Text>
+                <Text style={styles.messageText}>{invalidCredentials ? t('login.errorInvalid') : errorMessage}</Text>
+              </View>
+            ) : null}
+
+            {!!biometricEmail && !twoFactorUserId ? (
+              <Text style={styles.secureHint}>
+                {t('login.secureEnabledFor')} {biometricEmail}.
               </Text>
-            </View>
-          ) : null}
+            ) : null}
 
-          <MtButton title={twoFactorUserId ? (language === 'en' ? 'Validate code' : 'Validar código') : t('login.submit')} onPress={twoFactorUserId ? handleVerifyTwoFactor : handleLogin} loading={loading} style={{ marginTop: 18 }} />
-          {!!twoFactorUserId && (
-            <MtButton title={language === 'en' ? 'Use another account' : 'Usar otra cuenta'} variant="ghost" onPress={() => { setTwoFactorUserId(null); setTwoFactorDestination(null); setTwoFactorCode(''); setErrorMessage(null); setInfoMessage(null); }} style={{ marginTop: 8 }} />
-          )}
-          <Pressable style={styles.biometricButton} onPress={handleBiometricLogin} disabled={loading}>
-            <Text style={styles.biometricIcon}>☝️</Text>
-            <Text style={styles.biometricText}>{t('login.biometric')}</Text>
-          </Pressable>
-          <MtButton title={t('login.createAccount')} variant="ghost" onPress={() => router.push('/registro')} style={{ marginTop: 10 }} />
-          <Text style={styles.forgot} onPress={() => router.push('/forgot-password')}>{t('login.forgot')}</Text>
-        </MtCard>
+            <Pressable
+              disabled={loading}
+              style={[styles.primaryButton, loading && styles.disabledButton]}
+              onPress={twoFactorUserId ? handleVerifyTwoFactor : handleLogin}
+            >
+              <Text style={styles.primaryText}>{twoFactorUserId ? (t('login.validateCode')) : t('login.submit')}</Text>
+              <Ionicons name="arrow-forward" size={30} color="#FFFFFF" style={styles.arrowIcon} />
+            </Pressable>
+
+            {!twoFactorUserId ? (
+              <Pressable disabled={loading} style={[styles.biometricButton, loading && styles.disabledButton]} onPress={handleBiometricLogin}>
+                <Ionicons name="finger-print-outline" size={22} color={palette.purpleDark} />
+                <Text style={styles.biometricText}>{t('login.biometric')}</Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                style={styles.biometricButton}
+                onPress={() => {
+                  setTwoFactorUserId(null);
+                  setTwoFactorDestination(null);
+                  setTwoFactorCode('');
+                  setErrorMessage(null);
+                  setInfoMessage(null);
+                }}
+              >
+                <Text style={styles.biometricText}>{t('login.useAnotherAccount')}</Text>
+              </Pressable>
+            )}
+
+            <Pressable style={styles.secondaryButton} onPress={() => router.push('/registro')}>
+              <Text style={styles.secondaryText}>{t('login.createAccount')}</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
-    </MtScreen>
+    </View>
   );
 }
 
-function createStyles(theme: MediturnosTheme) {
-  return StyleSheet.create({
-    hero: { alignItems: 'center', paddingTop: 12, paddingBottom: 22 },
-    logoCircle: {
-      width: 78,
-      height: 78,
-      borderRadius: 28,
-      backgroundColor: theme.colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 14,
-      ...theme.shadow,
-    },
-    logoText: { color: theme.mode === 'dark' ? '#06201D' : 'white', fontSize: 38, fontWeight: '900' },
-    brand: { color: theme.colors.ink, fontSize: 36, fontWeight: '900', letterSpacing: -1 },
-    subtitle: { color: theme.colors.muted, fontSize: 15, marginTop: 6, textAlign: 'center' },
-    loginCard: { padding: 22 },
-    title: { color: theme.colors.ink, fontSize: 24, fontWeight: '900' },
-    helper: { color: theme.colors.muted, marginTop: 6, lineHeight: 20 },
-    form: { gap: 14, marginTop: 20 },
-    forgot: { color: theme.colors.primary, fontWeight: '800', textAlign: 'center', marginTop: 18 },
-    biometricHint: { color: theme.colors.muted, fontWeight: '700', fontSize: 12, lineHeight: 18, marginTop: 12 },
-    biometricButton: {
-      marginTop: 10,
-      minHeight: 52,
-      borderRadius: 17,
-      borderWidth: 1,
-      borderColor: theme.colors.primary,
-      backgroundColor: theme.colors.primaryLight,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 18,
-      flexDirection: 'row',
-      gap: 8,
-    },
-    biometricIcon: { fontSize: 18 },
-    biometricText: { color: theme.colors.primaryDark, fontSize: 15, fontWeight: '900' },
-    errorBox: { borderWidth: 1, borderColor: theme.colors.danger, backgroundColor: theme.mode === 'dark' ? '#2B1113' : '#FFF1F2', borderRadius: 16, padding: 12, marginTop: 16 },
-    errorTitle: { color: theme.colors.danger, fontWeight: '900', marginBottom: 4 },
-    errorText: { color: theme.colors.ink, fontWeight: '700', lineHeight: 20 },
-  });
-}
+const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
+  page: {
+    flex: 1,
+    backgroundColor: '#FFFEFF',
+    overflow: 'hidden',
+  },
+  topGlow: {
+    position: 'absolute',
+    top: -160,
+    right: -135,
+    width: 420,
+    height: 420,
+    borderRadius: 210,
+    backgroundColor: '#EFE5FF',
+    opacity: 0.9,
+  },
+  topWave: {
+    position: 'absolute',
+    top: -125,
+    left: -90,
+    width: 620,
+    height: 294,
+    borderBottomLeftRadius: 260,
+    borderBottomRightRadius: 420,
+    backgroundColor: '#F7F1FF',
+    transform: [{ rotate: '-8deg' }],
+  },
+  bottomWave: {
+    position: 'absolute',
+    bottom: -132,
+    left: -130,
+    width: 640,
+    height: 210,
+    borderTopLeftRadius: 320,
+    borderTopRightRadius: 260,
+    backgroundColor: '#F2EAFE',
+    transform: [{ rotate: '4deg' }],
+  },
+  bottomWaveTwo: {
+    position: 'absolute',
+    bottom: -160,
+    right: -185,
+    width: 520,
+    height: 210,
+    borderTopLeftRadius: 300,
+    borderTopRightRadius: 260,
+    backgroundColor: '#EBDDFF',
+    opacity: 0.62,
+    transform: [{ rotate: '-8deg' }],
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 26,
+    paddingTop: Platform.OS === 'web' ? 26 : 46,
+    paddingBottom: 24,
+    justifyContent: 'center',
+  },
+  logoWrap: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 332,
+    minHeight: 82,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  logo: {
+    width: 258,
+    height: 78,
+  },
+  card: {
+    width: '100%',
+    maxWidth: 470,
+    alignSelf: 'center',
+  },
+  title: {
+    color: palette.ink,
+    fontSize: 42,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+    marginTop: 0,
+  },
+  subtitle: {
+    color: palette.muted,
+    fontSize: 22,
+    fontWeight: '500',
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  formBlock: {
+    gap: 9,
+  },
+  label: {
+    color: palette.ink,
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 6,
+    marginLeft: 2,
+  },
+  inputShell: {
+    height: 60,
+    borderRadius: 18,
+    borderWidth: 1.3,
+    borderColor: palette.purpleBorder,
+    backgroundColor: '#F1EAFE',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 18,
+    paddingRight: 10,
+    shadowColor: '#8B5CF6',
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
+  },
+  inputShellFocused: {
+    borderColor: palette.purple,
+    backgroundColor: '#F1EAFE',
+    shadowOpacity: 0.16,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#F1EAFE',
+    color: palette.ink,
+    fontSize: 20,
+    fontWeight: '600',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    outlineStyle: 'none' as any,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+  },
+  eyeButton: {
+    width: 46,
+    height: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 23,
+  },
+  forgotButton: {
+    alignSelf: 'flex-end',
+    marginTop: 12,
+    marginBottom: 17,
+    paddingVertical: 5,
+  },
+  forgotText: {
+    color: palette.purpleDeep,
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  messageBox: {
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    marginBottom: 14,
+  },
+  errorBox: {
+    borderColor: '#FDA4AF',
+    backgroundColor: palette.dangerBg,
+  },
+  infoBox: {
+    borderColor: '#86EFAC',
+    backgroundColor: palette.successBg,
+  },
+  messageTitle: {
+    fontWeight: '900',
+    fontSize: 15,
+    marginBottom: 5,
+  },
+  errorTitle: {
+    color: palette.danger,
+  },
+  infoTitle: {
+    color: palette.success,
+  },
+  messageText: {
+    color: palette.ink,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  messageFoot: {
+    color: palette.muted,
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  secureHint: {
+    color: palette.muted,
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 18,
+    marginTop: -2,
+    marginBottom: 12,
+  },
+  primaryButton: {
+    height: 62,
+    borderRadius: 20,
+    backgroundColor: palette.purple,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    paddingHorizontal: 26,
+    shadowColor: palette.purple,
+    shadowOpacity: 0.30,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 9 },
+    elevation: 7,
+  },
+  primaryText: {
+    color: palette.white,
+    backgroundColor: 'transparent',
+    fontSize: 19,
+    fontWeight: '900',
+    letterSpacing: 0.25,
+  },
+  arrowIcon: {
+    position: 'absolute',
+    right: 28,
+  },
+  biometricButton: {
+    minHeight: 56,
+    borderRadius: 18,
+    borderWidth: 1.2,
+    borderColor: palette.purpleBorder,
+    backgroundColor: '#F1EAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 18,
+    marginTop: 14,
+  },
+  biometricText: {
+    color: palette.purpleDark,
+    backgroundColor: 'transparent',
+    fontSize: 19,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  secondaryButton: {
+    height: 58,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: palette.purple,
+    backgroundColor: '#F1EAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 14,
+  },
+  secondaryText: {
+    color: palette.purpleDeep,
+    backgroundColor: 'transparent',
+    fontSize: 19,
+    fontWeight: '900',
+  },
+  disabledButton: {
+    opacity: 0.62,
+  },
+});

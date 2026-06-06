@@ -251,7 +251,7 @@ function createStyles(theme: MediturnosTheme) {
     sectionTitle: { color: theme.colors.ink, fontWeight: '900', fontSize: 18, marginBottom: 12 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 18 },
     quickCard: { width: '48%', backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, borderRadius: 22, padding: 15, minHeight: 150, ...theme.shadow },
-    quickCardFeatured: { borderColor: theme.colors.primary, backgroundColor: theme.mode === 'dark' ? '#082F2B' : '#F0FDFA' },
+    quickCardFeatured: { borderColor: theme.colors.primary, backgroundColor: theme.mode === 'dark' ? '#24143E' : '#F8F5FF' },
     quickIcon: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
     quickIconText: { fontSize: 25, fontWeight: '900' },
     quickTitle: { color: theme.colors.ink, fontWeight: '900', fontSize: 15 },

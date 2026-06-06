@@ -1,127 +1,312 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
-import { medicalHistoryService } from '../../api/medicalHistoryService';
-import { TurnoResponse } from '../../api/appointmentService';
-import { userService, UserProfile } from '../../api/userService';
-import { useAuthStore } from '../../auth/authStore';
-import { MtBottomNav, MtCard, MtEmptyState, MtHeader, MtLoading, MtPill, MtScreen } from '../../components/mediturnos';
+import React, { useMemo, useState } from 'react';
+import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
+import { MtBottomNav, MtButton, MtCard, MtHeader, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
+import { documentTypes } from '../../../components/mediturnos/theme';
 
-export default function HistoriaClinicaScreen() {
-  const { usuarioId } = useAuthStore();
+type Tab = 'Atenciones' | 'Resumen' | 'Documentos';
+type UploadedDocument = {
+  id: string;
+  name: string;
+  type: string;
+  mimeType?: string;
+  size?: number;
+  uri?: string;
+};
+
+const MAX_SIZE = 1024 * 1024;
+const tabs: Tab[] = ['Atenciones', 'Resumen', 'Documentos'];
+
+function readableSize(size?: number) {
+  if (!size) return '';
+  return `${Math.max(1, Math.round(size / 1024))} KB`;
+}
+
+export default function ClinicalHistoryScreen() {
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
-  const [activeTab, setActiveTab] = useState<'atenciones' | 'documentos' | 'resumen'>('atenciones');
-  const [historyRecords, setHistoryRecords] = useState<TurnoResponse[]>([]);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>('Atenciones');
+  const [selectedType, setSelectedType] = useState('Receta');
+  const [typeOpen, setTypeOpen] = useState(false);
+  const [documents, setDocuments] = useState<UploadedDocument[]>([]);
 
-  useEffect(() => {
-    loadData();
-  }, [usuarioId]);
+  const helper = useMemo(() => {
+    if (tab === 'Atenciones') return 'Cuando un profesional cierre una consulta, aparecerá acá.';
+    if (tab === 'Resumen') return 'Resumen médico general pendiente de carga.';
+    return 'Adjuntá PDF, JPG o PNG de hasta 1 MB.';
+  }, [tab]);
 
-  const loadData = async () => {
-    setLoading(true);
-    const [historyData, profileData] = await Promise.all([
-      medicalHistoryService.getHistory(usuarioId),
-      userService.getProfile(usuarioId),
-    ]);
-    setHistoryRecords(historyData);
-    setProfile(profileData);
-    setLoading(false);
+  const validateAndAdd = (doc: UploadedDocument) => {
+    if (doc.size && doc.size > MAX_SIZE) {
+      Alert.alert('Archivo demasiado grande', 'El archivo tiene que pesar hasta 1 MB.');
+      return;
+    }
+
+    const lower = doc.name.toLowerCase();
+    const mime = (doc.mimeType ?? '').toLowerCase();
+    const allowed =
+      mime.includes('pdf') || mime.includes('jpeg') || mime.includes('jpg') || mime.includes('png') ||
+      lower.endsWith('.pdf') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png');
+
+    if (!allowed) {
+      Alert.alert('Formato no soportado', 'Subí un PDF, JPG o PNG.');
+      return;
+    }
+
+    setDocuments(prev => [{ ...doc, id: String(Date.now()), type: selectedType }, ...prev]);
   };
 
-  const finished = useMemo(() => historyRecords.filter((item) => ['FINALIZADO', 'ATENDIDO'].includes(String(item.estado).toUpperCase())), [historyRecords]);
+  const pickPdfOrImage = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['application/pdf', 'image/jpeg', 'image/png'],
+      multiple: false,
+      copyToCacheDirectory: true,
+    });
 
-  if (loading) return <MtLoading text="Cargando historia clínica..." />;
+    if (result.canceled) return;
+    const asset = result.assets?.[0];
+    if (!asset) return;
+
+    validateAndAdd({
+      id: String(Date.now()),
+      name: asset.name ?? 'documento',
+      type: selectedType,
+      mimeType: asset.mimeType,
+      size: asset.size,
+      uri: asset.uri,
+    });
+  };
+
+  const pickFromGallery = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permiso necesario', 'Necesito acceso a la galería para adjuntar imágenes.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.85,
+    });
+
+    if (result.canceled) return;
+    const asset = result.assets?.[0];
+    if (!asset) return;
+
+    validateAndAdd({
+      id: String(Date.now()),
+      name: asset.fileName ?? 'imagen.jpg',
+      type: selectedType,
+      mimeType: asset.mimeType ?? 'image/jpeg',
+      size: asset.fileSize,
+      uri: asset.uri,
+    });
+  };
 
   return (
     <>
-      <MtScreen scroll={false}>
-        <MtHeader eyebrow="HISTORIA CLÍNICA" title="Mi historia" subtitle="Atenciones, diagnósticos y documentos asociados." />
+      <MtScreen scroll>
+        <MtHeader
+          eyebrow="HISTORIA CLÍNICA"
+          title="Mi historia"
+          subtitle="Atenciones, diagnósticos y documentos asociados."
+        />
 
         <MtCard style={styles.patientCard}>
-          <Text style={styles.patientName}>{profile?.nombre} {profile?.apellido}</Text>
-          <View style={styles.patientGrid}>
-            <Text style={styles.patientText}>DNI: {profile?.dni || '-'}</Text>
-            <Text style={styles.patientText}>Obra social: {profile?.obraSocial || '-'}</Text>
-            <Text style={styles.patientText}>HC-{String(profile?.id ?? 0).padStart(6, '0')}</Text>
+          <Text style={styles.patientName}>Juan Ramirez</Text>
+          <View style={styles.chips}>
+            <Text style={styles.chip}>DNI: 41147663</Text>
+            <Text style={styles.chip}>Obra social: Galeno</Text>
+            <Text style={styles.chip}>HC-000001</Text>
           </View>
         </MtCard>
 
         <View style={styles.tabs}>
-          <MtPill label="Atenciones" selected={activeTab === 'atenciones'} onPress={() => setActiveTab('atenciones')} />
-          <MtPill label="Resumen" selected={activeTab === 'resumen'} onPress={() => setActiveTab('resumen')} tone="success" />
-          <MtPill label="Documentos" selected={activeTab === 'documentos'} onPress={() => setActiveTab('documentos')} tone="warning" />
+          {tabs.map(item => {
+            const selected = tab === item;
+            const isDocs = item === 'Documentos';
+            return (
+              <Pressable key={item} onPress={() => setTab(item)} style={[styles.tab, selected && styles.tabActive, selected && isDocs && styles.tabDocsActive]}>
+                <Text style={[styles.tabText, isDocs && styles.tabDocsText, selected && styles.tabTextActive]} numberOfLines={1} adjustsFontSizeToFit>
+                  {item}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
-        {activeTab === 'atenciones' && (
-          <FlatList
-            data={finished.length ? finished : historyRecords}
-            keyExtractor={(item) => String(item.id)}
-            contentContainerStyle={styles.list}
-            ListEmptyComponent={<MtEmptyState title="Todavía no hay atenciones" subtitle="Cuando un profesional cierre una consulta, aparecerá acá." />}
-            renderItem={({ item }) => <HistoryCard item={item} styles={styles} />}
-          />
+        {tab !== 'Documentos' ? (
+          <MtCard style={styles.emptyCard}>
+            <View style={styles.emptySymbol}>
+              <Ionicons name={tab === 'Atenciones' ? 'medkit-outline' : 'reader-outline'} size={34} color={theme.colors.primary} />
+            </View>
+            <Text style={styles.emptyTitle}>{tab === 'Atenciones' ? 'Todavía no hay atenciones' : 'Resumen próximamente'}</Text>
+            <Text style={styles.emptySub}>{helper}</Text>
+          </MtCard>
+        ) : (
+          <MtCard style={styles.documentsCard}>
+            <Text style={styles.docTitle}>Documentos</Text>
+            <Text style={styles.docSub}>Adjuntá estudios, recetas, carnets o documentación asociada.</Text>
+
+            <Text style={styles.fieldLabel}>Tipo de documento</Text>
+            <Pressable style={styles.dropdown} onPress={() => setTypeOpen(true)}>
+              <Text style={styles.dropdownText}>{selectedType}</Text>
+              <Ionicons name="chevron-down" size={22} color={theme.colors.primary} />
+            </Pressable>
+
+            <View style={styles.uploadRow}>
+              <MtButton title="Subir PDF/JPG" variant="secondary" onPress={pickPdfOrImage} style={styles.uploadButton} />
+              <Pressable style={styles.galleryButton} onPress={pickFromGallery}>
+                <Ionicons name="image-outline" size={26} color="#FFFFFF" />
+              </Pressable>
+            </View>
+
+            <Text style={styles.limitText}>Formatos permitidos: PDF, JPG o PNG. Tamaño máximo: 1 MB.</Text>
+
+            {documents.length === 0 ? (
+              <View style={styles.docEmpty}>
+                <Ionicons name="document-attach-outline" size={40} color={theme.colors.primary} />
+                <Text style={styles.docEmptyText}>Todavía no cargaste documentos.</Text>
+              </View>
+            ) : (
+              <View style={styles.docList}>
+                {documents.map(doc => (
+                  <View key={doc.id} style={styles.docItem}>
+                    <View style={styles.docIcon}>
+                      <Ionicons name="document-text-outline" size={22} color={theme.colors.primary} />
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={styles.docName} numberOfLines={1}>{doc.name}</Text>
+                      <Text style={styles.docMeta}>{doc.type}{doc.size ? ` · ${readableSize(doc.size)}` : ''}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </MtCard>
         )}
 
-        {activeTab === 'resumen' && (
-          <View style={styles.summaryWrap}>
-            <MtCard><Text style={styles.summaryTitle}>Cobertura</Text><Text style={styles.summaryText}>{profile?.obraSocial || 'No informada'} · Afiliado {profile?.numeroAfiliado || '-'}</Text></MtCard>
-            <MtCard><Text style={styles.summaryTitle}>Médico de cabecera</Text><Text style={styles.summaryText}>{profile?.medicoCabecera || 'No informado'}</Text></MtCard>
-            <MtCard><Text style={styles.summaryTitle}>Institución de cabecera</Text><Text style={styles.summaryText}>{profile?.institucionCabecera || 'No informada'}</Text></MtCard>
-          </View>
-        )}
-
-        {activeTab === 'documentos' && (
-          <MtEmptyState title="Documentos próximamente" subtitle="La estructura está lista para adjuntar estudios, imágenes o carnets." actionTitle="Volver a atenciones" onAction={() => setActiveTab('atenciones')} />
-        )}
+        <Modal visible={typeOpen} transparent animationType="fade" onRequestClose={() => setTypeOpen(false)}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setTypeOpen(false)}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Tipo de documento</Text>
+              {documentTypes.map(item => (
+                <Pressable
+                  key={item}
+                  style={[styles.typeOption, selectedType === item && styles.typeOptionActive]}
+                  onPress={() => {
+                    setSelectedType(item);
+                    setTypeOpen(false);
+                  }}
+                >
+                  <Text style={[styles.typeOptionText, selectedType === item && styles.typeOptionTextActive]}>{item}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
       </MtScreen>
       <MtBottomNav active="historia" />
     </>
   );
 }
 
-function HistoryCard({ item, styles }: { item: TurnoResponse; styles: ReturnType<typeof createStyles> }) {
-  return (
-    <MtCard style={styles.recordCard}>
-      <Pressable onPress={() => router.push({ pathname: '/paciente/historia-detalle', params: { id: item.id } })}>
-        <View style={styles.recordHeader}>
-          <View style={styles.recordIcon}><Text>📄</Text></View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.recordTitle}>{item.especialidad}</Text>
-            <Text style={styles.recordMeta}>{item.fecha} · {item.hora} hs</Text>
-            <Text style={styles.recordMeta}>{item.profesionalNombre}</Text>
-          </View>
-          <Text style={styles.chevron}>›</Text>
-        </View>
-        {!!item.diagnostico && <Text style={styles.diagnosis}>Diagnóstico: {item.diagnostico}</Text>}
-        {!!item.observaciones && <Text style={styles.notes}>{item.observaciones}</Text>}
-      </Pressable>
-    </MtCard>
-  );
-}
-
 function createStyles(theme: MediturnosTheme) {
+  const isDark = theme.mode === 'dark';
+
   return StyleSheet.create({
-  patientCard: { marginBottom: 14 },
-  patientName: { color: theme.colors.ink, fontWeight: '900', fontSize: 20 },
-  patientGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 },
-  patientText: { color: theme.colors.muted, backgroundColor: theme.colors.bg, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, fontWeight: '700', fontSize: 12 },
-  tabs: { flexDirection: 'row', marginBottom: 12 },
-  list: { gap: 14, paddingBottom: 120 },
-  recordCard: { gap: 10 },
-  recordHeader: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  recordIcon: { width: 44, height: 44, borderRadius: 16, backgroundColor: theme.colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
-  recordTitle: { color: theme.colors.ink, fontWeight: '900', fontSize: 16 },
-  recordMeta: { color: theme.colors.muted, marginTop: 2, fontWeight: '700', fontSize: 12 },
-  chevron: { fontSize: 30, color: theme.colors.soft },
-  diagnosis: { color: theme.colors.ink, marginTop: 12, fontWeight: '800' },
-  notes: { color: theme.colors.muted, marginTop: 6, lineHeight: 20 },
-  summaryWrap: { gap: 12, paddingBottom: 120 },
-  summaryTitle: { color: theme.colors.ink, fontWeight: '900', fontSize: 16, marginBottom: 5 },
-  summaryText: { color: theme.colors.muted, lineHeight: 20 },
+    patientCard: { marginBottom: 16 },
+    patientName: { color: theme.colors.ink, fontSize: 24, fontWeight: '900', marginBottom: 14 },
+    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+    chip: {
+      color: isDark ? theme.colors.primary : theme.colors.primaryDark,
+      backgroundColor: isDark ? 'rgba(0,0,0,0.22)' : '#F3ECFF',
+      borderWidth: 1,
+      borderColor: isDark ? 'rgba(216,200,255,0.14)' : 'rgba(124,58,237,0.16)',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 14,
+      fontSize: 13,
+      fontWeight: '900',
+    },
+    tabs: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+    tab: {
+      flex: 1,
+      minHeight: 48,
+      borderRadius: 17,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#F7F2FF',
+      paddingHorizontal: 8,
+    },
+    tabActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary, shadowColor: theme.colors.primary, shadowOpacity: 0.18, shadowRadius: 14, elevation: 3 },
+    tabDocsActive: { backgroundColor: theme.colors.warning, borderColor: theme.colors.warning },
+    tabText: { color: isDark ? theme.colors.primary : theme.colors.primaryDark, fontSize: 13, fontWeight: '900', backgroundColor: 'transparent' },
+    tabDocsText: { color: theme.colors.warning },
+    tabTextActive: { color: '#FFFFFF' },
+    emptyCard: { alignItems: 'center', justifyContent: 'center', minHeight: 238, paddingVertical: 30 },
+    emptySymbol: {
+      width: 68,
+      height: 68,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: isDark ? 'rgba(216,200,255,0.12)' : '#F3ECFF',
+      borderWidth: 1,
+      borderColor: isDark ? 'rgba(216,200,255,0.18)' : 'rgba(124,58,237,0.16)',
+      marginBottom: 18,
+    },
+    emptyTitle: { color: theme.colors.ink, backgroundColor: 'transparent', fontSize: 22, lineHeight: 28, fontWeight: '900', textAlign: 'center' },
+    emptySub: { color: theme.colors.muted, backgroundColor: 'transparent', fontSize: 16, lineHeight: 24, fontWeight: '700', textAlign: 'center', marginTop: 10 },
+    documentsCard: { marginBottom: 16 },
+    docTitle: { color: theme.colors.ink, backgroundColor: 'transparent', fontSize: 24, fontWeight: '900', marginBottom: 8 },
+    docSub: { color: theme.colors.muted, backgroundColor: 'transparent', fontSize: 15, lineHeight: 23, fontWeight: '700', marginBottom: 18 },
+    fieldLabel: { color: theme.colors.primary, fontSize: 14, fontWeight: '900', marginBottom: 8 },
+    dropdown: {
+      minHeight: 54,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: isDark ? 'rgba(255,255,255,0.045)' : '#F3ECFF',
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+    },
+    dropdownText: { color: theme.colors.ink, fontSize: 17, fontWeight: '900', backgroundColor: 'transparent' },
+    uploadRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+    uploadButton: { flex: 1 },
+    galleryButton: { width: 60, borderRadius: 20, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center', shadowColor: theme.colors.primary, shadowOpacity: 0.22, shadowRadius: 14, elevation: 3 },
+    limitText: { color: theme.colors.muted, fontSize: 13, lineHeight: 20, fontWeight: '700', marginBottom: 14 },
+    docEmpty: { alignItems: 'center', justifyContent: 'center', paddingVertical: 28, gap: 9 },
+    docEmptyText: { color: theme.colors.muted, fontSize: 16, fontWeight: '800' },
+    docList: { gap: 10 },
+    docItem: {
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#F8F4FF',
+      padding: 13,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    docIcon: { width: 42, height: 42, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? 'rgba(216,200,255,0.12)' : '#EDE7FF' },
+    docName: { color: theme.colors.ink, backgroundColor: 'transparent', fontSize: 16, fontWeight: '900' },
+    docMeta: { color: theme.colors.muted, backgroundColor: 'transparent', fontSize: 13, fontWeight: '700', marginTop: 3 },
+    modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.58)', justifyContent: 'flex-end', padding: 18 },
+    modalCard: { borderRadius: 26, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, padding: 18, marginBottom: 18 },
+    modalTitle: { color: theme.colors.ink, backgroundColor: 'transparent', fontSize: 21, fontWeight: '900', marginBottom: 12 },
+    typeOption: { minHeight: 48, borderRadius: 16, justifyContent: 'center', paddingHorizontal: 14 },
+    typeOptionActive: { backgroundColor: theme.colors.primaryLight },
+    typeOptionText: { color: theme.colors.muted, backgroundColor: 'transparent', fontSize: 17, fontWeight: '800' },
+    typeOptionTextActive: { color: theme.colors.primaryDark },
   });
 }
