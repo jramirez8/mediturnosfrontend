@@ -18,6 +18,7 @@ type AuthState = {
   usuarioId: string | null;
   pacienteId: string | null;
   profesionalId: string | null;
+  profesionalInstitucionId: string | null;
   role: string | null;
   nombreCompleto: string | null;
   loading: boolean;
@@ -35,7 +36,7 @@ function pickString(...values: any[]) {
   return found === undefined ? null : String(found);
 }
 
-const AUTH_KEYS_ACTIVE = ['access_token', 'usuario_id', 'paciente_id', 'profesional_id', 'role', 'nombre_completo'];
+const AUTH_KEYS_ACTIVE = ['access_token', 'usuario_id', 'paciente_id', 'profesional_id', 'profesional_institucion_id', 'role', 'nombre_completo'];
 
 async function clearEverythingAuthRelated() {
   await Promise.allSettled([
@@ -43,6 +44,7 @@ async function clearEverythingAuthRelated() {
     storage.deleteItem('usuario_id'),
     storage.deleteItem('paciente_id'),
     storage.deleteItem('profesional_id'),
+    storage.deleteItem('profesional_institucion_id'),
     storage.deleteItem('role'),
     storage.deleteItem('nombre_completo'),
     hardClearAuthStorage(),
@@ -56,6 +58,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   usuarioId: null,
   pacienteId: null,
   profesionalId: null,
+  profesionalInstitucionId: null,
   role: null,
   nombreCompleto: null,
   loading: false,
@@ -69,26 +72,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Si el dispositivo tiene ingreso biométrico activado, no restauramos sesión automáticamente:
       // el usuario debe tocar “Ingresar con biometría” y validar huella/rostro/PIN/patrón.
       await Promise.allSettled(AUTH_KEYS_ACTIVE.map((key) => storage.deleteItem(key)));
-      set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, role: null, nombreCompleto: null, hydrated: true, loading: false });
+      set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, profesionalInstitucionId: null, role: null, nombreCompleto: null, hydrated: true, loading: false });
       return;
     }
 
-    const [token, usuarioId, pacienteId, profesionalId, role, nombreCompleto] = await Promise.all([
+    const [token, usuarioId, pacienteId, profesionalId, profesionalInstitucionId, role, nombreCompleto] = await Promise.all([
       storage.getItem('access_token'),
       storage.getItem('usuario_id'),
       storage.getItem('paciente_id'),
       storage.getItem('profesional_id'),
+      storage.getItem('profesional_institucion_id'),
       storage.getItem('role'),
       storage.getItem('nombre_completo'),
     ]);
 
     if (token?.startsWith('demo-token-')) {
       await clearEverythingAuthRelated();
-      set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, role: null, nombreCompleto: null, hydrated: true, loading: false });
+      set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, profesionalInstitucionId: null, role: null, nombreCompleto: null, hydrated: true, loading: false });
       return;
     }
 
-    set({ token, usuarioId, pacienteId, profesionalId, role, nombreCompleto, hydrated: true, loading: false });
+    set({ token, usuarioId, pacienteId, profesionalId, profesionalInstitucionId, role, nombreCompleto, hydrated: true, loading: false });
   },
 
   fetchPacienteId: async (uId: string) => {
@@ -106,7 +110,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   login: async (email, password) => {
-    set({ loading: true, token: null, usuarioId: null, pacienteId: null, profesionalId: null, role: null, nombreCompleto: null, hydrated: true });
+    set({ loading: true, token: null, usuarioId: null, pacienteId: null, profesionalId: null, profesionalInstitucionId: null, role: null, nombreCompleto: null, hydrated: true });
     await clearEverythingAuthRelated();
 
     try {
@@ -132,6 +136,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const pId = pickString(response.data?.pacienteId, response.data?.paciente?.id);
       const profId = pickString(response.data?.profesionalId, response.data?.profesional?.id);
+      const profInstId = pickString(response.data?.profesionalInstitucionId, response.data?.profesionalInstitucion?.id, response.data?.profesional?.profesionalInstitucionId);
       const rawRole = pickString(response.data?.role, response.data?.rol, response.data?.tipoUsuario, response.data?.usuario?.rol);
       const normalizedRole = normalizeRole(rawRole);
       const role = normalizedRole ?? rawRole;
@@ -146,8 +151,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (role) await storage.setItem('role', role);
       if (nombreCompleto) await storage.setItem('nombre_completo', nombreCompleto);
       if (profId) await storage.setItem('profesional_id', profId);
+      if (profInstId) await storage.setItem('profesional_institucion_id', profInstId);
 
-      set({ token, usuarioId: uId, role, profesionalId: profId, nombreCompleto, hydrated: true });
+      set({ token, usuarioId: uId, role, profesionalId: profId, profesionalInstitucionId: profInstId, nombreCompleto, hydrated: true });
 
       if (pId) {
         await storage.setItem('paciente_id', pId);
@@ -164,7 +170,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
 
   verifyTwoFactor: async (usuarioId, codigo) => {
-    set({ loading: true, token: null, usuarioId: null, pacienteId: null, profesionalId: null, role: null, nombreCompleto: null, hydrated: true });
+    set({ loading: true, token: null, usuarioId: null, pacienteId: null, profesionalId: null, profesionalInstitucionId: null, role: null, nombreCompleto: null, hydrated: true });
     try {
       const response = await api.post('/api/auth/2fa/verify', { usuarioId: Number(usuarioId), codigo });
       const token = pickString(response.data?.token, response.data?.accessToken, response.data?.jwt);
@@ -173,6 +179,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const uId = pickString(response.data?.usuarioId, response.data?.userId, response.data?.id, response.data?.usuario?.id);
       const pId = pickString(response.data?.pacienteId, response.data?.paciente?.id);
       const profId = pickString(response.data?.profesionalId, response.data?.profesional?.id);
+      const profInstId = pickString(response.data?.profesionalInstitucionId, response.data?.profesionalInstitucion?.id, response.data?.profesional?.profesionalInstitucionId);
       const rawRole = pickString(response.data?.role, response.data?.rol, response.data?.tipoUsuario, response.data?.usuario?.rol);
       const normalizedRole = normalizeRole(rawRole);
       const role = normalizedRole ?? rawRole;
@@ -184,9 +191,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (role) await storage.setItem('role', role);
       if (nombreCompleto) await storage.setItem('nombre_completo', nombreCompleto);
       if (profId) await storage.setItem('profesional_id', profId);
+      if (profInstId) await storage.setItem('profesional_institucion_id', profInstId);
       if (pId) await storage.setItem('paciente_id', pId);
 
-      set({ token, usuarioId: uId, pacienteId: pId, profesionalId: profId, role, nombreCompleto, hydrated: true });
+      set({ token, usuarioId: uId, pacienteId: pId, profesionalId: profId, profesionalInstitucionId: profInstId, role, nombreCompleto, hydrated: true });
       return { role, route: routeForRole(role) };
     } finally {
       set({ loading: false });
@@ -208,6 +216,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         usuarioId: session.usuarioId,
         pacienteId: session.pacienteId,
         profesionalId: session.profesionalId,
+        profesionalInstitucionId: session.profesionalInstitucionId ?? null,
         role: normalizedRole,
         nombreCompleto: session.nombreCompleto,
         hydrated: true,
@@ -222,8 +231,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     // Estado primero: la UI debe salir aunque falle storage/cache.
-    set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, role: null, nombreCompleto: null, loading: false, hydrated: true });
+    set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, profesionalInstitucionId: null, role: null, nombreCompleto: null, loading: false, hydrated: true });
     await clearEverythingAuthRelated();
-    set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, role: null, nombreCompleto: null, loading: false, hydrated: true });
+    set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, profesionalInstitucionId: null, role: null, nombreCompleto: null, loading: false, hydrated: true });
   },
 }));

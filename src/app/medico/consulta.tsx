@@ -7,11 +7,16 @@ import { TurnoCard } from '../../components/TurnoCard';
 import { appointmentService, TurnoResponse } from '../../api/appointmentService';
 import { medicoService } from '../../api/staffService';
 import { useAuthStore } from '../../auth/authStore';
+import { doctorAccessMessage, filterTurnosForDoctor, turnoBelongsToDoctor } from '../../utils/doctorAccess';
 import { useMtTheme } from '../../theme/themeStore';
 
 export default function MedicoConsultaScreen() {
   const { turnoId } = useLocalSearchParams<{ turnoId?: string }>();
   const usuarioId = useAuthStore((s) => s.usuarioId);
+  const profesionalId = useAuthStore((s) => s.profesionalId);
+  const profesionalInstitucionId = useAuthStore((s) => s.profesionalInstitucionId);
+  const nombreCompleto = useAuthStore((s) => s.nombreCompleto);
+  const doctorIdentity = useMemo(() => ({ profesionalId, profesionalInstitucionId, nombreCompleto }), [profesionalId, profesionalInstitucionId, nombreCompleto]);
   const [turno, setTurno] = useState<TurnoResponse | null>(null);
   const [agenda, setAgenda] = useState<TurnoResponse[]>([]);
   const [loading, setLoading] = useState(Boolean(turnoId));
@@ -41,6 +46,11 @@ export default function MedicoConsultaScreen() {
       if (turnoId) {
         setLoading(true);
         const detail = await appointmentService.getAppointmentDetail(Number(turnoId));
+        if (!turnoBelongsToDoctor(detail, doctorIdentity)) {
+          setTurno(null);
+          setError(doctorAccessMessage());
+          return;
+        }
         setTurno(detail);
         setForm((prev) => ({
           ...prev,
@@ -56,26 +66,35 @@ export default function MedicoConsultaScreen() {
         }));
       } else if (usuarioId) {
         setLoading(true);
-        setAgenda(await medicoService.agenda(usuarioId));
+        const rawAgenda = await medicoService.agenda(usuarioId);
+        setAgenda(filterTurnosForDoctor(rawAgenda, doctorIdentity));
       }
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'No pudimos cargar la consulta.');
     } finally {
       setLoading(false);
     }
-  }, [turnoId, usuarioId]);
+  }, [turnoId, usuarioId, doctorIdentity]);
 
   useEffect(() => { load(); }, [load]);
 
-  const canSave = useMemo(() => !!turno?.id && !!form.motivoConsulta.trim() && !!form.conducta.trim(), [turno, form]);
+  const canSave = useMemo(() => !!turno?.id && !!form.motivoConsulta.trim() && !!form.conducta.trim() && turnoBelongsToDoctor(turno, doctorIdentity), [turno, form, doctorIdentity]);
 
   const save = async () => {
     if (!turno) return;
+    if (!turnoBelongsToDoctor(turno, doctorIdentity)) {
+      setError(doctorAccessMessage());
+      return;
+    }
     setSaving(true);
     setError(null);
     setMessage(null);
     try {
       const updated = await medicoService.guardarConsulta(turno.id, form);
+      if (!turnoBelongsToDoctor(updated, doctorIdentity)) {
+        setError(doctorAccessMessage());
+        return;
+      }
       setTurno(updated);
       setMessage(`Consulta guardada. El turno #${updated.id} quedó en estado ${updated.estado}.`);
     } catch (e: any) {
@@ -87,13 +106,26 @@ export default function MedicoConsultaScreen() {
 
   if (loading) return <MtLoading text="Cargando consulta..." />;
 
+  if (error && !turno) {
+    return (
+      <MtScreen scroll>
+        <MtHeader eyebrow="MÉDICO" title="Atención bloqueada" subtitle="No se puede atender un turno asignado a otro profesional." />
+        <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}>
+          <Text style={{ color: theme.colors.danger, fontWeight: '900', lineHeight: 20 }}>{error}</Text>
+          <MtButton title="Volver a mi agenda" onPress={() => router.replace('/medico/agenda')} style={{ marginTop: 12 }} />
+        </MtCard>
+        <RoleBottomNav role="medico" active="consulta" />
+      </MtScreen>
+    );
+  }
+
   if (!turno && !turnoId) {
     return (
       <MtScreen scroll>
-        <MtHeader eyebrow="MÉDICO" title="Registrar consulta" subtitle="Elegí un turno de la agenda para atender." />
+        <MtHeader eyebrow="MÉDICO" title="Registrar consulta" subtitle="Elegí un turno propio de la agenda para atender." />
         {agenda.length ? agenda.map((item) => (
           <TurnoCard key={item.id} turno={item} primaryAction={{ title: 'Seleccionar para atender', onPress: () => router.replace({ pathname: '/medico/consulta', params: { turnoId: String(item.id) } }) }} />
-        )) : <MtEmptyState title="No hay turnos para atender" subtitle="La agenda del día está vacía." />}
+        )) : <MtEmptyState title="No hay turnos para atender" subtitle="La agenda propia del día está vacía." />}
         <RoleBottomNav role="medico" active="consulta" />
       </MtScreen>
     );

@@ -12,6 +12,7 @@ const itemsByRole: Record<string, Item[]> = {
     { key: 'home', labelKey: 'nav.home', icon: '⌂', path: '/medico' },
     { key: 'agenda', labelKey: 'nav.agenda', icon: '▦', path: '/medico/agenda' },
     { key: 'consulta', labelKey: 'nav.consultation', icon: '⚕', path: '/medico/consulta' },
+    { key: 'disponibilidad', labelKey: 'nav.availability', icon: '◷', path: '/medico/disponibilidad' },
     { key: 'settings', labelKey: 'common.settings', icon: '◌', path: '/settings' },
   ],
   secretaria: [

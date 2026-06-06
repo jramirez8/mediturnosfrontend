@@ -11,6 +11,7 @@ const KEYS = {
   usuarioId: `${PREFIX}usuario_id`,
   pacienteId: `${PREFIX}paciente_id`,
   profesionalId: `${PREFIX}profesional_id`,
+  profesionalInstitucionId: `${PREFIX}profesional_institucion_id`,
   role: `${PREFIX}role`,
   nombreCompleto: `${PREFIX}nombre_completo`,
 };
@@ -58,11 +59,12 @@ export async function authenticateDevice(promptMessage = 'Ingresar a Mediturnos'
 }
 
 export async function saveCurrentSessionForDeviceAuth(email: string) {
-  const [token, usuarioId, pacienteId, profesionalId, role, nombreCompleto] = await Promise.all([
+  const [token, usuarioId, pacienteId, profesionalId, profesionalInstitucionId, role, nombreCompleto] = await Promise.all([
     storage.getItem('access_token'),
     storage.getItem('usuario_id'),
     storage.getItem('paciente_id'),
     storage.getItem('profesional_id'),
+    storage.getItem('profesional_institucion_id'),
     storage.getItem('role'),
     storage.getItem('nombre_completo'),
   ]);
@@ -75,24 +77,26 @@ export async function saveCurrentSessionForDeviceAuth(email: string) {
   if (usuarioId) await storage.setItem(KEYS.usuarioId, usuarioId);
   if (pacienteId) await storage.setItem(KEYS.pacienteId, pacienteId);
   if (profesionalId) await storage.setItem(KEYS.profesionalId, profesionalId);
+  if (profesionalInstitucionId) await storage.setItem(KEYS.profesionalInstitucionId, profesionalInstitucionId);
   if (role) await storage.setItem(KEYS.role, role);
   if (nombreCompleto) await storage.setItem(KEYS.nombreCompleto, nombreCompleto);
 }
 
 export async function readSavedDeviceSession() {
-  const [enabled, email, token, usuarioId, pacienteId, profesionalId, role, nombreCompleto] = await Promise.all([
+  const [enabled, email, token, usuarioId, pacienteId, profesionalId, profesionalInstitucionId, role, nombreCompleto] = await Promise.all([
     storage.getItem(KEYS.enabled),
     storage.getItem(KEYS.email),
     storage.getItem(KEYS.token),
     storage.getItem(KEYS.usuarioId),
     storage.getItem(KEYS.pacienteId),
     storage.getItem(KEYS.profesionalId),
+    storage.getItem(KEYS.profesionalInstitucionId),
     storage.getItem(KEYS.role),
     storage.getItem(KEYS.nombreCompleto),
   ]);
 
   if (enabled !== 'true' || !token || !role) return null;
-  return { email, token, usuarioId, pacienteId, profesionalId, role, nombreCompleto };
+  return { email, token, usuarioId, pacienteId, profesionalId, profesionalInstitucionId, role, nombreCompleto };
 }
 
 export async function promoteDeviceSessionToActive() {
@@ -103,6 +107,7 @@ export async function promoteDeviceSessionToActive() {
   if (session.usuarioId) await storage.setItem('usuario_id', session.usuarioId);
   if (session.pacienteId) await storage.setItem('paciente_id', session.pacienteId);
   if (session.profesionalId) await storage.setItem('profesional_id', session.profesionalId);
+  if (session.profesionalInstitucionId) await storage.setItem('profesional_institucion_id', session.profesionalInstitucionId);
   if (session.role) await storage.setItem('role', session.role);
   if (session.nombreCompleto) await storage.setItem('nombre_completo', session.nombreCompleto);
 
@@ -117,6 +122,7 @@ export async function disableDeviceAuthLogin() {
     storage.deleteItem(KEYS.usuarioId),
     storage.deleteItem(KEYS.pacienteId),
     storage.deleteItem(KEYS.profesionalId),
+    storage.deleteItem(KEYS.profesionalInstitucionId),
     storage.deleteItem(KEYS.role),
     storage.deleteItem(KEYS.nombreCompleto),
   ]);

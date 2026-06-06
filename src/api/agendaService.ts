@@ -1,4 +1,5 @@
 import { api } from './client';
+import { clearAppCache } from '../db/cache';
 
 export type HorarioAtencion = {
   id: number;
@@ -27,16 +28,24 @@ export const agendaService = {
   },
   createHorario: async (data: Partial<HorarioAtencion>) => {
     const response = await api.post<HorarioAtencion>('/api/agenda/horarios', data);
+    await clearAppCache();
     return response.data;
   },
-  deleteHorario: async (id: number) => api.delete(`/api/agenda/horarios/${id}`),
+  deleteHorario: async (id: number) => {
+    await api.delete(`/api/agenda/horarios/${id}`);
+    await clearAppCache();
+  },
   getBloqueos: async (profesionalInstitucionId: number) => {
     const response = await api.get<AgendaBloqueo[]>('/api/agenda/bloqueos', { params: { profesionalInstitucionId } });
     return response.data;
   },
   createBloqueo: async (data: Partial<AgendaBloqueo>) => {
     const response = await api.post<AgendaBloqueo>('/api/agenda/bloqueos', data);
+    await clearAppCache();
     return response.data;
   },
-  deleteBloqueo: async (id: number) => api.delete(`/api/agenda/bloqueos/${id}`),
+  deleteBloqueo: async (id: number) => {
+    await api.delete(`/api/agenda/bloqueos/${id}`);
+    await clearAppCache();
+  },
 };

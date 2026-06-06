@@ -7,14 +7,19 @@ import { TurnoCard } from '../../components/TurnoCard';
 import { medicoService } from '../../api/staffService';
 import { TurnoResponse } from '../../api/appointmentService';
 import { useAuthStore } from '../../auth/authStore';
+import { filterTurnosForDoctor, turnoBelongsToDoctor } from '../../utils/doctorAccess';
 import { useMtTheme } from '../../theme/themeStore';
 import { useTranslation } from '../../i18n/languageStore';
 
 export default function MedicoDashboard() {
   const usuarioId = useAuthStore((s) => s.usuarioId);
+  const profesionalId = useAuthStore((s) => s.profesionalId);
+  const profesionalInstitucionId = useAuthStore((s) => s.profesionalInstitucionId);
   const nombre = useAuthStore((s) => s.nombreCompleto);
+  const doctorIdentity = useMemo(() => ({ profesionalId, profesionalInstitucionId, nombreCompleto: nombre }), [profesionalId, profesionalInstitucionId, nombre]);
   const [agenda, setAgenda] = useState<TurnoResponse[]>([]);
   const [next, setNext] = useState<TurnoResponse | null>(null);
+  const [hiddenCount, setHiddenCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const theme = useMtTheme();
@@ -29,14 +34,16 @@ export default function MedicoDashboard() {
         medicoService.agenda(usuarioId),
         medicoService.proximoTurno(usuarioId).catch(() => null),
       ]);
-      setAgenda(agendaData);
-      setNext(nextData);
+      const ownAgenda = filterTurnosForDoctor(agendaData, doctorIdentity);
+      setAgenda(ownAgenda);
+      setHiddenCount(Math.max(0, agendaData.length - ownAgenda.length));
+      setNext(nextData && turnoBelongsToDoctor(nextData, doctorIdentity) ? nextData : ownAgenda[0] ?? null);
     } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || language === 'en' ? 'We could not load the medical schedule.' : 'No pudimos cargar la agenda médica.');
+      setError(e?.response?.data?.message || e?.message || (language === 'en' ? 'We could not load the medical schedule.' : 'No pudimos cargar la agenda médica.'));
     } finally {
       setLoading(false);
     }
-  }, [usuarioId, language]);
+  }, [usuarioId, language, doctorIdentity]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -57,6 +64,11 @@ export default function MedicoDashboard() {
           <MtButton title="Reintentar" onPress={load} style={{ marginTop: 12 }} />
         </MtCard>
       ) : null}
+      {hiddenCount > 0 ? (
+        <MtCard style={{ borderColor: theme.colors.warning, marginBottom: 14 }}>
+          <Text style={{ color: theme.colors.warning, fontWeight: '900' }}>Se ocultaron {hiddenCount} turno(s) ajenos a este médico.</Text>
+        </MtCard>
+      ) : null}
 
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
         <MtStat label={language === 'en' ? 'Today' : 'Turnos hoy'} value={stats.total} />
@@ -69,6 +81,7 @@ export default function MedicoDashboard() {
         <View style={{ gap: 10, marginTop: 14 }}>
           <MtButton title={t('doctor.todayAgenda')} onPress={() => router.push('/medico/agenda')} />
           <MtButton title={t('doctor.registerConsultation')} variant="ghost" onPress={() => router.push('/medico/consulta')} />
+          <MtButton title="Mi disponibilidad" variant="ghost" onPress={() => router.push('/medico/disponibilidad')} />
           <MtButton title={t('doctor.searchHistory')} variant="ghost" onPress={() => router.push('/medico/historia-paciente')} />
         </View>
       </MtCard>
