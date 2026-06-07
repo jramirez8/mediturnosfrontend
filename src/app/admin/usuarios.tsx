@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
 import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtPill, MtScreen } from '../../components/mediturnos';
 import { MtSelect } from '../../components/MtSelect';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
@@ -43,6 +43,8 @@ function validate(form: UsuarioForm, editing: boolean) {
 }
 
 export default function AdminUsuariosScreen() {
+  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollToTop = () => setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 80);
   const [usuarios, setUsuarios] = useState<AdminUsuario[]>([]);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('TODOS');
@@ -89,6 +91,7 @@ export default function AdminUsuariosScreen() {
     setFormOpen(true);
     setMessage(null);
     setError(null);
+    scrollToTop();
   };
 
   const startEdit = (user: AdminUsuario) => {
@@ -103,6 +106,7 @@ export default function AdminUsuariosScreen() {
     setFormOpen(true);
     setMessage(null);
     setError(null);
+    scrollToTop();
   };
 
   const submit = async () => {
@@ -121,15 +125,18 @@ export default function AdminUsuariosScreen() {
         if (form.password.trim()) payload.password = form.password.trim();
         await adminService.actualizarUsuario(form.id!, payload);
         setMessage('Usuario actualizado correctamente.');
+        scrollToTop();
       } else {
         await adminService.crearUsuario({ email: form.email.trim(), password: form.password.trim(), rol: form.rol, activo: form.activo, emailVerificado: form.emailVerificado });
         setMessage('Usuario creado correctamente.');
+        scrollToTop();
       }
       setForm(emptyForm);
       setFormOpen(false);
       await load();
     } catch (e: any) {
       setError(readableError(e, 'No pudimos guardar el usuario.'));
+      scrollToTop();
     } finally {
       setSaving(false);
     }
@@ -143,13 +150,16 @@ export default function AdminUsuariosScreen() {
       if (active) {
         await adminService.activarUsuario(user.id);
         setMessage(`Usuario ${user.email} activado.`);
+        scrollToTop();
       } else {
         await adminService.desactivarUsuario(user.id);
         setMessage(`Usuario ${user.email} desactivado.`);
+        scrollToTop();
       }
       await load();
     } catch (e: any) {
       setError(readableError(e, active ? 'No pudimos activar el usuario.' : 'No pudimos desactivar el usuario.'));
+      scrollToTop();
     } finally {
       setWorkingId(null);
     }
@@ -158,7 +168,7 @@ export default function AdminUsuariosScreen() {
   if (loading) return <MtLoading text="Cargando usuarios..." />;
 
   return (
-    <MtScreen scroll>
+    <MtScreen scroll scrollRef={scrollRef}>
       <MtHeader eyebrow="ADMIN" title="Usuarios" subtitle="Alta, edición, cambio de rol, activación y baja lógica de usuarios." />
       {message ? <AdminNotice type="success" title="Operación realizada" message={message} /> : null}
       {error ? <AdminNotice type="danger" title="Revisá esta operación" message={error} /> : null}

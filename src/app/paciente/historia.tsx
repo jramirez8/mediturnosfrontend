@@ -1,24 +1,19 @@
 import React, { useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
-import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { MtBottomNav, MtButton, MtCard, MtHeader, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
-import { documentTypes } from '../../../components/mediturnos/theme';
+import { documentTypes } from '../../constants/documentTypes';
+import { chooseDocumentSource, PickedMedia } from '../../utils/mediaPicker';
 
 type Tab = 'Atenciones' | 'Resumen' | 'Documentos';
-type UploadedDocument = {
+type UploadedDocument = PickedMedia & {
   id: string;
   name: string;
   type: string;
-  mimeType?: string;
-  size?: number;
-  uri?: string;
 };
 
-const MAX_SIZE = 1024 * 1024;
 const tabs: Tab[] = ['Atenciones', 'Resumen', 'Documentos'];
 
 function readableSize(size?: number) {
@@ -40,71 +35,20 @@ export default function ClinicalHistoryScreen() {
     return 'Adjuntá PDF, JPG o PNG de hasta 1 MB.';
   }, [tab]);
 
-  const validateAndAdd = (doc: UploadedDocument) => {
-    if (doc.size && doc.size > MAX_SIZE) {
-      Alert.alert('Archivo demasiado grande', 'El archivo tiene que pesar hasta 1 MB.');
-      return;
-    }
-
-    const lower = doc.name.toLowerCase();
-    const mime = (doc.mimeType ?? '').toLowerCase();
-    const allowed =
-      mime.includes('pdf') || mime.includes('jpeg') || mime.includes('jpg') || mime.includes('png') ||
-      lower.endsWith('.pdf') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png');
-
-    if (!allowed) {
-      Alert.alert('Formato no soportado', 'Subí un PDF, JPG o PNG.');
-      return;
-    }
-
-    setDocuments(prev => [{ ...doc, id: String(Date.now()), type: selectedType }, ...prev]);
+  const addPickedDocument = (media: PickedMedia) => {
+    setDocuments(prev => [{
+      ...media,
+      id: String(Date.now()),
+      name: media.fileName ?? 'documento',
+      type: selectedType,
+    }, ...prev]);
   };
 
   const pickPdfOrImage = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['application/pdf', 'image/jpeg', 'image/png'],
-      multiple: false,
-      copyToCacheDirectory: true,
-    });
-
-    if (result.canceled) return;
-    const asset = result.assets?.[0];
-    if (!asset) return;
-
-    validateAndAdd({
-      id: String(Date.now()),
-      name: asset.name ?? 'documento',
-      type: selectedType,
-      mimeType: asset.mimeType,
-      size: asset.size,
-      uri: asset.uri,
-    });
-  };
-
-  const pickFromGallery = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permiso necesario', 'Necesito acceso a la galería para adjuntar imágenes.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
-    });
-
-    if (result.canceled) return;
-    const asset = result.assets?.[0];
-    if (!asset) return;
-
-    validateAndAdd({
-      id: String(Date.now()),
-      name: asset.fileName ?? 'imagen.jpg',
-      type: selectedType,
-      mimeType: asset.mimeType ?? 'image/jpeg',
-      size: asset.fileSize,
-      uri: asset.uri,
-    });
+    chooseDocumentSource(
+      addPickedDocument,
+      (message) => Alert.alert('No pudimos adjuntar', message),
+    );
   };
 
   return (
@@ -160,7 +104,7 @@ export default function ClinicalHistoryScreen() {
 
             <View style={styles.uploadRow}>
               <MtButton title="Subir PDF/JPG" variant="secondary" onPress={pickPdfOrImage} style={styles.uploadButton} />
-              <Pressable style={styles.galleryButton} onPress={pickFromGallery}>
+              <Pressable style={styles.galleryButton} onPress={pickPdfOrImage}>
                 <Ionicons name="image-outline" size={26} color="#FFFFFF" />
               </Pressable>
             </View>

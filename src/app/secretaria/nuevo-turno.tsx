@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { MtButton, MtCard, MtHeader, MtInput, MtPill, MtScreen } from '../../components/mediturnos';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
@@ -10,6 +10,8 @@ import { useMtTheme } from '../../theme/themeStore';
 
 export default function SecretariaNuevoTurnoScreen() {
   const theme = useMtTheme();
+  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollToTop = () => setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 80);
   const [dni, setDni] = useState('');
   const [paciente, setPaciente] = useState<any | null>(null);
   const [profesionales, setProfesionales] = useState<Professional[]>([]);
@@ -64,13 +66,15 @@ export default function SecretariaNuevoTurnoScreen() {
         observaciones,
       });
       setMessage(`Turno #${created.id} creado y confirmado para ${created.fecha} ${created.hora}.`);
+      scrollToTop();
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'No pudimos crear el turno.');
+      scrollToTop();
     } finally { setSaving(false); }
   };
 
   return (
-    <MtScreen scroll>
+    <MtScreen scroll scrollRef={scrollRef}>
       <MtHeader eyebrow="SECRETARÍA" title="Nuevo turno" subtitle="Alta operativa usando paciente existente y disponibilidad disponible." />
       {message ? <MtCard style={{ borderColor: theme.colors.success, marginBottom: 14 }}><Text style={{ color: theme.colors.success, fontWeight: '900' }}>{message}</Text><MtButton title="Ver turnos" onPress={() => router.replace('/secretaria/turnos')} style={{ marginTop: 12 }} /></MtCard> : null}
       {error ? <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}><Text style={{ color: theme.colors.danger, fontWeight: '900' }}>{error}</Text></MtCard> : null}

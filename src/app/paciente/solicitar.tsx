@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { appointmentService, AppointmentSlot, TurnoResponse } from '../../api/appointmentService';
 import { professionalService, Professional } from '../../api/professionalService';
@@ -10,7 +10,8 @@ import { useMtTheme } from '../../theme/themeStore';
 import { useTranslation } from '../../i18n/languageStore';
 import { readableError } from '../../utils/errors';
 import { waitlistService } from '../../api/waitlistService';
-import { chooseImageSource, PickedMedia } from '../../utils/mediaPicker';
+import { chooseDocumentSource, PickedMedia } from '../../utils/mediaPicker';
+import { MONTH_NAMES, toLocalIsoDate, parseIsoDateLocal, todayLocalIso } from '../../utils/date';
 
 type Notice = {
   type: 'success' | 'error';
@@ -28,15 +29,8 @@ type CalendarCell = {
 
 const WEEKDAYS_ES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 const WEEKDAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const MONTHS_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const MONTHS_ES = MONTH_NAMES;
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-function toIsoDate(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
 
 function buildCalendarCells(monthCursor: Date, availableDates: Set<string>): CalendarCell[] {
   const first = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), 1);
@@ -47,7 +41,7 @@ function buildCalendarCells(monthCursor: Date, availableDates: Set<string>): Cal
   return Array.from({ length: 35 }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
-    const iso = toIsoDate(date);
+    const iso = toLocalIsoDate(date);
     return {
       key: iso,
       dayLabel: String(date.getDate()),
@@ -90,7 +84,7 @@ export default function SolicitarTurnoScreen() {
   const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedSlot, setSelectedSlot] = useState<AppointmentSlot | null>(null);
-  const [monthCursor, setMonthCursor] = useState(() => new Date());
+  const [monthCursor, setMonthCursor] = useState(() => parseIsoDateLocal(todayLocalIso()));
   const [showTimes, setShowTimes] = useState(false);
   const [motivo, setMotivo] = useState('');
   const [observaciones, setObservaciones] = useState('');
@@ -185,7 +179,7 @@ export default function SolicitarTurnoScreen() {
   };
 
   const pickDocumentation = () => {
-    chooseImageSource(
+    chooseDocumentSource(
       (media) => {
         setDocumentation(media);
         setNotice(null);

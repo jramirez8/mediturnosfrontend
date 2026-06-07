@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
-import { MtButton, MtCard, MtHeader, MtInput, MtLoading, MtPill, MtScreen, MtStat } from '../../components/mediturnos';
+import { Platform, Share, Text, View } from 'react-native';
+import { MtButton, MtCard, MtHeader, MtInput, MtLoading, MtNotice, MtScreen, MtStat } from '../../components/mediturnos';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { secretariaService } from '../../api/staffService';
 import { adminService, AdminSummary } from '../../api/adminService';
@@ -8,13 +8,14 @@ import { TurnoResponse } from '../../api/appointmentService';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 import { AdminNotice, AdminTabs, AdminTitle } from '../../components/admin/AdminUi';
+import { todayLocalIso } from '../../utils/date';
 
 type Range = 'TODOS' | 'HOY' | 'FUTUROS' | 'HISTORICO';
 
 function dateKey(value?: string | null) {
   return String(value ?? '').slice(0, 10);
 }
-function todayKey() { return new Date().toISOString().slice(0, 10); }
+function todayKey() { return todayLocalIso(); }
 function isFuture(value?: string | null) { return dateKey(value) >= todayKey(); }
 function isPast(value?: string | null) { return dateKey(value) < todayKey(); }
 
@@ -30,6 +31,18 @@ function topEntries(map: Record<string, number>, limit = 8) {
   return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, limit);
 }
 
+
+function csvEscape(value: unknown) {
+  const text = String(value ?? '').replace(/"/g, '""');
+  return `"${text}"`;
+}
+
+function buildCsv(turnos: TurnoResponse[]) {
+  const headers = ['ID', 'Fecha', 'Hora', 'Paciente', 'Profesional', 'Especialidad', 'Institución', 'Estado'];
+  const rows = turnos.map((t) => [t.id, t.fecha || dateKey(t.fechaHora), t.hora, t.pacienteNombre, t.profesionalNombre, t.especialidad, t.institucionNombre, t.estado]);
+  return [headers, ...rows].map((row) => row.map(csvEscape).join(',')).join('\n');
+}
+
 export default function AdminReportesScreen() {
   const [turnos, setTurnos] = useState<TurnoResponse[]>([]);
   const [summary, setSummary] = useState<AdminSummary>({});
@@ -37,6 +50,7 @@ export default function AdminReportesScreen() {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const theme = useMtTheme();
 
   const load = useCallback(async () => {
@@ -68,6 +82,29 @@ export default function AdminReportesScreen() {
   const cancellationRate = filtered.length ? Math.round(((byStatus.CANCELADO || 0) / filtered.length) * 100) : 0;
   const attendanceRate = filtered.length ? Math.round(((byStatus.ATENDIDO || 0) / filtered.length) * 100) : 0;
 
+
+  const exportCsv = async () => {
+    try {
+      const csv = buildCsv(filtered);
+      const filename = `mediturnos-reportes-${todayLocalIso()}.csv`;
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+        setNotice(`CSV descargado: ${filename}`);
+        return;
+      }
+      await Share.share({ title: filename, message: csv });
+      setNotice(`CSV generado para ${filtered.length} turnos.`);
+    } catch (e: any) {
+      setError(readableError(e, 'No pudimos exportar el CSV.'));
+    }
+  };
+
   if (loading) return <MtLoading text="Cargando reportes..." />;
 
   const Bar = ({ label, value, total }: { label: string; value: number; total: number }) => {
@@ -89,6 +126,7 @@ export default function AdminReportesScreen() {
     <MtScreen scroll>
       <MtHeader eyebrow="ADMIN" title="Reportes" subtitle="Indicadores operativos de turnos y resumen del sistema." />
       {error ? <AdminNotice type="danger" title="No pudimos cargar reportes" message={error} onRetry={load} /> : null}
+      {notice ? <MtNotice type="success" title="Exportación lista" message={notice} style={{ marginBottom: 14 }} /> : null}
 
       <MtCard style={{ marginBottom: 14 }}>
         <AdminTitle title="Filtros" subtitle="No altera datos: solo filtra la información cargada." />
@@ -133,7 +171,7 @@ export default function AdminReportesScreen() {
         {topEntries(byDate, 10).map(([label, value]) => <Bar key={label} label={label || 'Sin fecha'} value={value} total={filtered.length} />)}
       </MtCard>
 
-      <MtButton title="Exportar reportes · Próximamente" disabled variant="ghost" onPress={() => {}} />
+      <MtButton title="Exportar CSV filtrado" variant="secondary" onPress={exportCsv} disabled={!filtered.length} />
       <MtButton title="Actualizar reportes" onPress={load} variant="ghost" />
       <RoleBottomNav role="admin" active="reportes" />
     </MtScreen>

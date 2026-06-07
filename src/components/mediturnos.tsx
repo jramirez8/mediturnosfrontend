@@ -13,7 +13,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { AppBottomNav } from './AppBottomNav';
 import { MediturnosTheme } from '../constants/mediturnosTheme';
 import { useMtTheme } from '../theme/themeStore';
 import { translateLiteral, useTranslation } from '../i18n/languageStore';
@@ -24,6 +24,7 @@ type ScreenProps = {
   padded?: boolean;
   bottomSpace?: boolean;
   style?: StyleProp<ViewStyle>;
+  scrollRef?: React.RefObject<ScrollView | null>;
 };
 
 function useStyles() {
@@ -49,7 +50,7 @@ function DecorativeBackground() {
   );
 }
 
-export function MtScreen({ children, scroll = false, padded = true, bottomSpace = true, style }: ScreenProps) {
+export function MtScreen({ children, scroll = false, padded = true, bottomSpace = true, style, scrollRef }: ScreenProps) {
   const { styles } = useStyles();
   const contentStyle = [padded && styles.screenPadding, bottomSpace && { paddingBottom: 116 }, style];
 
@@ -57,7 +58,7 @@ export function MtScreen({ children, scroll = false, padded = true, bottomSpace 
     <SafeAreaView style={styles.safe} edges={['top']}>
       <DecorativeBackground />
       {scroll ? (
-        <ScrollView contentContainerStyle={contentStyle} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scrollRef} contentContainerStyle={contentStyle} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
       ) : (
@@ -102,7 +103,7 @@ export function MtButton({
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { styles } = useStyles();
+  const { theme, styles } = useStyles();
   const { language } = useTranslation();
   const buttonStyle = [
     styles.button,
@@ -114,11 +115,11 @@ export function MtButton({
     style,
   ];
 
-  const textStyle = [styles.buttonText, variant === 'ghost' && styles.buttonGhostText, variant === 'danger' && styles.buttonDangerText];
+  const textStyle = [styles.buttonText, variant === 'secondary' && styles.buttonSecondaryText, variant === 'ghost' && styles.buttonGhostText, variant === 'danger' && styles.buttonDangerText];
 
   return (
     <Pressable onPress={onPress} disabled={disabled || loading} style={({ pressed }) => [buttonStyle, pressed && { transform: [{ scale: 0.985 }], opacity: 0.94 }]}>
-      {loading ? <ActivityIndicator color="white" /> : <Text style={textStyle} numberOfLines={2} adjustsFontSizeToFit>{translateLiteral(title, language)}</Text>}
+      {loading ? <ActivityIndicator color={variant === 'primary' ? '#FFFFFF' : theme.colors.primary} /> : <Text style={textStyle} numberOfLines={2} adjustsFontSizeToFit>{translateLiteral(title, language)}</Text>}
     </Pressable>
   );
 }
@@ -174,6 +175,48 @@ export function MtLoading({ text = 'Cargando...' }: { text?: string }) {
   );
 }
 
+
+export function MtNotice({
+  type = 'info',
+  title,
+  message,
+  actionTitle,
+  onAction,
+  style,
+}: {
+  type?: 'info' | 'success' | 'danger' | 'warning';
+  title?: string;
+  message: string;
+  actionTitle?: string;
+  onAction?: () => void;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const { theme } = useStyles();
+  const { language } = useTranslation();
+  const color = type === 'success' ? theme.colors.success : type === 'danger' ? theme.colors.danger : type === 'warning' ? theme.colors.warning : theme.colors.primary;
+  const bg = type === 'success'
+    ? (theme.mode === 'dark' ? 'rgba(34,197,94,0.12)' : '#F0FDF4')
+    : type === 'danger'
+      ? (theme.mode === 'dark' ? 'rgba(248,113,113,0.12)' : '#FFF1F2')
+      : type === 'warning'
+        ? (theme.mode === 'dark' ? 'rgba(251,191,36,0.12)' : '#FFFBEB')
+        : (theme.mode === 'dark' ? 'rgba(124,58,237,0.14)' : '#F3ECFF');
+  return (
+    <View style={[{
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: `${color}66`,
+      backgroundColor: bg,
+      padding: 14,
+      gap: 5,
+    }, style]}>
+      {!!title && <Text style={{ color, fontWeight: '900', fontSize: 14 }}>{translateLiteral(title, language)}</Text>}
+      <Text style={{ color: theme.colors.ink, fontWeight: '700', lineHeight: 20 }}>{translateLiteral(message, language)}</Text>
+      {!!actionTitle && !!onAction && <MtButton title={actionTitle} onPress={onAction} variant="ghost" style={{ marginTop: 8, minHeight: 42 }} />}
+    </View>
+  );
+}
+
 export function MtStat({ label, value, tone = 'primary' }: { label: string; value: string | number; tone?: 'primary' | 'success' | 'warning' | 'danger' }) {
   const { theme, styles } = useStyles();
   const { language } = useTranslation();
@@ -187,39 +230,7 @@ export function MtStat({ label, value, tone = 'primary' }: { label: string; valu
 }
 
 export function MtBottomNav({ active }: { active: 'home' | 'perfil' | 'turnos' | 'historia' | 'solicitar' | 'profesionales' }) {
-  const { theme, styles } = useStyles();
-  const { t } = useTranslation();
-  const icons: Record<string, string> = {
-    home: '⌂',
-    perfil: '◉',
-    turnos: '▦',
-    historia: '✦',
-    solicitar: '+',
-    profesionales: '⚕',
-  };
-  const item = (key: typeof active, label: string, path: string) => {
-    const selected = active === key;
-    return (
-      <Pressable style={styles.navItem} onPress={() => router.replace(path as any)}>
-        <View style={[styles.navIconBubble, selected && styles.navIconBubbleSelected]}>
-          <Text style={[styles.navEmoji, selected && { color: '#FFFFFF' }]}>{icons[key]}</Text>
-        </View>
-        <Text style={[styles.navText, selected && { color: theme.colors.primary, fontWeight: '900' }]}>{label}</Text>
-      </Pressable>
-    );
-  };
-
-  return (
-    <View style={styles.navBar}>
-      {item('home', t('nav.home'), '/paciente')}
-      {item('perfil', t('nav.profile'), '/paciente/perfil')}
-      <Pressable style={styles.navFab} onPress={() => router.push('/paciente/solicitar')}>
-        <Text style={styles.navFabText}>+</Text>
-      </Pressable>
-      {item('turnos', t('nav.appointments'), '/paciente/turnos')}
-      {item('historia', t('nav.history'), '/paciente/historia')}
-    </View>
-  );
+  return <AppBottomNav role="paciente" active={active} />;
 }
 
 export function useMtTextStyle(extra?: StyleProp<TextStyle>) {
@@ -307,11 +318,12 @@ function createStyles(theme: MediturnosTheme) {
     },
     button: { minHeight: 54, borderRadius: 19, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 16, elevation: 3 },
     buttonPrimary: { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary },
-    buttonSecondary: { backgroundColor: isDark ? theme.colors.secondary : '#8B35F6', borderWidth: 1, borderColor: 'transparent', shadowColor: theme.colors.primary },
+    buttonSecondary: { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F3ECFF', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'rgba(124,58,237,0.24)', shadowColor: theme.colors.primary, shadowOpacity: isDark ? 0.08 : 0.10 },
     buttonDanger: { backgroundColor: theme.mode === 'dark' ? 'rgba(248,113,113,0.14)' : '#FFF1F2', borderWidth: 1, borderColor: theme.colors.danger, shadowOpacity: 0 },
     buttonGhost: { backgroundColor: isDark ? 'rgba(255,255,255,0.075)' : '#EDE7FF', borderWidth: 1, borderColor: isDark ? theme.colors.border : 'rgba(124,58,237,0.28)', shadowColor: theme.colors.primary, shadowOpacity: isDark ? 0 : 0.10 },
     buttonDisabled: { opacity: 0.62 },
     buttonText: { color: '#FFFFFF', backgroundColor: 'transparent', fontSize: 14, fontWeight: '900', letterSpacing: 0.1, textAlign: 'center', lineHeight: 18, includeFontPadding: false },
+    buttonSecondaryText: { color: theme.colors.primaryDark },
     buttonGhostText: { color: theme.colors.primary },
     buttonDangerText: { color: theme.colors.danger },
     inputLabel: { color: theme.colors.ink, fontWeight: '900', fontSize: 13, marginLeft: 2 },

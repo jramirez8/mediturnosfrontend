@@ -11,9 +11,10 @@ import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 import { AdminNotice, AdminTitle } from '../../components/admin/AdminUi';
 import { useTranslation } from '../../i18n/languageStore';
+import { todayLocalIso } from '../../utils/date';
 
 function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+  return todayLocalIso();
 }
 
 function isToday(date?: string | null) {

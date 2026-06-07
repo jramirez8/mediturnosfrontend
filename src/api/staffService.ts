@@ -1,12 +1,9 @@
 import { api } from './client';
 import { appointmentService, TurnoResponse } from './appointmentService';
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
+import { todayLocalIso } from '../utils/date';
 
 export const medicoService = {
-  agenda: async (usuarioId: string | number, fecha = today()): Promise<TurnoResponse[]> => {
+  agenda: async (usuarioId: string | number, fecha = todayLocalIso()): Promise<TurnoResponse[]> => {
     const response = await api.get<any[]>(`/api/profesionales/agenda/${usuarioId}`, { params: { fecha } });
     return response.data.map((item) => appointmentService.normalizeForStaff(item));
   },

@@ -1,0 +1,12 @@
+# Archivos que no hace falta subir a EAS Build
+node_modules
+.expo
+web-build
+dist
+coverage
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+*.zip

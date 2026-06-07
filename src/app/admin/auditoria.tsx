@@ -28,7 +28,7 @@ export default function AuditoriaAdmin() {
       <Text style={{ color: theme.colors.primary, fontWeight: '900' }}>{item.accion}</Text>
       <Text style={{ color: theme.colors.ink, fontWeight: '800', marginTop: 4 }}>{item.entidad || '-'} #{item.entidadId || '-'}</Text>
       <Text style={{ color: theme.colors.muted, marginTop: 4 }}>{item.detalle || 'Sin detalle'}</Text>
-      <Text style={{ color: theme.colors.soft, marginTop: 6, fontSize: 12 }}>{item.creadoEn} · {item.actor || 'sistema'}</Text>
+      <Text style={{ color: theme.colors.soft, marginTop: 6, fontSize: 12 }}>{item.creadoEn} · {item.actor || 'actor no informado por backend'}</Text>
     </MtCard>)}
     <MtButton title="Actualizar" onPress={load} variant="ghost" />
     <RoleBottomNav role="admin" active="reportes" />

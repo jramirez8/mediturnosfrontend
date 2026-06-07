@@ -1,5 +1,6 @@
 import { api } from './client';
 import { getCachedJson, setCachedJson } from '../db/cache';
+import { storage } from './storage';
 
 export type Professional = {
   id: number;
@@ -41,7 +42,52 @@ const filterLocal = (items: Professional[], especialidad?: string, query?: strin
   });
 };
 
+
+async function findMeFromList() {
+  const [professionalId, professionalInstitutionId, fullName] = await Promise.all([
+    storage.getItem('profesional_id'),
+    storage.getItem('profesional_institucion_id'),
+    storage.getItem('nombre_completo'),
+  ]);
+  const list = await professionalService.getAll();
+  const profId = professionalId ? Number(professionalId) : null;
+  const profInstId = professionalInstitutionId ? Number(professionalInstitutionId) : null;
+  if (profInstId) {
+    const found = list.find((p) => Number(p.profesionalInstitucionId ?? p.id) === profInstId);
+    if (found) return found;
+  }
+  if (profId) {
+    const found = list.find((p) => Number(p.id) === profId);
+    if (found) return found;
+  }
+  const normalizedName = String(fullName ?? '').toLowerCase();
+  if (normalizedName) {
+    const found = list.find((p) => normalizedName.includes(String(p.nombre).toLowerCase()) && normalizedName.includes(String(p.apellido).toLowerCase()));
+    if (found) return found;
+  }
+  return null;
+}
+
 export const professionalService = {
+
+  getMe: async () => {
+    try {
+      const response = await api.get<any>('/api/profesionales/me');
+      const data = normalizeProfessional(response.data);
+      if (Number.isFinite(data.id)) {
+        await setCachedJson('professionals:me', data);
+        return data;
+      }
+      throw new Error('Respuesta de profesional inválida.');
+    } catch (error) {
+      const fromList = await findMeFromList();
+      if (fromList) return fromList;
+      const cached = await getCachedJson<Professional>('professionals:me');
+      if (cached) return cached;
+      throw error;
+    }
+  },
+
   getAll: async (especialidad?: string, query?: string) => {
     const cacheKey = `professionals:all:${especialidad ?? 'Todos'}:${query ?? ''}`;
 

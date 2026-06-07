@@ -31,6 +31,11 @@ export const agendaService = {
     await clearAppCache();
     return response.data;
   },
+  updateHorario: async (id: number, data: Partial<HorarioAtencion>) => {
+    const response = await api.put<HorarioAtencion>(`/api/agenda/horarios/${id}`, data);
+    await clearAppCache();
+    return response.data;
+  },
   deleteHorario: async (id: number) => {
     await api.delete(`/api/agenda/horarios/${id}`);
     await clearAppCache();
@@ -41,6 +46,11 @@ export const agendaService = {
   },
   createBloqueo: async (data: Partial<AgendaBloqueo>) => {
     const response = await api.post<AgendaBloqueo>('/api/agenda/bloqueos', data);
+    await clearAppCache();
+    return response.data;
+  },
+  updateBloqueo: async (id: number, data: Partial<AgendaBloqueo>) => {
+    const response = await api.put<AgendaBloqueo>(`/api/agenda/bloqueos/${id}`, data);
     await clearAppCache();
     return response.data;
   },

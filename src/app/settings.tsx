@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Redirect, router } from 'expo-router';
-import { MtButton, MtCard, MtHeader, MtScreen } from '../components/mediturnos';
+import { MtButton, MtBottomNav, MtCard, MtHeader, MtScreen } from '../components/mediturnos';
+import { RoleBottomNav } from '../components/RoleBottomNav';
 import { useAuthStore } from '../auth/authStore';
 import { humanRole, routeForRole } from '../auth/roles';
 import { ThemeMode, useThemeStore, useMtTheme } from '../theme/themeStore';
@@ -63,11 +64,16 @@ export default function GlobalSettingsScreen() {
         </View>
       </MtCard>
 
-      <MtCard>
+      <MtCard style={{ marginBottom: 92 }}>
         <Text style={styles.cardTitle}>{t('settings.session')}</Text>
         <Text style={styles.muted}>{t('settings.sessionHelp')}</Text>
         <MtButton title={t('common.logout')} variant="danger" onPress={close} style={{ marginTop: 14 }} />
       </MtCard>
+
+      {role === 'ADMIN' ? <RoleBottomNav role="admin" active="settings" /> : null}
+      {role === 'PROFESSIONAL' ? <RoleBottomNav role="medico" active="settings" /> : null}
+      {role === 'SECRETARY' ? <RoleBottomNav role="secretaria" active="settings" /> : null}
+      {role === 'PATIENT' ? <MtBottomNav active="perfil" /> : null}
     </MtScreen>
   );
 }

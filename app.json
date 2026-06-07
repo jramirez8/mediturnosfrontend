@@ -1,14 +1,15 @@
 {
   "expo": {
     "name": "Mediturnos",
-    "slug": "mediturnos-mobile",
+    "slug": "mediturnos",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/mediturnos-square-logo.png",
     "scheme": "mediturnos",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/mediturnos-square-logo.png",
+      "bundleIdentifier": "com.mediturnos.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +18,9 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.mediturnos.app",
+      "versionCode": 1
     },
     "web": {
       "output": "single",

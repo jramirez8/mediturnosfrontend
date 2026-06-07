@@ -9,6 +9,7 @@ import { TurnoResponse } from '../../api/appointmentService';
 import { useAuthStore } from '../../auth/authStore';
 import { useMtTheme } from '../../theme/themeStore';
 import { useTranslation } from '../../i18n/languageStore';
+import { todayLocalIso } from '../../utils/date';
 
 export default function SecretariaDashboard() {
   const nombre = useAuthStore((s) => s.nombreCompleto);
@@ -28,7 +29,7 @@ export default function SecretariaDashboard() {
   useEffect(() => { load(); }, [load]);
 
   const stats = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocalIso();
     const todayItems = turnos.filter((t) => (t.fechaHora || t.fecha || '').startsWith(today));
     const count = (estado: string) => turnos.filter((t) => String(t.estado).toUpperCase() === estado).length;
     return { today: todayItems.length, confirmed: count('CONFIRMADO'), cancelled: count('CANCELADO'), pending: count('PENDIENTE') + count('REPROGRAMADO') };

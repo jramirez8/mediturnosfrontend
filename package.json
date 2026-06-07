@@ -45,7 +45,12 @@
     "start:tunnel": "expo start --tunnel -c",
     "typecheck": "tsc --noEmit",
     "android:lan": "expo start --android --lan -c",
-    "start:android": "expo start --android --lan -c"
+    "start:android": "expo start --android --lan -c",
+    "build:android:apk": "eas build --platform android --profile preview",
+    "build:android:aab": "eas build --platform android --profile production",
+    "build:android:apk:local": "eas build --platform android --profile preview --local",
+    "eas:configure": "eas build:configure",
+    "eas:login": "eas login"
   },
   "private": true
 }

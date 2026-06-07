@@ -39,11 +39,24 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
-  const token = await storage.getItem('access_token');
+  const [token, usuarioId, role, nombreCompleto] = await Promise.all([
+    storage.getItem('access_token'),
+    storage.getItem('usuario_id'),
+    storage.getItem('role'),
+    storage.getItem('nombre_completo'),
+  ]);
+
+  config.headers = config.headers ?? {};
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Ayuda al backend/auditoría a identificar al actor real de cada operación.
+  // El JWT sigue siendo la fuente de verdad; estos headers son complemento para logs y auditoría.
+  if (usuarioId) config.headers['X-Mediturnos-Actor-Id'] = usuarioId;
+  if (role) config.headers['X-Mediturnos-Actor-Role'] = role;
+  if (nombreCompleto) config.headers['X-Mediturnos-Actor-Name'] = nombreCompleto;
 
   return config;
 });

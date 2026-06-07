@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtPill, MtScreen } from '../../components/mediturnos';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
@@ -11,6 +11,8 @@ import { useMtTheme } from '../../theme/themeStore';
 const estados = ['TODOS', 'CONFIRMADO', 'REPROGRAMADO', 'PENDIENTE', 'CANCELADO', 'ATENDIDO', 'AUSENTE'];
 
 export default function SecretariaTurnosScreen() {
+  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollToTop = () => setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 80);
   const [turnos, setTurnos] = useState<TurnoResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [workingId, setWorkingId] = useState<number | null>(null);
@@ -43,16 +45,18 @@ export default function SecretariaTurnosScreen() {
     try {
       const updated = action === 'confirmar' ? await secretariaService.confirmar(turno.id) : action === 'cancelar' ? await secretariaService.cancelar(turno.id) : await secretariaService.ausente(turno.id);
       setMessage(`Turno #${updated.id} actualizado a ${updated.estado}.`);
+      scrollToTop();
       await load();
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'No pudimos actualizar el turno.');
+      scrollToTop();
     } finally { setWorkingId(null); }
   };
 
   if (loading) return <MtLoading text="Cargando turnos..." />;
 
   return (
-    <MtScreen scroll>
+    <MtScreen scroll scrollRef={scrollRef}>
       <MtHeader eyebrow="SECRETARÍA" title="Gestión de turnos" subtitle="Confirmar, cancelar, marcar ausente o reprogramar sin borrar historial." />
       {message ? <MtCard style={{ borderColor: theme.colors.success, marginBottom: 14 }}><Text style={{ color: theme.colors.success, fontWeight: '900' }}>{message}</Text></MtCard> : null}
       {error ? <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}><Text style={{ color: theme.colors.danger, fontWeight: '900' }}>{error}</Text></MtCard> : null}
