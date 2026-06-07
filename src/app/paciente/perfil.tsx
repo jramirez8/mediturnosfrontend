@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { userService, UserProfile } from '../../api/userService';
 import { useAuthStore } from '../../auth/authStore';
 import { catalogService, CatalogItem } from '../../api/catalogService';
 import { Professional } from '../../api/professionalService';
-import { MtBottomNav, MtButton, MtCard, MtHeader, MtInput, MtLoading, MtScreen } from '../../components/mediturnos';
+import { MtBottomNav, MtButton, MtCard, MtHeader, MtInput, MtLoading, MtNotice, MtScreen } from '../../components/mediturnos';
 import { MtSelect, MtSelectOption } from '../../components/MtSelect';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
@@ -26,12 +26,16 @@ function matchCatalogByName(items: CatalogItem[], name?: string | null) {
   return found ? String(found.id) : '';
 }
 
+type Notice = { type: 'success' | 'danger' | 'warning' | 'info'; title: string; message: string };
+
 export default function PerfilScreen() {
   const { usuarioId } = useAuthStore();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const scrollRef = useRef<ScrollView | null>(null);
   const [email, setEmail] = useState('');
   const [numeroAfiliado, setNumeroAfiliado] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -47,6 +51,9 @@ export default function PerfilScreen() {
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
   const { t, language } = useTranslation();
+
+  const scrollTop = () => requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: 0, animated: true }));
+  const showNotice = (next: Notice) => { setNotice(next); scrollTop(); };
 
   useEffect(() => {
     loadAll();
@@ -81,7 +88,7 @@ export default function PerfilScreen() {
       setCarnet(data.carnetObraSocialUrl ? { uri: data.carnetObraSocialUrl, fileName: 'carnet-obra-social.jpg', mimeType: 'image/jpeg' } : null);
       fillForm(data, obras);
     } catch (error: any) {
-      Alert.alert(language === 'en' ? 'We could not load your profile' : 'No se pudo cargar perfil', readableError(error));
+      showNotice({ type: 'danger', title: language === 'en' ? 'We could not load your profile' : 'No se pudo cargar perfil', message: readableError(error) });
     } finally {
       setCatalogLoading(false);
       setLoading(false);
@@ -120,7 +127,7 @@ export default function PerfilScreen() {
         setProfile(updated);
         setPhotoUri(updated.fotoPerfilUrl ?? media.uri);
       },
-      (message) => Alert.alert('No pudimos cargar la foto', message),
+      (message) => showNotice({ type: 'danger', title: 'No pudimos cargar la foto', message }),
     );
   };
 
@@ -135,7 +142,7 @@ export default function PerfilScreen() {
           mimeType: 'image/jpeg',
         });
       },
-      (message) => Alert.alert(language === 'en' ? 'We could not attach the card' : 'No pudimos adjuntar el carnet', message),
+      (message) => showNotice({ type: 'danger', title: language === 'en' ? 'We could not attach the card' : 'No pudimos adjuntar el carnet', message }),
     );
   };
 
@@ -144,13 +151,13 @@ export default function PerfilScreen() {
       setSaving(true);
 
       if (needsOtherDetails && !observacionesOtro.trim()) {
-        Alert.alert(language === 'en' ? 'Missing notes' : 'Faltan observaciones', language === 'en' ? 'When you choose Other, complete the Notes field with the missing information.' : 'Cuando elegís “Otro”, completá el campo Observaciones con los datos faltantes.');
+        showNotice({ type: 'warning', title: language === 'en' ? 'Missing notes' : 'Faltan observaciones', message: language === 'en' ? 'When you choose Other, complete the Notes field with the missing information.' : 'Cuando elegís “Otro”, completá el campo Observaciones con los datos faltantes.' });
         return;
       }
 
       const selectedObraSocialId = obraSocialId === OTRO ? profile?.obraSocialId : Number(obraSocialId);
       if (!selectedObraSocialId || Number.isNaN(Number(selectedObraSocialId))) {
-        Alert.alert(language === 'en' ? 'Health insurance required' : 'Obra social requerida', language === 'en' ? 'Select a health insurance option from the list. If it is missing, choose Other and add the details in Notes.' : 'Seleccioná una obra social del listado. Si no aparece, elegí “Otro” y completá los datos en Observaciones.');
+        showNotice({ type: 'warning', title: language === 'en' ? 'Health insurance required' : 'Obra social requerida', message: language === 'en' ? 'Select a health insurance option from the list. If it is missing, choose Other and add the details in Notes.' : 'Seleccioná una obra social del listado. Si no aparece, elegí “Otro” y completá los datos en Observaciones.' });
         return;
       }
 
@@ -170,9 +177,9 @@ export default function PerfilScreen() {
         doctorCabecera: doctor,
       });
       setProfile(updated);
-      Alert.alert(t('profile.saved'), t('profile.savedMsg'));
+      showNotice({ type: 'success', title: t('profile.saved'), message: t('profile.savedMsg') });
     } catch (error: any) {
-      Alert.alert(language === 'en' ? 'Could not save' : 'No se pudo guardar', readableError(error));
+      showNotice({ type: 'danger', title: language === 'en' ? 'Could not save' : 'No se pudo guardar', message: readableError(error) });
     } finally {
       setSaving(false);
     }
@@ -182,12 +189,14 @@ export default function PerfilScreen() {
 
   return (
     <>
-      <MtScreen scroll>
+      <MtScreen scroll scrollRef={scrollRef}>
         <MtHeader
           eyebrow={t('profile.eyebrow')}
           title={t('profile.title')}
           subtitle={t('profile.subtitle')}
         />
+
+        {!!notice && <MtNotice type={notice.type} title={notice.title} message={notice.message} style={{ marginBottom: 14 }} />}
 
         <MtCard style={styles.heroCard}>
           <Pressable style={styles.avatarWrap} onPress={pickProfilePhoto}>

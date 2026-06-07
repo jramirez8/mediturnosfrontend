@@ -5,10 +5,13 @@ import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtScreen 
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { TurnoCard } from '../../components/TurnoCard';
 import { appointmentService, TurnoResponse } from '../../api/appointmentService';
+import { documentService } from '../../api/documentService';
 import { medicoService } from '../../api/staffService';
 import { useAuthStore } from '../../auth/authStore';
 import { doctorAccessMessage, filterTurnosForDoctor, turnoBelongsToDoctor } from '../../utils/doctorAccess';
 import { useMtTheme } from '../../theme/themeStore';
+import { chooseDocumentSource } from '../../utils/mediaPicker';
+import { readableError } from '../../utils/errors';
 
 export default function MedicoConsultaScreen() {
   const { turnoId } = useLocalSearchParams<{ turnoId?: string }>();
@@ -21,6 +24,7 @@ export default function MedicoConsultaScreen() {
   const [agenda, setAgenda] = useState<TurnoResponse[]>([]);
   const [loading, setLoading] = useState(Boolean(turnoId));
   const [saving, setSaving] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const theme = useMtTheme();
@@ -70,7 +74,7 @@ export default function MedicoConsultaScreen() {
         setAgenda(filterTurnosForDoctor(rawAgenda, doctorIdentity));
       }
     } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'No pudimos cargar la consulta.');
+      setError(readableError(e, 'No pudimos cargar la consulta.'));
     } finally {
       setLoading(false);
     }
@@ -98,10 +102,32 @@ export default function MedicoConsultaScreen() {
       setTurno(updated);
       setMessage(`Consulta guardada. El turno #${updated.id} quedó en estado ${updated.estado}.`);
     } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'No pudimos guardar la consulta.');
+      setError(readableError(e, 'No pudimos guardar la consulta.'));
     } finally {
       setSaving(false);
     }
+  };
+
+  const uploadDocument = () => {
+    if (!turno?.pacienteId) {
+      setError('No pudimos asociar el documento porque el turno no tiene paciente.');
+      return;
+    }
+    chooseDocumentSource(
+      async (media) => {
+        try {
+          setUploadingDoc(true);
+          setError(null);
+          await documentService.upload(Number(turno.pacienteId), media, 'Estudio', turno.id);
+          setMessage('Documento adjuntado a la atención.');
+        } catch (e: any) {
+          setError(readableError(e, 'No pudimos adjuntar el documento.'));
+        } finally {
+          setUploadingDoc(false);
+        }
+      },
+      (message) => setError(message),
+    );
   };
 
   if (loading) return <MtLoading text="Cargando consulta..." />;
@@ -149,7 +175,8 @@ export default function MedicoConsultaScreen() {
         <MtInput label="Hábitos" value={form.habitos} onChangeText={(v) => setField('habitos', v)} multiline />
         <MtInput label="Hallazgos del examen físico" value={form.hallazgosExamenFisico} onChangeText={(v) => setField('hallazgosExamenFisico', v)} multiline />
         <MtInput label="Conducta / tratamiento *" value={form.conducta} onChangeText={(v) => setField('conducta', v)} multiline />
-        <MtButton title="Guardar consulta y marcar atendido" onPress={save} loading={saving} disabled={!canSave} />
+        <MtButton title="Adjuntar documento a la atención" variant="secondary" onPress={uploadDocument} loading={uploadingDoc} disabled={!turno?.pacienteId || uploadingDoc || saving} />
+        <MtButton title="Guardar consulta y marcar atendido" onPress={save} loading={saving} disabled={!canSave || uploadingDoc} />
       </MtCard>
       <RoleBottomNav role="medico" active="consulta" />
     </MtScreen>

@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, Text, View } from 'react-native';
 import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtPill, MtScreen } from '../../components/mediturnos';
 import { MtSelect } from '../../components/MtSelect';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
@@ -8,7 +8,7 @@ import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 import { AdminActionRow, AdminKV, AdminMiniButton, AdminNotice, AdminTabs, AdminTitle } from '../../components/admin/AdminUi';
 
-type Tab = 'MEDICOS' | 'SECRETARIAS' | 'PACIENTES';
+type Tab = 'MEDICOS' | 'SECRETARIAS' | 'PACIENTES'; // PACIENTES queda soportado por compatibilidad, pero el alta principal está en Admin > Usuarios.
 
 const sangreOptions = ['A_POSITIVO', 'A_NEGATIVO', 'B_POSITIVO', 'B_NEGATIVO', 'AB_POSITIVO', 'AB_NEGATIVO', 'O_POSITIVO', 'O_NEGATIVO'].map((value) => ({ value, label: value.replace('_', ' ') }));
 
@@ -58,6 +58,8 @@ export default function AdminProfesionalesScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const theme = useMtTheme();
+  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollTop = () => setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 80);
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
@@ -135,7 +137,7 @@ export default function AdminProfesionalesScreen() {
   };
 
   const saveProfesional = async () => {
-    const problem = validateProfesional(); if (problem) { setError(problem); return; }
+    const problem = validateProfesional(); if (problem) { setError(problem); scrollTop(); return; }
     setSaving(true); setError(null); setMessage(null);
     const payload: any = {
       email: profForm.email.trim(), nombre: profForm.nombre.trim(), apellido: profForm.apellido.trim(), dni: profForm.dni.trim() || undefined, matricula: profForm.matricula.trim(), telefono: profForm.telefono.trim() || undefined,
@@ -143,28 +145,28 @@ export default function AdminProfesionalesScreen() {
     };
     if (profForm.password.trim()) payload.password = profForm.password.trim();
     try {
-      if (profForm.id) { await adminService.actualizarProfesional(profForm.id, payload); setMessage('Médico actualizado correctamente.'); }
-      else { await adminService.crearProfesional({ ...payload, password: profForm.password.trim() }); setMessage('Médico creado correctamente.'); }
+      if (profForm.id) { await adminService.actualizarProfesional(profForm.id, payload); setMessage('Médico actualizado correctamente.'); scrollTop(); }
+      else { await adminService.crearProfesional({ ...payload, password: profForm.password.trim() }); setMessage('Médico creado correctamente.'); scrollTop(); }
       closeForm(); await load();
-    } catch (e: any) { setError(readableError(e, 'No pudimos guardar el médico.')); }
+    } catch (e: any) { setError(readableError(e, 'No pudimos guardar el médico.')); scrollTop(); }
     finally { setSaving(false); }
   };
 
   const saveSecretaria = async () => {
-    const problem = validateSecretaria(); if (problem) { setError(problem); return; }
+    const problem = validateSecretaria(); if (problem) { setError(problem); scrollTop(); return; }
     setSaving(true); setError(null); setMessage(null);
     const payload: any = { email: secForm.email.trim(), nombre: secForm.nombre.trim(), apellido: secForm.apellido.trim(), dni: secForm.dni.trim(), telefono: secForm.telefono.trim() || undefined, institucionId: Number(secForm.institucionId), activa: secForm.activa, emailVerificado: secForm.emailVerificado };
     if (secForm.password.trim()) payload.password = secForm.password.trim();
     try {
-      if (secForm.id) { await adminService.actualizarSecretaria(secForm.id, payload); setMessage('Secretaría actualizada correctamente.'); }
-      else { await adminService.crearSecretaria({ ...payload, password: secForm.password.trim() }); setMessage('Secretaría creada correctamente.'); }
+      if (secForm.id) { await adminService.actualizarSecretaria(secForm.id, payload); setMessage('Secretaría actualizada correctamente.'); scrollTop(); }
+      else { await adminService.crearSecretaria({ ...payload, password: secForm.password.trim() }); setMessage('Secretaría creada correctamente.'); scrollTop(); }
       closeForm(); await load();
     } catch (e: any) { setError(readableError(e, 'No pudimos guardar secretaría.')); }
     finally { setSaving(false); }
   };
 
   const savePaciente = async () => {
-    const problem = validatePaciente(); if (problem) { setError(problem); return; }
+    const problem = validatePaciente(); if (problem) { setError(problem); scrollTop(); return; }
     setSaving(true); setError(null); setMessage(null);
     const payload: any = {
       email: pacForm.email.trim(), nombre: pacForm.nombre.trim(), apellido: pacForm.apellido.trim(), dni: pacForm.dni.trim(), fechaNacimiento: pacForm.fechaNacimiento, telefono: pacForm.telefono.trim(), tipoSangre: pacForm.tipoSangre,
@@ -175,10 +177,10 @@ export default function AdminProfesionalesScreen() {
     };
     if (pacForm.password.trim()) payload.password = pacForm.password.trim();
     try {
-      if (pacForm.id) { await adminService.actualizarPaciente(pacForm.id, payload); setMessage('Paciente actualizado correctamente.'); }
-      else { await adminService.crearPaciente({ ...payload, password: pacForm.password.trim() }); setMessage('Paciente creado correctamente.'); }
+      if (pacForm.id) { await adminService.actualizarPaciente(pacForm.id, payload); setMessage('Paciente actualizado correctamente.'); scrollTop(); }
+      else { await adminService.crearPaciente({ ...payload, password: pacForm.password.trim() }); setMessage('Paciente creado correctamente.'); scrollTop(); }
       closeForm(); await load();
-    } catch (e: any) { setError(readableError(e, 'No pudimos guardar el paciente.')); }
+    } catch (e: any) { setError(readableError(e, 'No pudimos guardar el paciente.')); scrollTop(); }
     finally { setSaving(false); }
   };
 
@@ -197,15 +199,15 @@ export default function AdminProfesionalesScreen() {
   if (loading) return <MtLoading text="Cargando gestión de personas..." />;
 
   return (
-    <MtScreen scroll>
-      <MtHeader eyebrow="ADMIN" title="Personal y pacientes" subtitle="Médicos, secretarías y pacientes con alta, edición y baja lógica." />
+    <MtScreen scroll scrollRef={scrollRef}>
+      <MtHeader eyebrow="ADMIN" title="Personal" subtitle="Médicos y secretarías. Los pacientes se crean desde Admin > Usuarios." />
       {message ? <AdminNotice type="success" title="Listo" message={message} /> : null}
       {error ? <AdminNotice type="danger" title="Revisá esta operación" message={error} /> : null}
 
       <MtCard style={{ marginBottom: 14 }}>
-        <AdminTabs value={tab} onChange={(v) => { setTab(v); closeForm(); }} options={[{ value: 'MEDICOS', label: `Médicos ${profesionales.length}` }, { value: 'SECRETARIAS', label: `Secretaría ${secretarias.length}`, tone: 'warning' }, { value: 'PACIENTES', label: `Pacientes ${pacientes.length}`, tone: 'success' }]} />
+        <AdminTabs value={tab} onChange={(v) => { setTab(v); closeForm(); }} options={[{ value: 'MEDICOS', label: `Médicos ${profesionales.length}` }, { value: 'SECRETARIAS', label: `Secretaría ${secretarias.length}`, tone: 'warning' }]} />
         <MtInput label="Buscar" value={query} onChangeText={setQuery} placeholder="nombre, dni, email, matrícula..." autoCapitalize="none" />
-        <MtButton title={formOpen ? 'Cerrar formulario' : tab === 'MEDICOS' ? 'Crear médico' : tab === 'SECRETARIAS' ? 'Crear secretaría' : 'Crear paciente'} onPress={formOpen ? closeForm : openCreate} style={{ marginTop: 12 }} />
+        <MtButton title={formOpen ? 'Cerrar formulario' : tab === 'MEDICOS' ? 'Crear médico' : 'Crear secretaría'} onPress={formOpen ? closeForm : openCreate} style={{ marginTop: 12 }} />
       </MtCard>
 
       {formOpen && tab === 'MEDICOS' ? (

@@ -13,7 +13,7 @@
       </GradleProjectSettings>
       <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$/node_modules/@expo/ui/android" />
-        <option name="gradleJvm" value="jbrsdk_jcef-21" />
+        <option name="gradleJvm" value="jbrsdk_jcef-21 (2)" />
       </GradleProjectSettings>
       <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$/node_modules/@react-native-masked-view/masked-view/android" />

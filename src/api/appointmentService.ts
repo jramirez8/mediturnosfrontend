@@ -109,7 +109,7 @@ const normalizeTurno = (t: any): TurnoResponse => {
     especialidad: t?.especialidad ?? t?.especialidadNombre ?? 'Consulta médica',
     institucionId: t?.institucionId ? Number(t.institucionId) : undefined,
     institucionNombre: t?.institucionNombre ?? t?.institucion ?? t?.profesionalInstitucion?.institucion?.nombre ?? 'Institución',
-    estado: t?.estado ?? 'PENDIENTE',
+    estado: t?.estado ?? 'SIN_ESTADO',
     motivoConsulta: t?.motivoConsulta,
     diagnostico: t?.diagnostico,
     observaciones: t?.observaciones,

@@ -114,7 +114,7 @@ export default function AgendaAvanzadaAdmin() {
       <MtCard style={{ gap: 12, marginBottom: 14 }}>
         <Text style={styles.title}>Horarios vigentes</Text>
         {horarios.map((h) => <Text key={h.id} style={styles.item}>• {h.diaSemana}: {h.horaDesde} a {h.horaHasta} · {h.duracionTurnoMin} min · {h.especialidad}</Text>)}
-        {!horarios.length && <Text style={styles.muted}>Sin horarios configurados. Si no configurás horarios, el sistema usa la grilla base.</Text>}
+        {!horarios.length && <Text style={styles.muted}>Sin horarios configurados. Si no cargás disponibilidad, no se ofrecerán turnos para ese médico.</Text>}
       </MtCard>
 
       <MtCard style={{ gap: 12, marginBottom: 14 }}>

@@ -201,6 +201,10 @@ export const adminService = {
   },
   desactivarUsuario: async (id: number) => api.delete(`/api/admin/usuarios/${id}`),
   activarUsuario: async (id: number) => adminService.actualizarUsuario(id, { activo: true }),
+  reenviarVerificacionUsuario: async (id: number) => {
+    const response = await api.post(`/api/admin/usuarios/${id}/reenviar-verificacion`);
+    return response.data as { ok?: boolean; message?: string };
+  },
 
   profesionales: async () => {
     const response = await api.get<any[]>('/api/admin/profesionales');
