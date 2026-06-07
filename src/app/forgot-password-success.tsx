@@ -1,62 +1,34 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Linking,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Linking, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { MtButton, MtCard, MtScreen } from '../components/mediturnos';
+import { useMtTheme } from '../theme/themeStore';
 
 export default function ForgotPasswordSuccessScreen() {
-  const handleOpenEmail = () => {
-    Linking.openURL('mailto:');
-    router.replace('/login');
-  };
-
+  const theme = useMtTheme();
   return (
-    <SafeAreaView style={styles.container}>
+    <MtScreen scroll bottomSpace={false}>
       <View style={styles.content}>
-        <View style={styles.iconCircle}>
-          <Text style={{color: 'white', fontSize: 40}}>✅</Text>
+        <View style={[styles.iconCircle, { backgroundColor: theme.colors.success }]}>
+          <Text style={styles.icon}>✓</Text>
         </View>
+        <Text style={[styles.title, { color: theme.colors.ink }]}>Solicitud enviada</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.muted }]}>Si los datos son correctos, te enviamos un código de 6 dígitos. Revisá entrada y spam/no deseado.</Text>
 
-        <Text style={styles.title}>¡Solicitud enviada!</Text>
-        <Text style={styles.subtitle}>
-          Te enviamos un enlace para crear una nueva contraseña. Revisá la bandeja de entrada y también spam/no deseado.
-        </Text>
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleOpenEmail}
-          >
-            <Text style={styles.buttonText}>Ir al correo</Text>
-          </TouchableOpacity>
-
-
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.replace('/login')}
-          >
-            <Text style={styles.backButtonText}>Volver al login</Text>
-          </TouchableOpacity>
-        </View>
+        <MtCard style={{ width: '100%', gap: 12 }}>
+          <MtButton title="Ingresar código" onPress={() => router.replace('/reset-password')} />
+          <MtButton title="Abrir correo" variant="secondary" onPress={() => Linking.openURL('mailto:')} />
+          <MtButton title="Volver al login" variant="ghost" onPress={() => router.replace('/login')} />
+        </MtCard>
       </View>
-    </SafeAreaView>
+    </MtScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
-  content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  iconCircle: { width: 100, height: 100, backgroundColor: '#22c55e', borderRadius: 50, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
-  title: { fontSize: 26, fontWeight: '700', color: '#111827', marginBottom: 12, textAlign: 'center' },
-  subtitle: { fontSize: 15, color: '#6b7280', textAlign: 'center', lineHeight: 22, marginBottom: 40 },
-  footer: { width: '100%', gap: 12 },
-  button: { backgroundColor: '#7C3AED', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
-  buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
-  backButton: { paddingVertical: 12, alignItems: 'center' },
-  backButtonText: { color: '#7C3AED', fontSize: 15, fontWeight: '600' },
+  content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 28, gap: 16 },
+  iconCircle: { width: 92, height: 92, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
+  icon: { color: 'white', fontSize: 44, fontWeight: '900' },
+  title: { fontSize: 30, fontWeight: '900', textAlign: 'center', letterSpacing: -0.6 },
+  subtitle: { fontSize: 15, fontWeight: '700', lineHeight: 22, textAlign: 'center', marginBottom: 14 },
 });

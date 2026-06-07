@@ -15,7 +15,15 @@ function isVercelHostedWeb() {
   if (forcedMode === 'direct') return false;
   if (forcedMode === 'proxy') return true;
 
-  return host === 'vercel.app' || host.endsWith('.vercel.app');
+  const isLocalHost = ['localhost', '127.0.0.1'].includes(host);
+  if (isLocalHost) return false;
+
+  return (
+    host === 'mediturnos.net.ar' ||
+    host === 'www.mediturnos.net.ar' ||
+    host === 'vercel.app' ||
+    host.endsWith('.vercel.app')
+  );
 }
 
 /**

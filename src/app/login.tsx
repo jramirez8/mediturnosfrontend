@@ -186,6 +186,7 @@ export default function LoginScreen() {
   };
 
   const invalidCredentials = debugMessage?.includes('HTTP 400') || debugMessage?.includes('HTTP 401');
+  const needsAccountVerification = !!errorMessage && /verific/i.test(errorMessage);
 
   return (
     <View style={styles.page}>
@@ -284,7 +285,15 @@ export default function LoginScreen() {
             {errorMessage ? (
               <View style={[styles.messageBox, styles.errorBox]}>
                 <Text style={[styles.messageTitle, styles.errorTitle]}>{t('login.signInErrorTitle')}</Text>
-                <Text style={styles.messageText}>{invalidCredentials ? t('login.errorInvalid') : errorMessage}</Text>
+                <Text style={styles.messageText}>{needsAccountVerification ? errorMessage : invalidCredentials ? t('login.errorInvalid') : errorMessage}</Text>
+                {needsAccountVerification ? (
+                  <Pressable
+                    style={styles.verifyAccountButton}
+                    onPress={() => router.push({ pathname: '/registro/verificar', params: { email: identifier.trim() } })}
+                  >
+                    <Text style={styles.verifyAccountText}>Ingresar código de verificación</Text>
+                  </Pressable>
+                ) : null}
               </View>
             ) : null}
 
@@ -521,6 +530,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     marginTop: 4,
+  },
+  verifyAccountButton: {
+    backgroundColor: palette.purple,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginTop: 12,
+  },
+  verifyAccountText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '900',
   },
   secureHint: {
     color: palette.muted,

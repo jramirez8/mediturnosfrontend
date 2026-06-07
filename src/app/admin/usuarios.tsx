@@ -37,7 +37,7 @@ const roleOptions = [
 
 function validate(form: UsuarioForm, editing: boolean) {
   if (!form.email.includes('@')) return 'Ingresá un email válido.';
-  if (!editing && form.password.trim().length < 6) return 'La contraseña inicial debe tener al menos 6 caracteres.';
+  if (!editing && form.password.trim().length < 8) return 'La contraseña inicial debe tener al menos 8 caracteres.';
   if (!form.rol) return 'Seleccioná un rol.';
   return null;
 }
@@ -114,6 +114,7 @@ export default function AdminUsuariosScreen() {
     const problem = validate(form, editing);
     if (problem) {
       setError(problem);
+      scrollToTop();
       return;
     }
     setSaving(true);
@@ -192,7 +193,7 @@ export default function AdminUsuariosScreen() {
           <AdminTitle title={form.id ? 'Editar usuario' : 'Crear usuario'} subtitle="Este formulario escribe directo en /api/admin/usuarios." />
           <View style={{ gap: 12 }}>
             <MtInput label="Email" value={form.email} onChangeText={(email) => setForm((f) => ({ ...f, email }))} placeholder="usuario@dominio.com" autoCapitalize="none" keyboardType="email-address" />
-            <MtInput label={form.id ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'} value={form.password} onChangeText={(password) => setForm((f) => ({ ...f, password }))} placeholder={form.id ? 'Dejar vacío para no cambiar' : 'Mínimo 6 caracteres'} secureTextEntry />
+            <MtInput label={form.id ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'} value={form.password} onChangeText={(password) => setForm((f) => ({ ...f, password }))} placeholder={form.id ? 'Dejar vacío para no cambiar' : 'Mínimo 8 caracteres'} secureTextEntry />
             <MtSelect label="Rol" value={form.rol} placeholder="Seleccionar rol" options={roleOptions} onChange={(rol) => setForm((f) => ({ ...f, rol }))} />
             <AdminTabs value={form.activo ? 'SI' : 'NO'} onChange={(v) => setForm((f) => ({ ...f, activo: v === 'SI' }))} options={[{ value: 'SI', label: 'Activo', tone: 'success' }, { value: 'NO', label: 'Inactivo', tone: 'danger' }]} />
             <AdminTabs value={form.emailVerificado ? 'SI' : 'NO'} onChange={(v) => setForm((f) => ({ ...f, emailVerificado: v === 'SI' }))} options={[{ value: 'SI', label: 'Email verificado', tone: 'success' }, { value: 'NO', label: 'Email sin verificar', tone: 'warning' }]} />

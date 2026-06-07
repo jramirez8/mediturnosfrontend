@@ -101,6 +101,11 @@ export const authService = {
     return response.data;
   },
 
+  verifyAccount: async (identificador: string, codigo: string) => {
+    const response = await api.post('/api/auth/verificar-cuenta', { identificador, codigo });
+    return response.data;
+  },
+
   resetPassword: async (token: string, password: string, confirmPassword: string) => {
     const response = await api.post('/api/auth/reset-password', {
       token,

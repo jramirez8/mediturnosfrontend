@@ -24,6 +24,7 @@ export default function RegisterStep2() {
   const [repeatPassword, setRepeatPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [conflicts, setConflicts] = useState<RegistrationAvailability | null>(null);
 
   const goForgotPassword = () => {
@@ -36,10 +37,17 @@ export default function RegisterStep2() {
     const cleanTelefono = telefono.trim();
 
     setError('');
+    setFieldErrors({});
     setConflicts(null);
 
-    if (!cleanEmail || !cleanTelefono || !password || !repeatPassword) {
-      setError('Completá email, teléfono, contraseña y confirmación para continuar.');
+    const nextErrors: Record<string, string> = {};
+    if (!cleanEmail) nextErrors.email = 'El email es obligatorio.';
+    if (!cleanTelefono) nextErrors.telefono = 'El teléfono es obligatorio.';
+    if (!password) nextErrors.password = 'La contraseña es obligatoria.';
+    if (!repeatPassword) nextErrors.repeatPassword = 'Tenés que repetir la contraseña.';
+    if (Object.keys(nextErrors).length) {
+      setFieldErrors(nextErrors);
+      setError('Completá los campos obligatorios marcados.');
       return;
     }
     if (!data.dni.trim()) {
@@ -47,10 +55,12 @@ export default function RegisterStep2() {
       return;
     }
     if (password !== repeatPassword) {
+      setFieldErrors({ repeatPassword: 'Las contraseñas no coinciden.' });
       setError('Las contraseñas no coinciden.');
       return;
     }
     if (password.length < 8) {
+      setFieldErrors({ password: 'La contraseña debe tener al menos 8 caracteres.' });
       setError('La contraseña debe tener al menos 8 caracteres.');
       return;
     }
@@ -115,7 +125,7 @@ export default function RegisterStep2() {
           <View style={styles.form}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, fieldErrors.email && styles.inputError]}>
                 <TextInput
                   style={styles.input}
                   placeholder="tu.email@ejemplo.com"
@@ -125,11 +135,12 @@ export default function RegisterStep2() {
                   keyboardType="email-address"
                 />
               </View>
+              {!!fieldErrors.email && <Text style={styles.fieldError}>{fieldErrors.email}</Text>}
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Teléfono</Text>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, fieldErrors.telefono && styles.inputError]}>
                 <TextInput
                   style={styles.input}
                   placeholder="Ej: 2284 123456"
@@ -138,11 +149,12 @@ export default function RegisterStep2() {
                   keyboardType="phone-pad"
                 />
               </View>
+              {!!fieldErrors.telefono && <Text style={styles.fieldError}>{fieldErrors.telefono}</Text>}
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Contraseña</Text>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, fieldErrors.password && styles.inputError]}>
                 <TextInput
                   style={styles.input}
                   placeholder="Ingresá tu contraseña"
@@ -151,11 +163,12 @@ export default function RegisterStep2() {
                   secureTextEntry
                 />
               </View>
+              {!!fieldErrors.password && <Text style={styles.fieldError}>{fieldErrors.password}</Text>}
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Repetir contraseña</Text>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, fieldErrors.repeatPassword && styles.inputError]}>
                 <TextInput
                   style={styles.input}
                   placeholder="Repetí tu contraseña"
@@ -164,6 +177,7 @@ export default function RegisterStep2() {
                   secureTextEntry
                 />
               </View>
+              {!!fieldErrors.repeatPassword && <Text style={styles.fieldError}>{fieldErrors.repeatPassword}</Text>}
             </View>
             <Text style={styles.hintText}>Antes de avanzar verificamos que DNI, email y teléfono no estén registrados.</Text>
           </View>
@@ -200,6 +214,8 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '700', color: '#374151', marginLeft: 4 },
   inputContainer: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, paddingHorizontal: 16 },
   input: { paddingVertical: 14, fontSize: 16, color: '#111827' },
+  inputError: { borderColor: '#DC2626', backgroundColor: '#FFF7F7' },
+  fieldError: { color: '#B91C1C', fontSize: 12, fontWeight: '800', marginLeft: 4 },
   hintText: { fontSize: 13, color: '#6b7280', paddingHorizontal: 4, lineHeight: 19 },
   footer: { marginTop: 40, gap: 12 },
   button: { backgroundColor: '#7C3AED', paddingVertical: 16, borderRadius: 12, alignItems: 'center', minHeight: 56, justifyContent: 'center' },

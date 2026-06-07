@@ -108,7 +108,7 @@ export default function AdminProfesionalesScreen() {
 
   const validateProfesional = () => {
     if (!profForm.email.includes('@')) return 'Ingresá email válido del médico.';
-    if (!profForm.id && profForm.password.trim().length < 6) return 'Ingresá contraseña inicial del médico.';
+    if (!profForm.id && profForm.password.trim().length < 8) return 'La contraseña inicial del médico debe tener al menos 8 caracteres.';
     if (!profForm.nombre.trim() || !profForm.apellido.trim()) return 'Nombre y apellido son obligatorios.';
     if (!profForm.matricula.trim()) return 'La matrícula es obligatoria.';
     if (!profForm.especialidadIds.length) return 'Seleccioná al menos una especialidad.';
@@ -118,7 +118,7 @@ export default function AdminProfesionalesScreen() {
 
   const validateSecretaria = () => {
     if (!secForm.email.includes('@')) return 'Ingresá email válido de secretaría.';
-    if (!secForm.id && secForm.password.trim().length < 6) return 'Ingresá contraseña inicial de secretaría.';
+    if (!secForm.id && secForm.password.trim().length < 8) return 'La contraseña inicial de secretaría debe tener al menos 8 caracteres.';
     if (!secForm.nombre.trim() || !secForm.apellido.trim() || !secForm.dni.trim()) return 'Nombre, apellido y DNI son obligatorios.';
     if (!secForm.institucionId) return 'Seleccioná institución de secretaría.';
     return null;
@@ -126,7 +126,7 @@ export default function AdminProfesionalesScreen() {
 
   const validatePaciente = () => {
     if (!pacForm.email.includes('@')) return 'Ingresá email válido del paciente.';
-    if (!pacForm.id && pacForm.password.trim().length < 6) return 'Ingresá contraseña inicial del paciente.';
+    if (!pacForm.id && pacForm.password.trim().length < 8) return 'La contraseña inicial del paciente debe tener al menos 8 caracteres.';
     if (!pacForm.nombre.trim() || !pacForm.apellido.trim() || !pacForm.dni.trim()) return 'Nombre, apellido y DNI son obligatorios.';
     if (!/^\d{4}-\d{2}-\d{2}$/.test(pacForm.fechaNacimiento)) return 'La fecha de nacimiento debe tener formato AAAA-MM-DD.';
     if (!pacForm.telefono.trim()) return 'El teléfono es obligatorio.';

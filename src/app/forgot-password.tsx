@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { authService } from '../api/authService';
 import { MtButton, MtCard, MtInput, MtScreen } from '../components/mediturnos';
@@ -14,7 +14,7 @@ export default function ForgotPasswordScreen() {
 
   const handleRequestReset = async () => {
     if (!identifier.trim()) {
-      Alert.alert('Dato faltante', 'Ingresá tu DNI o email.');
+      setErrorMessage('Ingresá tu DNI o email para enviarte el código.');
       return;
     }
 
@@ -31,7 +31,7 @@ export default function ForgotPasswordScreen() {
       router.push('/forgot-password-success');
     } catch (error: any) {
       console.error('Forgot password error:', error);
-      setErrorMessage(readableError(error, 'No pudimos enviar el correo. Revisá el DNI/email e intentá nuevamente.'));
+      setErrorMessage(readableError(error, 'No pudimos procesar la solicitud. Intentá nuevamente.'));
     } finally {
       setLoading(false);
     }
@@ -45,7 +45,7 @@ export default function ForgotPasswordScreen() {
             <Text style={styles.iconText}>@</Text>
           </View>
           <Text style={styles.title}>Recuperar contraseña</Text>
-          <Text style={styles.subtitle}>Ingresá tu DNI o email para recibir instrucciones.</Text>
+          <Text style={styles.subtitle}>Ingresá tu DNI o email para recibir un código de 6 dígitos.</Text>
         </View>
 
         <MtCard style={styles.card}>
@@ -65,7 +65,7 @@ export default function ForgotPasswordScreen() {
             </View>
           )}
 
-          <MtButton title="Solicitar recuperación" onPress={handleRequestReset} loading={loading} style={{ marginTop: 18 }} />
+          <MtButton title="Enviar código" onPress={handleRequestReset} loading={loading} style={{ marginTop: 18 }} />
           <MtButton title="Volver" variant="ghost" onPress={() => router.back()} style={{ marginTop: 10 }} />
         </MtCard>
       </KeyboardAvoidingView>

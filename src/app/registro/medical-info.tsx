@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -102,6 +102,8 @@ export default function MedicalInfoScreen() {
   const { data, reset } = useRegistrationStore();
   const [loading, setLoading] = useState(false);
   const [catalogLoading, setCatalogLoading] = useState(true);
+  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollToTop = () => setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 60);
   const [error, setError] = useState('');
 
   const [obrasSociales, setObrasSociales] = useState<CatalogItem[]>([]);
@@ -186,16 +188,19 @@ export default function MedicalInfoScreen() {
 
       if (!obraSocialId || !tipoSangre || !fechaNacimiento || !numCarnet.trim() || !clinicaCabecera || !medicoCabecera) {
         setError('Completá obra social, fecha de nacimiento, grupo sanguíneo, número de carnet, hospital/clínica y médico de cabecera.');
+        scrollToTop();
         return;
       }
 
       if (clinicaCabecera === 'Otro' && !otroClinica.trim()) {
         setError('Completá Observaciones con el hospital o clínica de cabecera.');
+        scrollToTop();
         return;
       }
 
       if (medicoCabecera === 'Otro' && !otroMedico.trim()) {
         setError('Completá Observaciones con el médico de cabecera.');
+        scrollToTop();
         return;
       }
 
@@ -212,12 +217,14 @@ export default function MedicalInfoScreen() {
         doctorCabecera: medicoCabecera === 'Otro' ? otroMedico.trim() : medicoCabecera,
       };
 
-      await authService.register(registrationData);
+      const response = await authService.register(registrationData);
+      const email = data.email;
       reset();
-      router.replace('/login');
+      router.replace({ pathname: '/registro/verificar', params: { email, created: '1', message: response?.message || response?.mensaje || 'Cuenta creada. Revisá tu correo.' } });
     } catch (err: any) {
       console.error('Registration error:', err);
       setError(readableError(err, 'No se pudo completar el registro. Revisá los datos e intentá nuevamente.'));
+      scrollToTop();
     } finally {
       setLoading(false);
     }
@@ -226,7 +233,7 @@ export default function MedicalInfoScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <Text style={styles.kicker}>PASO 3</Text>
             <Text style={styles.title}>Información médica</Text>

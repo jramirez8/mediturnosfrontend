@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { MtButton, MtCard, MtHeader, MtLoading, MtScreen } from '../../components/mediturnos';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { agendaService, AgendaBloqueo, HorarioAtencion } from '../../api/agendaService';
@@ -150,6 +150,8 @@ export default function MedicoDisponibilidadScreen() {
   const profesionalId = useAuthStore((s) => s.profesionalId);
   const profesionalInstitucionId = useAuthStore((s) => s.profesionalInstitucionId);
   const nombreCompleto = useAuthStore((s) => s.nombreCompleto);
+  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollToTop = () => setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 70);
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
   const [professional, setProfessional] = useState<Professional | null>(null);
@@ -215,6 +217,18 @@ export default function MedicoDisponibilidadScreen() {
 
   const addHorario = async () => {
     if (!professional || !selectedWeekday) return;
+    if (!/^\d{2}:\d{2}$/.test(desde) || !/^\d{2}:\d{2}$/.test(hasta)) {
+      setError('Usá formato HH:mm. Ejemplo: 09:00 a 13:00.');
+      setNotice(null);
+      scrollToTop();
+      return;
+    }
+    if (!Number.isFinite(Number(duracion)) || Number(duracion) < 10) {
+      setError('La duración debe ser de al menos 10 minutos. Para turnos normales usá 30.');
+      setNotice(null);
+      scrollToTop();
+      return;
+    }
     try {
       setSaving(true); setNotice(null); setError(null);
       await agendaService.createHorario({
@@ -227,8 +241,9 @@ export default function MedicoDisponibilidadScreen() {
         activo: true,
       });
       setNotice(`Listo: ${API_DAY_TO_LABEL[selectedWeekday]} queda disponible de ${desde} a ${hasta}.`);
+      scrollToTop();
       await loadAgenda(professional);
-    } catch (e: any) { setError(readableError(e, 'No pudimos guardar el horario semanal.')); }
+    } catch (e: any) { setError(readableError(e, 'No pudimos guardar el horario semanal.')); scrollToTop(); }
     finally { setSaving(false); }
   };
 
@@ -238,29 +253,30 @@ export default function MedicoDisponibilidadScreen() {
       setSaving(true); setNotice(null); setError(null);
       await agendaService.createBloqueo({ profesionalInstitucionId: piId, fechaDesde: `${selectedDate}T00:00`, fechaHasta: `${selectedDate}T23:59`, motivo: bloqueoMotivo || 'No atiende este día' });
       setNotice(`Listo: ${formatDate(selectedDate)} quedó bloqueado.`);
+      scrollToTop();
       await loadAgenda(professional);
-    } catch (e: any) { setError(readableError(e, 'No pudimos bloquear la fecha.')); }
+    } catch (e: any) { setError(readableError(e, 'No pudimos bloquear la fecha.')); scrollToTop(); }
     finally { setSaving(false); }
   };
 
   const deleteHorario = async (id: number) => {
     if (!professional) return;
-    try { setSaving(true); setNotice(null); setError(null); await agendaService.deleteHorario(id); setNotice('Horario eliminado.'); await loadAgenda(professional); }
-    catch (e: any) { setError(readableError(e, 'No pudimos eliminar el horario.')); }
+    try { setSaving(true); setNotice(null); setError(null); await agendaService.deleteHorario(id); setNotice('Horario eliminado.'); scrollToTop(); await loadAgenda(professional); }
+    catch (e: any) { setError(readableError(e, 'No pudimos eliminar el horario.')); scrollToTop(); }
     finally { setSaving(false); }
   };
 
   const deleteBloqueo = async (id: number) => {
     if (!professional) return;
-    try { setSaving(true); setNotice(null); setError(null); await agendaService.deleteBloqueo(id); setNotice('Bloqueo eliminado.'); await loadAgenda(professional); }
-    catch (e: any) { setError(readableError(e, 'No pudimos eliminar el bloqueo.')); }
+    try { setSaving(true); setNotice(null); setError(null); await agendaService.deleteBloqueo(id); setNotice('Bloqueo eliminado.'); scrollToTop(); await loadAgenda(professional); }
+    catch (e: any) { setError(readableError(e, 'No pudimos eliminar el bloqueo.')); scrollToTop(); }
     finally { setSaving(false); }
   };
 
   if (loading) return <MtLoading text="Cargando disponibilidad..." />;
 
   return (
-    <MtScreen scroll>
+    <MtScreen scroll scrollRef={scrollRef}>
       <MtHeader eyebrow="MÉDICO" title="Mi disponibilidad" subtitle="Definí días de atención, bloqueos y revisá exactamente qué fechas ve el paciente." />
       {!!error && <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}><Text style={styles.error}>{error}</Text></MtCard>}
       {!!notice && <MtCard style={{ borderColor: theme.colors.success, marginBottom: 14 }}><Text style={styles.success}>{notice}</Text></MtCard>}
@@ -278,7 +294,7 @@ export default function MedicoDisponibilidadScreen() {
 
       <MtCard style={{ gap: 12, marginBottom: 14 }}>
         <Text style={styles.title}>1. Plan semanal de atención</Text>
-        <Text style={styles.muted}>Marcá qué días atendés habitualmente. Después el calendario diferencia cupos libres, días sin cupo y bloqueos.</Text>
+        <Text style={styles.muted}>Marcá los bloques de atención habituales. Podés cargar más de un bloque para el mismo día y también habilitar sábados/domingos como excepción.</Text>
         <View style={styles.weekPicker}>{WEEKDAY_OPTIONS.map((d) => (
           <Pressable key={d.api} onPress={() => setSelectedWeekday(d.api)} style={[styles.weekChip, selectedWeekday === d.api && styles.weekChipActive]}>
             <Text style={[styles.weekChipText, selectedWeekday === d.api && styles.weekChipTextActive]}>{d.short}</Text>
