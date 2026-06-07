@@ -1,10 +1,23 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npx expo export -p web",
   "outputDirectory": "dist",
   "devCommand": "npx expo start",
   "cleanUrls": true,
   "framework": null,
   "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://mediturnosbackend-production.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://mediturnosbackend-production.up.railway.app/uploads/:path*"
+    },
+    {
+      "source": "/files/:path*",
+      "destination": "https://mediturnosbackend-production.up.railway.app/files/:path*"
+    },
     {
       "source": "/:path*",
       "destination": "/"

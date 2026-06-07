@@ -1,10 +1,40 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 import { storage } from './storage';
 
-export const API_BASE_URL = 'https://mediturnosbackend-production.up.railway.app';
+const DEFAULT_API_ORIGIN = 'https://mediturnosbackend-production.up.railway.app';
+const configuredApiOrigin = process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_API_ORIGIN;
+
+function isVercelHostedWeb() {
+  if (Platform.OS !== 'web') return false;
+  if (typeof window === 'undefined') return false;
+
+  const host = window.location.hostname.toLowerCase();
+  const forcedMode = process.env.EXPO_PUBLIC_API_MODE;
+
+  if (forcedMode === 'direct') return false;
+  if (forcedMode === 'proxy') return true;
+
+  return host === 'vercel.app' || host.endsWith('.vercel.app');
+}
+
+/**
+ * En Android/iOS y en desarrollo local pegamos directo al backend de Railway.
+ * En Vercel Web usamos URLs relativas (/api/...), y vercel.json las proxyea al backend.
+ * Eso evita el bloqueo CORS que en navegador aparece como "Network Error".
+ */
+export const USE_VERCEL_API_PROXY = isVercelHostedWeb();
+export const API_ORIGIN = configuredApiOrigin.replace(/\/$/, '');
+export const API_BASE_URL = USE_VERCEL_API_PROXY ? '' : API_ORIGIN;
+
+export function apiUrl(path: string) {
+  if (/^https?:\/\//i.test(path)) return path;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+}
 
 export const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE_URL || undefined,
   timeout: 15000,
 });
 
