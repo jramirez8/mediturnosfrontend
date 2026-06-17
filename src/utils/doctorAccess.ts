@@ -1,4 +1,4 @@
-import { TurnoResponse } from '../api/appointmentService';
+import type { TurnoResponse } from '../api/appointmentService';
 
 export type DoctorAccessIdentity = {
   profesionalId?: string | number | null;

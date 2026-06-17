@@ -1,9 +1,13 @@
 import { Alert, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import {
+  MAX_DOCUMENT_BYTES,
+  SUPPORTED_DOCUMENT_MIME_TYPES,
+  validateDocumentCandidate,
+} from './documentValidation';
 
-export const MAX_DOCUMENT_BYTES = 1024 * 1024;
-export const SUPPORTED_DOCUMENT_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+export { MAX_DOCUMENT_BYTES, SUPPORTED_DOCUMENT_MIME_TYPES } from './documentValidation';
 
 export type PickedMedia = {
   uri: string;
@@ -13,12 +17,7 @@ export type PickedMedia = {
 };
 
 function validateMedia(media: PickedMedia) {
-  const mime = media.mimeType ?? '';
-  const name = String(media.fileName ?? media.uri ?? '').toLowerCase();
-  const looksSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(mime) || name.endsWith('.pdf') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png');
-  if (!looksSupported) throw new Error('Solo se permiten archivos PDF, JPG o PNG.');
-  if (media.size && media.size > MAX_DOCUMENT_BYTES) throw new Error('El archivo no puede superar 1 MB.');
-  return media;
+  return validateDocumentCandidate(media);
 }
 
 function normalizeImage(result: ImagePicker.ImagePickerResult): PickedMedia | null {
@@ -71,7 +70,7 @@ export async function pickFromCamera(): Promise<PickedMedia | null> {
 
 export async function pickDocumentFile(): Promise<PickedMedia | null> {
   const result = await DocumentPicker.getDocumentAsync({
-    type: SUPPORTED_DOCUMENT_MIME_TYPES,
+    type: [...SUPPORTED_DOCUMENT_MIME_TYPES],
     copyToCacheDirectory: true,
     multiple: false,
   });

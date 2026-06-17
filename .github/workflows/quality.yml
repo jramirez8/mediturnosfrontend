@@ -1,0 +1,74 @@
+name: Calidad, coverage y Sonar
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependencias de la aplicación
+        run: npm install
+
+      - name: Instalar herramientas de test compatibles con Expo
+        run: npm run quality:setup
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: Tests y coverage LCOV
+        run: npm run test:coverage
+
+      - name: Guardar reporte de coverage
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: frontend-coverage-report
+          path: coverage/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Analizar con SonarQube Cloud
+        if: ${{ success() && env.SONAR_TOKEN != '' }}
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+
+
+      - name: Verificar cero alertas High o Medium
+        if: ${{ success() && env.SONAR_TOKEN != '' }}
+        shell: bash
+        run: |
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $SONAR_TOKEN" \
+            --get "https://sonarcloud.io/api/issues/search" \
+            --data-urlencode "componentKeys=jramirez8_mediturnosfrontend" \
+            --data-urlencode "resolved=false" \
+            --data-urlencode "impactSeverities=HIGH,MEDIUM" \
+            --data-urlencode "ps=1" \
+            --output sonar-high-medium.json
+          TOTAL=$(python3 -c "import json; print(json.load(open('sonar-high-medium.json', encoding='utf-8')).get('total', 0))")
+          echo "Alertas High/Medium abiertas: $TOTAL"
+          test "$TOTAL" -eq 0

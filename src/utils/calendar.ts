@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import * as Calendar from 'expo-calendar';
-import { TurnoResponse } from '../api/appointmentService';
+import type { TurnoResponse } from '../api/appointmentService';
 
 function parseDate(turno: TurnoResponse) {
   const raw = turno.fechaHora || (turno.fecha && turno.hora ? `${turno.fecha}T${turno.hora}` : '');

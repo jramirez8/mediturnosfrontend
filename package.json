@@ -50,7 +50,12 @@
     "build:android:aab": "eas build --platform android --profile production",
     "build:android:apk:local": "eas build --platform android --profile preview --local",
     "eas:configure": "eas build:configure",
-    "eas:login": "eas login"
+    "eas:login": "eas login",
+    "quality:setup": "npx expo install jest-expo jest @types/jest \"--\" --dev",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage --runInBand",
+    "quality": "npm run typecheck && npm run test:coverage"
   },
   "private": true
 }
