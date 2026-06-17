@@ -1,0 +1,20 @@
+MEDITURNOS FRONTEND - FIX DE CALIDAD v15.1
+
+1) Copiar el contenido de este parche sobre la raíz de mediturnosfrontend.
+2) Desde esa raíz ejecutar:
+
+   node apply-v15-1-cleanup.cjs
+   npm install
+   npm run quality
+
+Resultado verificado:
+- TypeScript: 0 errores
+- Test suites: 5/5 aprobadas
+- Tests: 30/30 aprobados
+- Statements: 91.51%
+- Branches: 83.95%
+- Functions: 97.22%
+- Lines: 93.28%
+- npm audit High/Critical: 0
+
+No ejecutar npm audit fix --force porque puede romper las versiones compatibles con Expo SDK 55.

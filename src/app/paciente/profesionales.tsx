@@ -5,7 +5,7 @@ import { professionalService, Professional } from '../../api/professionalService
 import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
-import { useTranslation } from '../../i18n/languageStore';
+import { AppLanguage, useTranslation } from '../../i18n/languageStore';
 
 export default function ProfesionalesScreen() {
   const theme = useMtTheme();
@@ -87,7 +87,7 @@ export default function ProfesionalesScreen() {
   );
 }
 
-function ProfessionalCard({ item, styles, theme, language }: { item: Professional; styles: ReturnType<typeof createStyles>; theme: MediturnosTheme; language: 'es' | 'en' }) {
+function ProfessionalCard({ item, styles, theme, language }: { item: Professional; styles: ReturnType<typeof createStyles>; theme: MediturnosTheme; language: AppLanguage }) {
   const initials = `${item.nombre?.[0] ?? ''}${item.apellido?.[0] ?? ''}`.toUpperCase() || 'Dr';
   return (
     <MtCard style={styles.card}>

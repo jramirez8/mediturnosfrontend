@@ -92,9 +92,17 @@ export function countSlotsInRange(from?: string | null, to?: string | null, minu
 
 export function formatLocalDate(value?: string | null) {
   const iso = isoFromDateTime(value);
-  if (!iso || !iso.includes('-')) return '';
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return '';
+
+  const [, year, month, day] = match;
+  const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+  const isValid =
+    parsed.getFullYear() === Number(year) &&
+    parsed.getMonth() === Number(month) - 1 &&
+    parsed.getDate() === Number(day);
+
+  return isValid ? `${day}/${month}/${year}` : '';
 }
 
 export function formatLocalDateTime(value?: string | null) {

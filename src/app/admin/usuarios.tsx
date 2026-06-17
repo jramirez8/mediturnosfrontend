@@ -175,7 +175,7 @@ export default function AdminUsuariosScreen() {
         <MtInput label="DNI" value={pacienteForm.dni} onChangeText={(dni) => setPacienteForm((f) => ({ ...f, dni }))} keyboardType="numeric" />
         <MtInput label="Teléfono" value={pacienteForm.telefono} onChangeText={(telefono) => setPacienteForm((f) => ({ ...f, telefono }))} keyboardType="phone-pad" />
         <MtInput label="Fecha nacimiento (AAAA-MM-DD)" value={pacienteForm.fechaNacimiento} onChangeText={(fechaNacimiento) => setPacienteForm((f) => ({ ...f, fechaNacimiento }))} />
-        <MtSelect label="Grupo sanguíneo" value={pacienteForm.tipoSangre} options={sangreOptions} onChange={(tipoSangre) => setPacienteForm((f) => ({ ...f, tipoSangre }))} />
+        <MtSelect label="Grupo sanguíneo" value={pacienteForm.tipoSangre} placeholder="Seleccionar" options={sangreOptions} onChange={(tipoSangre) => setPacienteForm((f) => ({ ...f, tipoSangre }))} />
         <MtSelect label="Obra social" value={pacienteForm.obraSocialId} placeholder="Seleccionar" options={obrasSociales.map((o) => ({ label: o.nombre, value: String(o.id) }))} onChange={(obraSocialId) => setPacienteForm((f) => ({ ...f, obraSocialId }))} />
         <MtInput label="N° carnet" value={pacienteForm.numeroCarnet} onChangeText={(numeroCarnet) => setPacienteForm((f) => ({ ...f, numeroCarnet }))} />
         <AdminTabs value={pacienteForm.emailVerificado ? 'SI' : 'NO'} onChange={(v) => setPacienteForm((f) => ({ ...f, emailVerificado: v === 'SI' }))} options={[{ value: 'SI', label: 'Email verificado', tone: 'success' }, { value: 'NO', label: 'Debe verificar', tone: 'warning' }]} />

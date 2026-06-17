@@ -33,7 +33,7 @@ describe('readableError', () => {
   it('convierte valores primitivos y preferred objects', () => {
     expect(readableError({ response: { data: 404 } })).toBe('404');
     expect(readableError({ response: { data: false } })).toBe('false');
-    expect(readableError({ response: { data: { message: { detail: 'Anidado' } } } })).toContain('detail');
+    expect(readableError({ response: { data: { message: { detail: 'Anidado' } } } })).toBe('Anidado');
   });
 
   it('no duplica el código HTTP si ya está en el mensaje', () => {
