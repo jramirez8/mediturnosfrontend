@@ -80,7 +80,7 @@ export function AppBottomNav({ role, active }: { role: AppNavRole; active: strin
               style={[
                 styles.iconBubble,
                 { borderColor: theme.colors.border, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#FFFFFF' },
-                selected && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary, shadowColor: theme.colors.primary, shadowOpacity: 0.22, shadowRadius: 12, elevation: 4 },
+                selected && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
                 item.center && {
                   width: 58,
                   height: 58,
@@ -89,10 +89,6 @@ export function AppBottomNav({ role, active }: { role: AppNavRole; active: strin
                   backgroundColor: theme.colors.primary,
                   borderColor: theme.colors.bg,
                   borderWidth: 4,
-                  shadowColor: theme.colors.primary,
-                  shadowOpacity: 0.26,
-                  shadowRadius: 18,
-                  elevation: 8,
                 },
               ]}
             >
@@ -125,10 +121,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.13,
-    shadowRadius: 24,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
     zIndex: 50,
   },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 8, minWidth: 0 },

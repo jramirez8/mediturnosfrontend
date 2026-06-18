@@ -1,37 +1,35 @@
-import { useEffect, useState } from "react";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
-import { View } from "react-native";
+import { useEffect, useState } from 'react';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { View } from 'react-native';
+import { purgeLegacyCache } from '../db/cache';
 
-// Evita que Expo esconda el splash nativo antes de que la app esté lista.
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
-    async function prepareApp() {
+    let mounted = true;
+
+    async function initializeApp() {
       try {
-        // Acá podés cargar lo importante antes de mostrar la app:
-        // - fuentes
-        // - idioma guardado
-        // - token de SecureStore
-        // - sesión de usuario
-        // - SQLite inicial
-        await new Promise((resolve) => setTimeout(resolve, 900));
+        await purgeLegacyCache();
       } finally {
-        setAppReady(true);
+        if (mounted) setAppReady(true);
         await SplashScreen.hideAsync();
       }
     }
 
-    prepareApp();
+    void initializeApp();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (!appReady) {
-    // No renderizamos nada: mientras tanto se ve el splash nativo.
-    return <View style={{ flex: 1, backgroundColor: "#0D2B44" }} />;
+    return <View style={{ flex: 1, backgroundColor: '#0D2B44' }} />;
   }
 
   return (

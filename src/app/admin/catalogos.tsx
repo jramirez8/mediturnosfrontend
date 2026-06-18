@@ -169,7 +169,7 @@ export default function AdminCatalogosScreen() {
         </MtCard>
       )) : <MtEmptyState title="Sin datos" subtitle="No hay elementos para el filtro seleccionado." />}
 
-      <RoleBottomNav role="admin" active="catalogos" />
+      <RoleBottomNav role="admin" active="home" />
     </MtScreen>
   );
 }

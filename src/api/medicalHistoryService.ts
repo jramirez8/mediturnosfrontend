@@ -45,6 +45,7 @@ export const medicalHistoryService = {
     alergias?: string;
     habitos?: string;
     hallazgosExamenFisico?: string;
+    diagnostico?: string;
     conducta?: string;
   }) => {
     const response = await api.put(`/api/turnos/${turnoId}/detalle-consulta`, data);

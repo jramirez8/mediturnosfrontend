@@ -83,7 +83,7 @@ export default function AdminDashboard() {
       const r = await systemService.diagnostico();
       setDiagnostico(r);
     } catch (e: any) {
-      setDiagnostico({ error: readableError(e, 'No respondió el diagnóstico. Revisá Railway o el proxy de Vercel.') });
+      setDiagnostico({ error: readableError(e, 'No pudimos verificar el estado del sistema. Intentá nuevamente.') });
     }
   };
 
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
           </Pressable>
         ))}
         <Pressable onPress={() => setDiagnosticoOpen((v) => !v)} style={{ alignSelf: 'flex-end', marginTop: 8, opacity: 0.55 }}>
-          <Text style={{ color: theme.colors.muted, fontWeight: '800', fontSize: 12 }}>Diagnóstico discreto</Text>
+          <Text style={{ color: theme.colors.muted, fontWeight: '800', fontSize: 12 }}>Estado del sistema</Text>
         </Pressable>
         {diagnosticoOpen ? <View style={{ marginTop: 10 }}>
           <MtButton title="Probar sistema" onPress={runDiagnostico} variant="ghost" />

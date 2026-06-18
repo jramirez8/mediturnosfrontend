@@ -55,5 +55,5 @@ export function filterTurnosForDoctor(turnos: TurnoResponse[], doctor: DoctorAcc
 }
 
 export function doctorAccessMessage() {
-  return 'Este turno no pertenece al médico logueado. Por seguridad no se puede atender ni modificar.';
+  return 'Este turno no pertenece a la agenda de este profesional. Por seguridad no se puede atender ni modificar.';
 }

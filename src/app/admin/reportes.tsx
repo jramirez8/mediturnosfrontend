@@ -9,6 +9,7 @@ import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 import { AdminNotice, AdminTabs, AdminTitle } from '../../components/admin/AdminUi';
 import { todayLocalIso } from '../../utils/date';
+import { feedbackService, TurnoFeedback } from '../../api/feedbackService';
 
 type Range = 'TODOS' | 'HOY' | 'FUTUROS' | 'HISTORICO';
 
@@ -46,6 +47,7 @@ function buildCsv(turnos: TurnoResponse[]) {
 export default function AdminReportesScreen() {
   const [turnos, setTurnos] = useState<TurnoResponse[]>([]);
   const [summary, setSummary] = useState<AdminSummary>({});
+  const [feedback, setFeedback] = useState<TurnoFeedback[]>([]);
   const [range, setRange] = useState<Range>('TODOS');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -56,8 +58,8 @@ export default function AdminReportesScreen() {
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const [resumen, allTurnos] = await Promise.all([adminService.resumen(), secretariaService.turnos()]);
-      setSummary(resumen); setTurnos(allTurnos);
+      const [resumen, allTurnos, feedbackData] = await Promise.all([adminService.resumen(), secretariaService.turnos(), feedbackService.latest().catch(() => [])]);
+      setSummary(resumen); setTurnos(allTurnos); setFeedback(feedbackData);
     } catch (e: any) { setError(readableError(e, 'No pudimos cargar reportes.')); }
     finally { setLoading(false); }
   }, []);
@@ -81,6 +83,17 @@ export default function AdminReportesScreen() {
   const byDate = useMemo(() => countBy(filtered, (t) => dateKey(t.fecha || t.fechaHora)), [filtered]);
   const cancellationRate = filtered.length ? Math.round(((byStatus.CANCELADO || 0) / filtered.length) * 100) : 0;
   const attendanceRate = filtered.length ? Math.round(((byStatus.ATENDIDO || 0) / filtered.length) * 100) : 0;
+  const satisfactionAverage = feedback.length ? (feedback.reduce((sum, item) => sum + item.puntuacion, 0) / feedback.length).toFixed(1) : '—';
+  const feedbackByProfessional = useMemo(() => {
+    const grouped = feedback.reduce<Record<string, { total: number; count: number }>>((acc, item) => {
+      const key = item.profesionalNombre || 'Profesional no informado';
+      acc[key] = acc[key] || { total: 0, count: 0 };
+      acc[key].total += item.puntuacion;
+      acc[key].count += 1;
+      return acc;
+    }, {});
+    return Object.entries(grouped).sort((a, b) => (b[1].total / b[1].count) - (a[1].total / a[1].count));
+  }, [feedback]);
 
 
   const exportCsv = async () => {
@@ -143,6 +156,7 @@ export default function AdminReportesScreen() {
         <MtStat label="Cancelación" value={`${cancellationRate}%`} tone={cancellationRate > 20 ? 'danger' : 'primary'} />
         <MtStat label="Atención" value={`${attendanceRate}%`} tone="success" />
         <MtStat label="Usuarios" value={summary.usuarios ?? 0} />
+        <MtStat label="Satisfacción" value={`${satisfactionAverage}/5`} tone="success" />
       </View>
 
       <MtCard style={{ marginBottom: 14 }}>
@@ -164,6 +178,27 @@ export default function AdminReportesScreen() {
       <MtCard style={{ marginBottom: 14 }}>
         <AdminTitle title="Instituciones" />
         {topEntries(byInstitution).map(([label, value]) => <Bar key={label} label={label} value={value} total={filtered.length} />)}
+      </MtCard>
+
+      <MtCard style={{ marginBottom: 14 }}>
+        <AdminTitle title="Satisfacción por profesional" subtitle={`${feedback.length} valoración(es) registradas`} />
+        {feedbackByProfessional.slice(0, 8).map(([name, values]) => (
+          <View key={name} style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border, paddingVertical: 10 }}>
+            <Text style={{ color: theme.colors.ink, fontWeight: '900' }}>{name}</Text>
+            <Text style={{ color: theme.colors.primary, fontWeight: '900', marginTop: 3 }}>{(values.total / values.count).toFixed(1)}/5 · {values.count} valoración(es)</Text>
+          </View>
+        ))}
+        {!feedback.length ? <Text style={{ color: theme.colors.muted }}>Todavía no hay valoraciones.</Text> : null}
+      </MtCard>
+
+      <MtCard style={{ marginBottom: 14 }}>
+        <AdminTitle title="Comentarios recientes" />
+        {feedback.slice(0, 8).map((item) => (
+          <View key={item.id} style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border, paddingVertical: 10 }}>
+            <Text style={{ color: theme.colors.primary, fontWeight: '900' }}>{item.profesionalNombre || 'Profesional'} · {item.puntuacion}/5</Text>
+            <Text style={{ color: theme.colors.ink, fontWeight: '700', marginTop: 4 }}>{item.comentario || 'Sin comentario escrito.'}</Text>
+          </View>
+        ))}
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>

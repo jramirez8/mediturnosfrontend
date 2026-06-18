@@ -82,7 +82,7 @@ export default function ProfesionalesScreen() {
           renderItem={({ item }) => <ProfessionalCard item={item} styles={styles} theme={theme} language={language} />}
         />
       </MtScreen>
-      <MtBottomNav active="profesionales" />
+      <MtBottomNav active="solicitar" />
     </>
   );
 }

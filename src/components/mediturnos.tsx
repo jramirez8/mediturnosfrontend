@@ -52,18 +52,25 @@ function DecorativeBackground() {
 
 export function MtScreen({ children, scroll = false, padded = true, bottomSpace = true, style, scrollRef }: ScreenProps) {
   const { styles } = useStyles();
-  const contentStyle = [padded && styles.screenPadding, bottomSpace && { paddingBottom: 116 }, style];
+  const childArray = React.Children.toArray(children);
+  const isBottomNav = (child: React.ReactNode) => React.isValidElement(child)
+    && (child.type as { displayName?: string })?.displayName === 'MediturnosBottomNav';
+  const navigation = childArray.filter(isBottomNav);
+  const content = childArray.filter((child) => !isBottomNav(child));
+  const hasNavigation = navigation.length > 0;
+  const contentStyle = [padded && styles.screenPadding, bottomSpace && { paddingBottom: hasNavigation ? 116 : 28 }, style];
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <DecorativeBackground />
       {scroll ? (
-        <ScrollView ref={scrollRef} contentContainerStyle={contentStyle} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          {children}
+        <ScrollView ref={scrollRef} style={styles.fill} contentContainerStyle={contentStyle} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {content}
         </ScrollView>
       ) : (
-        <View style={[styles.fill, contentStyle]}>{children}</View>
+        <View style={[styles.fill, contentStyle]}>{content}</View>
       )}
+      {navigation}
     </SafeAreaView>
   );
 }
@@ -232,6 +239,7 @@ export function MtStat({ label, value, tone = 'primary' }: { label: string; valu
 export function MtBottomNav({ active }: { active: 'home' | 'perfil' | 'turnos' | 'historia' | 'solicitar' | 'profesionales' }) {
   return <AppBottomNav role="paciente" active={active} />;
 }
+MtBottomNav.displayName = 'MediturnosBottomNav';
 
 export function useMtTextStyle(extra?: StyleProp<TextStyle>) {
   const { styles } = useStyles();

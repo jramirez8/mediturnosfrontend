@@ -191,7 +191,7 @@ export default function MedicoDisponibilidadScreen() {
       const own = findOwnProfessional(professionals, profesionalId, profesionalInstitucionId, nombreCompleto);
       if (!own) {
         setProfessional(null); setHorarios([]); setBloqueos([]); setSlotsVisibles([]);
-        setError('No pudimos vincular este usuario médico con un profesional/sede. Revisá que el login devuelva profesionalId o profesionalInstitucionId.');
+        setError('Tu cuenta médica todavía no está vinculada a una sede. Solicitá al administrador que complete la asignación.');
         return;
       }
       setProfessional(own);
@@ -433,7 +433,7 @@ function createStyles(theme: MediturnosTheme) {
     statLabel: { color: theme.colors.muted, fontWeight: '800', fontSize: 12, marginTop: 2 },
     weekPicker: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     weekChip: { minWidth: 54, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceMuted, alignItems: 'center' },
-    weekChipActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primaryDark, shadowColor: theme.colors.primary, shadowOpacity: 0.18, shadowRadius: 10, elevation: 2 },
+    weekChipActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primaryDark },
     weekChipText: { color: theme.colors.muted, fontWeight: '900' },
     weekChipTextActive: { color: '#FFFFFF' },
     calendarTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
@@ -451,7 +451,7 @@ function createStyles(theme: MediturnosTheme) {
     dayWithSlots: { backgroundColor: theme.mode === 'dark' ? 'rgba(74,222,128,0.16)' : '#ECFDF3', borderColor: theme.colors.success },
     dayWeeklyNoSlots: { backgroundColor: theme.mode === 'dark' ? 'rgba(251,191,36,0.14)' : '#FFF7ED', borderColor: theme.colors.warning },
     dayBlocked: { backgroundColor: theme.mode === 'dark' ? 'rgba(248,113,113,0.15)' : '#FEF2F2', borderColor: theme.colors.danger },
-    daySelected: { borderWidth: 3, borderColor: theme.colors.primary, shadowColor: theme.colors.primary, shadowOpacity: 0.18, shadowRadius: 8, elevation: 2, transform: [{ scale: 1.02 }] },
+    daySelected: { borderWidth: 3, borderColor: theme.colors.primary, transform: [{ scale: 1.02 }] },
     dayText: { color: theme.colors.soft, fontWeight: '900', fontSize: 15 },
     dayWithSlotsText: { color: theme.colors.success },
     dayWeeklyNoSlotsText: { color: theme.colors.warning },

@@ -62,11 +62,7 @@ export default function AuditoriaAdmin() {
     {filtered.map((item) => <MtCard key={item.id} style={{ marginBottom: 10 }}>
       <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 17 }}>{tituloHumano(item)}</Text>
       <Text style={{ color: theme.colors.muted, marginTop: 6, fontWeight: '700' }}>{item.detalle || 'Sin detalle adicional'}</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-        <Text style={{ color: theme.colors.primary, fontWeight: '900' }}>{item.accion}</Text>
-        <Text style={{ color: theme.colors.soft, fontWeight: '800' }}>{item.entidad || '-'} #{item.entidadId || '-'}</Text>
-      </View>
-      <Text style={{ color: theme.colors.soft, marginTop: 6, fontSize: 12 }}>{item.creadoEn} · {item.actor || 'actor no informado'}</Text>
+      <Text style={{ color: theme.colors.soft, marginTop: 8, fontSize: 12 }}>{item.creadoEn} · {item.actor || 'Sistema'}</Text>
     </MtCard>)}
     <MtButton title="Actualizar" onPress={load} variant="ghost" />
     <RoleBottomNav role="admin" active="reportes" />

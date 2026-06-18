@@ -6,13 +6,37 @@
   <component name="ChangeListManager">
     <list default="true" id="c3503bc3-1a69-4106-9a32-09e0b7dff32f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/admin/usuarios.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/usuarios.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/feedbackService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/feedbackService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/medicalHistoryService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/medicalHistoryService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/staffService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/staffService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/agenda-avanzada.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/agenda-avanzada.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/auditoria.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/auditoria.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/catalogos.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/catalogos.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/admin/reportes.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/admin/reportes.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/explore.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/explore.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/login.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/medico/agenda.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/medico/agenda.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/medico/consulta.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/medico/consulta.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/medico/disponibilidad.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/medico/disponibilidad.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/medico/historia-paciente.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/medico/historia-paciente.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/medico/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/medico/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/paciente/historia-detalle.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/paciente/historia-detalle.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/paciente/historia.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/paciente/historia.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/paciente/profesionales.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/paciente/profesionales.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/date.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/date.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/errors.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/errors.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/errors.test.ts" beforeDir="false" afterPath="$PROJECT_DIR$/tests/errors.test.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/secretaria/nuevo-turno.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/secretaria/nuevo-turno.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/secretaria/pacientes.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/secretaria/pacientes.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/auth/authStore.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/auth/authStore.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/AppBottomNav.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AppBottomNav.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/MtSelect.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/MtSelect.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/RoleBottomNav.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/RoleBottomNav.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/mediturnos.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/mediturnos.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constants/mediturnosTheme.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/mediturnosTheme.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/doctorAccess.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/doctorAccess.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,7 +105,7 @@
       <workItem from="1780767980688" duration="2464000" />
       <workItem from="1780827427397" duration="1309000" />
       <workItem from="1781716972832" duration="3518000" />
-      <workItem from="1781734414136" duration="1454000" />
+      <workItem from="1781734414136" duration="2688000" />
     </task>
     <servers />
   </component>

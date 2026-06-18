@@ -33,9 +33,9 @@ export const lightMt: MediturnosTheme = {
   shadow: {
     shadowColor: '#7C3AED',
     shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.12,
-    shadowRadius: 28,
-    elevation: 5,
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 1,
   },
 };
 
@@ -62,10 +62,10 @@ export const darkMt: MediturnosTheme = {
   },
   shadow: {
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.32,
-    shadowRadius: 28,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
 };
 

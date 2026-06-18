@@ -7,6 +7,10 @@ export const medicoService = {
     const response = await api.get<any[]>(`/api/profesionales/agenda/${usuarioId}`, { params: { fecha } });
     return response.data.map((item) => appointmentService.normalizeForStaff(item));
   },
+  agendaRango: async (usuarioId: string | number, desde: string, hasta: string): Promise<TurnoResponse[]> => {
+    const response = await api.get<any[]>(`/api/profesionales/agenda/${usuarioId}/rango`, { params: { desde, hasta } });
+    return response.data.map((item) => appointmentService.normalizeForStaff(item));
+  },
   proximoTurno: async (usuarioId: string | number): Promise<TurnoResponse | null> => {
     const response = await api.get<any>(`/api/profesionales/proximo-turno/${usuarioId}`);
     return response.data ? appointmentService.normalizeForStaff(response.data) : null;

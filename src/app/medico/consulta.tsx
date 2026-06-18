@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtScreen } from '../../components/mediturnos';
+import { MtSelect } from '../../components/MtSelect';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { TurnoCard } from '../../components/TurnoCard';
 import { appointmentService, TurnoResponse } from '../../api/appointmentService';
@@ -12,6 +13,7 @@ import { doctorAccessMessage, filterTurnosForDoctor, turnoBelongsToDoctor } from
 import { useMtTheme } from '../../theme/themeStore';
 import { chooseDocumentSource } from '../../utils/mediaPicker';
 import { readableError } from '../../utils/errors';
+import { documentTypes } from '../../constants/documentTypes';
 
 export default function MedicoConsultaScreen() {
   const { turnoId } = useLocalSearchParams<{ turnoId?: string }>();
@@ -25,6 +27,7 @@ export default function MedicoConsultaScreen() {
   const [loading, setLoading] = useState(Boolean(turnoId));
   const [saving, setSaving] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [documentType, setDocumentType] = useState('Estudio');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const theme = useMtTheme();
@@ -38,6 +41,7 @@ export default function MedicoConsultaScreen() {
     alergias: '',
     habitos: '',
     hallazgosExamenFisico: '',
+    diagnostico: '',
     conducta: '',
   });
 
@@ -66,6 +70,7 @@ export default function MedicoConsultaScreen() {
           alergias: detail.alergias || '',
           habitos: detail.habitos || '',
           hallazgosExamenFisico: detail.hallazgosExamenFisico || '',
+          diagnostico: detail.diagnostico || '',
           conducta: detail.conducta || '',
         }));
       } else if (usuarioId) {
@@ -82,7 +87,7 @@ export default function MedicoConsultaScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  const canSave = useMemo(() => !!turno?.id && !!form.motivoConsulta.trim() && !!form.conducta.trim() && turnoBelongsToDoctor(turno, doctorIdentity), [turno, form, doctorIdentity]);
+  const canSave = useMemo(() => !!turno?.id && !!form.motivoConsulta.trim() && !!form.diagnostico.trim() && !!form.conducta.trim() && turnoBelongsToDoctor(turno, doctorIdentity), [turno, form, doctorIdentity]);
 
   const save = async () => {
     if (!turno) return;
@@ -100,7 +105,7 @@ export default function MedicoConsultaScreen() {
         return;
       }
       setTurno(updated);
-      setMessage(`Consulta guardada. El turno #${updated.id} quedó en estado ${updated.estado}.`);
+      setMessage('Consulta guardada correctamente y turno marcado como atendido.');
     } catch (e: any) {
       setError(readableError(e, 'No pudimos guardar la consulta.'));
     } finally {
@@ -118,7 +123,7 @@ export default function MedicoConsultaScreen() {
         try {
           setUploadingDoc(true);
           setError(null);
-          await documentService.upload(Number(turno.pacienteId), media, 'Estudio', turno.id);
+          await documentService.upload(Number(turno.pacienteId), media, documentType, turno.id);
           setMessage('Documento adjuntado a la atención.');
         } catch (e: any) {
           setError(readableError(e, 'No pudimos adjuntar el documento.'));
@@ -174,7 +179,9 @@ export default function MedicoConsultaScreen() {
         <MtInput label="Alergias" value={form.alergias} onChangeText={(v) => setField('alergias', v)} multiline />
         <MtInput label="Hábitos" value={form.habitos} onChangeText={(v) => setField('habitos', v)} multiline />
         <MtInput label="Hallazgos del examen físico" value={form.hallazgosExamenFisico} onChangeText={(v) => setField('hallazgosExamenFisico', v)} multiline />
+        <MtInput label="Diagnóstico *" value={form.diagnostico} onChangeText={(v) => setField('diagnostico', v)} multiline />
         <MtInput label="Conducta / tratamiento *" value={form.conducta} onChangeText={(v) => setField('conducta', v)} multiline />
+        <MtSelect label="Tipo de documento adjunto" value={documentType} placeholder="Seleccionar tipo" options={documentTypes.map((type) => ({ label: type, value: type }))} onChange={setDocumentType} disabled={uploadingDoc || saving} />
         <MtButton title="Adjuntar documento a la atención" variant="secondary" onPress={uploadDocument} loading={uploadingDoc} disabled={!turno?.pacienteId || uploadingDoc || saving} />
         <MtButton title="Guardar consulta y marcar atendido" onPress={save} loading={saving} disabled={!canSave || uploadingDoc} />
       </MtCard>

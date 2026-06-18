@@ -43,7 +43,7 @@ export default function SecretariaNuevoTurnoScreen() {
   const chooseProfessional = async (p: Professional) => {
     setSelectedProfessional(p); setSelectedDate(''); setSelectedHour(''); setSlots([]); setError(null); setMessage(null);
     if (!p.profesionalInstitucionId) {
-      setError('Ese profesional no tiene profesionalInstitucionId. Revisá catálogo profesional/sede.');
+      setError('El profesional todavía no tiene una sede vinculada. Corregilo desde Personal o contactá al administrador.');
       return;
     }
     setLoadingSlots(true);

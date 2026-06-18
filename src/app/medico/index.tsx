@@ -10,6 +10,7 @@ import { useAuthStore } from '../../auth/authStore';
 import { filterTurnosForDoctor, turnoBelongsToDoctor } from '../../utils/doctorAccess';
 import { useMtTheme } from '../../theme/themeStore';
 import { useTranslation } from '../../i18n/languageStore';
+import { feedbackService, TurnoFeedback } from '../../api/feedbackService';
 
 export default function MedicoDashboard() {
   const usuarioId = useAuthStore((s) => s.usuarioId);
@@ -20,6 +21,7 @@ export default function MedicoDashboard() {
   const [agenda, setAgenda] = useState<TurnoResponse[]>([]);
   const [next, setNext] = useState<TurnoResponse | null>(null);
   const [hiddenCount, setHiddenCount] = useState(0);
+  const [feedback, setFeedback] = useState<TurnoFeedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const theme = useMtTheme();
@@ -30,14 +32,16 @@ export default function MedicoDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [agendaData, nextData] = await Promise.all([
+      const [agendaData, nextData, feedbackData] = await Promise.all([
         medicoService.agenda(usuarioId),
         medicoService.proximoTurno(usuarioId).catch(() => null),
+        feedbackService.latest().catch(() => []),
       ]);
       const ownAgenda = filterTurnosForDoctor(agendaData, doctorIdentity);
       setAgenda(ownAgenda);
       setHiddenCount(Math.max(0, agendaData.length - ownAgenda.length));
       setNext(nextData && turnoBelongsToDoctor(nextData, doctorIdentity) ? nextData : ownAgenda[0] ?? null);
+      setFeedback(feedbackData);
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || (language === 'en' ? 'We could not load the medical schedule.' : 'No pudimos cargar la agenda médica.'));
     } finally {
@@ -46,6 +50,8 @@ export default function MedicoDashboard() {
   }, [usuarioId, language, doctorIdentity]);
 
   useEffect(() => { load(); }, [load]);
+
+  const satisfaction = useMemo(() => feedback.length ? (feedback.reduce((sum, item) => sum + item.puntuacion, 0) / feedback.length).toFixed(1) : null, [feedback]);
 
   const stats = useMemo(() => {
     const pendientes = agenda.filter((t) => ['PENDIENTE', 'CONFIRMADO', 'REPROGRAMADO'].includes(String(t.estado).toUpperCase())).length;
@@ -74,6 +80,7 @@ export default function MedicoDashboard() {
         <MtStat label={language === 'en' ? 'Today' : 'Turnos hoy'} value={stats.total} />
         <MtStat label={language === 'en' ? 'Pending' : 'Pendientes'} value={stats.pendientes} tone="warning" />
         <MtStat label={language === 'en' ? 'Completed' : 'Atendidos'} value={stats.atendidos} tone="success" />
+        <MtStat label={language === 'en' ? 'Rating' : 'Valoración'} value={satisfaction ? `${satisfaction}/5` : '—'} tone="success" />
       </View>
 
       <MtCard style={{ marginBottom: 14 }}>
@@ -86,11 +93,24 @@ export default function MedicoDashboard() {
         </View>
       </MtCard>
 
+      {feedback.length ? (
+        <MtCard style={{ marginBottom: 14 }}>
+          <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18 }}>Valoraciones recientes</Text>
+          <Text style={{ color: theme.colors.muted, fontWeight: '700', marginTop: 5 }}>Promedio de {feedback.length} atención(es): {satisfaction}/5</Text>
+          {feedback.slice(0, 3).map((item) => (
+            <View key={item.id} style={{ borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 10, marginTop: 10 }}>
+              <Text style={{ color: theme.colors.primary, fontWeight: '900' }}>{'★'.repeat(item.puntuacion)}{'☆'.repeat(5 - item.puntuacion)}</Text>
+              {item.comentario ? <Text style={{ color: theme.colors.ink, fontWeight: '700', marginTop: 4 }}>{item.comentario}</Text> : null}
+            </View>
+          ))}
+        </MtCard>
+      ) : null}
+
       <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18, marginBottom: 10 }}>{t('doctor.next')}</Text>
       {next ? (
         <TurnoCard turno={next} primaryAction={{ title: 'Atender consulta', onPress: () => router.push({ pathname: '/medico/consulta', params: { turnoId: String(next.id) } }) }} />
       ) : (
-        <MtEmptyState title={language === 'en' ? 'No upcoming appointments' : 'Sin próximos turnos'} subtitle={language === 'en' ? 'There are no upcoming consultations assigned to this doctor.' : 'No hay consultas próximas asignadas para este usuario médico.'} />
+        <MtEmptyState title={language === 'en' ? 'No upcoming appointments' : 'Sin próximos turnos'} subtitle={language === 'en' ? 'There are no upcoming consultations assigned to this doctor.' : 'No hay consultas próximas asignadas para este profesional.'} />
       )}
       <RoleBottomNav role="medico" active="home" />
     </MtScreen>

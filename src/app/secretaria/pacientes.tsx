@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MtButton, MtCard, MtHeader, MtInput, MtNotice, MtScreen } from '../../components/mediturnos';
+import { MtSelect } from '../../components/MtSelect';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { secretariaService } from '../../api/staffService';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 import { chooseDocumentSource } from '../../utils/mediaPicker';
 import { documentService, PacienteDocumento } from '../../api/documentService';
+import { documentTypes } from '../../constants/documentTypes';
 
 type Notice = { type: 'success' | 'danger' | 'warning' | 'info'; title: string; message: string };
 
@@ -15,25 +17,39 @@ export default function SecretariaPacientesScreen() {
   const [dni, setDni] = useState('');
   const [paciente, setPaciente] = useState<any | null>(null);
   const [docs, setDocs] = useState<PacienteDocumento[]>([]);
+  const [documentType, setDocumentType] = useState('Otros');
+  const [includeArchived, setIncludeArchived] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const theme = useMtTheme();
+
+  const pacienteId = Number(paciente?.id ?? paciente?.pacienteId);
+
+  const loadDocuments = async (id: number, archived = includeArchived) => {
+    setDocs(await documentService.listByPaciente(id, archived));
+  };
 
   const search = async () => {
     setLoading(true); setNotice(null); setPaciente(null); setDocs([]);
     try {
       const found = await secretariaService.buscarPaciente(dni.trim());
       setPaciente(found);
-      const pacienteId = Number(found?.id ?? found?.pacienteId);
-      if (pacienteId) setDocs(await documentService.listByPaciente(pacienteId));
+      const foundId = Number(found?.id ?? found?.pacienteId);
+      if (foundId) await loadDocuments(foundId);
     } catch (e: any) {
       setNotice({ type: 'danger', title: 'No encontramos el paciente', message: readableError(e, 'No encontramos paciente con ese DNI.') });
     } finally { setLoading(false); }
   };
 
+  useEffect(() => {
+    if (!pacienteId) return;
+    loadDocuments(pacienteId, includeArchived).catch((e) => {
+      setNotice({ type: 'danger', title: 'No pudimos actualizar los documentos', message: readableError(e, 'Reintentá en unos segundos.') });
+    });
+  }, [includeArchived, pacienteId]);
+
   const uploadDoc = () => {
-    const pacienteId = Number(paciente?.id ?? paciente?.pacienteId);
     if (!pacienteId) {
       setNotice({ type: 'warning', title: 'Primero buscá un paciente', message: 'Necesitamos asociar el documento a una ficha de paciente.' });
       return;
@@ -42,8 +58,8 @@ export default function SecretariaPacientesScreen() {
       async (media) => {
         try {
           setUploading(true);
-          await documentService.upload(pacienteId, media, 'Otros');
-          setDocs(await documentService.listByPaciente(pacienteId));
+          await documentService.upload(pacienteId, media, documentType);
+          await loadDocuments(pacienteId);
           setNotice({ type: 'success', title: 'Documento subido', message: 'Quedó disponible para el paciente y el equipo médico.' });
         } catch (e: any) {
           setNotice({ type: 'danger', title: 'No pudimos subir el documento', message: readableError(e, 'Verificá formato y tamaño máximo de 1 MB.') });
@@ -61,6 +77,16 @@ export default function SecretariaPacientesScreen() {
     catch { setNotice({ type: 'danger', title: 'No pudimos abrir el documento', message: 'Probá desde otro dispositivo o navegador.' }); }
   };
 
+  const archiveDoc = async (doc: PacienteDocumento) => {
+    try {
+      await documentService.archive(doc.id);
+      if (pacienteId) await loadDocuments(pacienteId);
+      setNotice({ type: 'success', title: 'Documento archivado', message: 'Ya no aparece entre los documentos activos.' });
+    } catch (e: any) {
+      setNotice({ type: 'danger', title: 'No pudimos archivar', message: readableError(e, 'Reintentá en unos segundos.') });
+    }
+  };
+
   return (
     <MtScreen scroll>
       <MtHeader eyebrow="SECRETARÍA" title="Pacientes" subtitle="Búsqueda rápida por DNI para operar turnos y documentos." />
@@ -76,21 +102,30 @@ export default function SecretariaPacientesScreen() {
           <Text style={{ color: theme.colors.muted, fontWeight: '700' }}>Teléfono: {paciente.telefono || 'No informado'}</Text>
           <Text style={{ color: theme.colors.muted, fontWeight: '700' }}>Email: {paciente.usuario?.email || paciente.email || 'No informado'}</Text>
           <Text style={{ color: theme.colors.muted, fontWeight: '700' }}>Obra social: {paciente.obraSocial?.nombre || paciente.obraSocialNombre || 'No informada'}</Text>
-          <MtButton title="Subir documento administrativo" variant="secondary" onPress={uploadDoc} loading={uploading} disabled={uploading} style={{ marginTop: 8 }} />
+          <MtSelect label="Tipo de documento" value={documentType} placeholder="Seleccionar tipo" options={documentTypes.map((type) => ({ label: type, value: type }))} onChange={setDocumentType} disabled={uploading} />
+          <MtButton title="Subir documento" variant="secondary" onPress={uploadDoc} loading={uploading} disabled={uploading} />
         </MtCard>
       ) : null}
       {paciente ? (
         <MtCard style={{ gap: 10 }}>
-          <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18 }}>Documentos</Text>
-          {docs.length === 0 ? <Text style={{ color: theme.colors.muted, fontWeight: '700' }}>No hay documentos cargados.</Text> : docs.map((doc) => (
-            <Pressable key={doc.id} onPress={() => openDoc(doc)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: theme.colors.border, borderRadius: 16, padding: 12 }}>
-              <Ionicons name={doc.mimeType?.includes('pdf') ? 'document-text-outline' : 'image-outline'} size={22} color={theme.colors.primary} />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ color: theme.colors.ink, fontWeight: '900' }} numberOfLines={1}>{doc.nombreArchivo}</Text>
-                <Text style={{ color: theme.colors.muted, fontWeight: '700', fontSize: 12 }}>{doc.tipoDocumento || 'Documento'} · {doc.subidoPorRol || 'USUARIO'}</Text>
-              </View>
-              <Ionicons name="open-outline" size={18} color={theme.colors.muted} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={{ flex: 1, color: theme.colors.ink, fontWeight: '900', fontSize: 18 }}>Documentos</Text>
+            <Pressable onPress={() => setIncludeArchived((value) => !value)} style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 7 }}>
+              <Text style={{ color: theme.colors.primary, fontWeight: '900', fontSize: 12 }}>{includeArchived ? 'Ocultar archivados' : 'Ver archivados'}</Text>
             </Pressable>
+          </View>
+          {docs.length === 0 ? <Text style={{ color: theme.colors.muted, fontWeight: '700' }}>No hay documentos cargados.</Text> : docs.map((doc) => (
+            <View key={doc.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: theme.colors.border, borderRadius: 16, padding: 12, opacity: doc.archivado ? 0.62 : 1 }}>
+              <Pressable onPress={() => openDoc(doc)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                <Ionicons name={doc.mimeType?.includes('pdf') ? 'document-text-outline' : 'image-outline'} size={22} color={theme.colors.primary} />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ color: theme.colors.ink, fontWeight: '900' }} numberOfLines={1}>{doc.nombreArchivo}</Text>
+                  <Text style={{ color: theme.colors.muted, fontWeight: '700', fontSize: 12 }}>{doc.tipoDocumento || 'Documento'} · {doc.archivado ? 'ARCHIVADO' : (doc.subidoPorRol || 'USUARIO')}</Text>
+                </View>
+                <Ionicons name="open-outline" size={18} color={theme.colors.muted} />
+              </Pressable>
+              {!doc.archivado ? <Pressable onPress={() => archiveDoc(doc)} hitSlop={8}><Ionicons name="archive-outline" size={20} color={theme.colors.danger} /></Pressable> : null}
+            </View>
           ))}
         </MtCard>
       ) : null}

@@ -86,11 +86,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       storage.getItem('nombre_completo'),
     ]);
 
-    if (token?.startsWith('demo-token-')) {
-      await clearEverythingAuthRelated();
-      set({ token: null, usuarioId: null, pacienteId: null, profesionalId: null, profesionalInstitucionId: null, role: null, nombreCompleto: null, hydrated: true, loading: false });
-      return;
-    }
 
     set({ token, usuarioId, pacienteId, profesionalId, profesionalInstitucionId, role, nombreCompleto, hydrated: true, loading: false });
   },
@@ -103,8 +98,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await storage.setItem('paciente_id', pId);
       set({ pacienteId: pId });
       return pId;
-    } catch (e) {
-      console.warn('No se pudo obtener pacienteId desde backend.', e);
+    } catch {
       return null;
     }
   },

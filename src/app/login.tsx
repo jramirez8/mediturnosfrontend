@@ -15,7 +15,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../auth/authStore';
 import { useTranslation } from '../i18n/languageStore';
-import { debugErrorPayload, readableError } from '../utils/errors';
+import { readableError } from '../utils/errors';
 import {
   authenticateDevice,
   canUseDeviceAuth,
@@ -48,7 +48,7 @@ export default function LoginScreen() {
   const [focused, setFocused] = useState<'identifier' | 'password' | 'twoFactor' | null>(null);
   const [biometricEmail, setBiometricEmail] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [debugMessage, setDebugMessage] = useState<string | null>(null);
+  const [invalidCredentials, setInvalidCredentials] = useState(false);
   const [twoFactorUserId, setTwoFactorUserId] = useState<string | null>(null);
   const [twoFactorDestination, setTwoFactorDestination] = useState<string | null>(null);
   const [twoFactorCode, setTwoFactorCode] = useState('');
@@ -106,8 +106,8 @@ export default function LoginScreen() {
             try {
               const auth = await authenticateDevice(t('login.enableSecureAction'));
               if (auth.success) await saveCurrentSessionForDeviceAuth(userIdentifier);
-            } catch (error) {
-              console.warn('No se pudo activar biometría', error);
+            } catch {
+              // El ingreso normal sigue disponible si el dispositivo rechaza la biometría.
             } finally {
               router.replace(route as any);
             }
@@ -120,7 +120,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     setErrorMessage(null);
     setInfoMessage(null);
-    setDebugMessage(null);
+    setInvalidCredentials(false);
 
     if (!identifier.trim() || !password) {
       setErrorMessage(t('login.requiredFields'));
@@ -143,10 +143,9 @@ export default function LoginScreen() {
       await askBiometricSetup(result.route, identifier.trim());
     } catch (error: any) {
       const message = readableError(error, t('login.checkCredentials'));
-      const debug = debugErrorPayload(error);
-      console.error('LOGIN_REAL_ERROR', debug);
+      const status = Number(error?.response?.status);
+      setInvalidCredentials(status === 400 || status === 401);
       setErrorMessage(message);
-      setDebugMessage(`${debug.method ?? 'POST'} ${debug.url ?? '/api/auth/login'}${debug.status ? ` · HTTP ${debug.status}` : ''}`);
     }
   };
 
@@ -170,7 +169,7 @@ export default function LoginScreen() {
   const handleBiometricLogin = async () => {
     setErrorMessage(null);
     setInfoMessage(null);
-    setDebugMessage(null);
+    setInvalidCredentials(false);
 
     try {
       const result = await loginWithDeviceAuth();
@@ -185,7 +184,6 @@ export default function LoginScreen() {
     }
   };
 
-  const invalidCredentials = debugMessage?.includes('HTTP 400') || debugMessage?.includes('HTTP 401');
   const needsAccountVerification = !!errorMessage && /verific/i.test(errorMessage);
 
   return (
