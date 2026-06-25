@@ -4,7 +4,7 @@ import { debugErrorPayload, readableError } from '../src/utils/errors';
 describe('readableError', () => {
   it('prioriza el mensaje del backend', () => {
     const error = { response: { status: 400, data: { message: 'El DNI ya existe' } } };
-    expect(readableError(error)).toBe('HTTP 400: El DNI ya existe');
+    expect(readableError(error)).toBe('El DNI ya existe');
   });
 
   it('lee aliases frecuentes del backend', () => {
@@ -25,7 +25,7 @@ describe('readableError', () => {
   });
 
   it('usa error.message y luego fallback', () => {
-    expect(readableError({ message: 'Network Error' })).toBe('Network Error');
+    expect(readableError({ message: 'Network Error' })).toBe('No hay conexión a internet. Revisá tu conexión e intentá nuevamente.');
     expect(readableError(null, 'No pudimos continuar')).toBe('No pudimos continuar');
   });
 
@@ -36,9 +36,14 @@ describe('readableError', () => {
     expect(readableError({ response: { data: { message: { detail: 'Anidado' } } } })).toBe('Anidado');
   });
 
-  it('no duplica el código HTTP si ya está en el mensaje', () => {
+  it('no agrega códigos HTTP a los mensajes visibles', () => {
     expect(readableError({ response: { status: 401, data: { message: 'HTTP 401: no autorizado' } } }))
-      .toBe('HTTP 401: no autorizado');
+      .toBe('no autorizado');
+  });
+
+  it('oculta detalles técnicos de errores internos', () => {
+    expect(readableError({ response: { status: 500, data: { message: 'NullPointerException' } } }))
+      .toBe('El servicio no está disponible en este momento. Intentá nuevamente más tarde.');
   });
 });
 

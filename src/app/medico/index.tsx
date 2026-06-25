@@ -11,6 +11,7 @@ import { filterTurnosForDoctor, turnoBelongsToDoctor } from '../../utils/doctorA
 import { useMtTheme } from '../../theme/themeStore';
 import { useTranslation } from '../../i18n/languageStore';
 import { feedbackService, TurnoFeedback } from '../../api/feedbackService';
+import { readableError } from '../../utils/errors';
 
 export default function MedicoDashboard() {
   const usuarioId = useAuthStore((s) => s.usuarioId);
@@ -43,7 +44,7 @@ export default function MedicoDashboard() {
       setNext(nextData && turnoBelongsToDoctor(nextData, doctorIdentity) ? nextData : ownAgenda[0] ?? null);
       setFeedback(feedbackData);
     } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || (language === 'en' ? 'We could not load the medical schedule.' : 'No pudimos cargar la agenda médica.'));
+      setError(readableError(e, language === 'en' ? 'We could not load the medical schedule.' : 'No pudimos cargar la agenda médica.'));
     } finally {
       setLoading(false);
     }

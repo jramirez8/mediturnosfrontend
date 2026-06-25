@@ -7,9 +7,9 @@ const configuredApiOrigin = process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_API_
 
 function isVercelHostedWeb() {
   if (Platform.OS !== 'web') return false;
-  if (typeof window === 'undefined') return false;
+  if (typeof globalThis.location === 'undefined') return false;
 
-  const host = window.location.hostname.toLowerCase();
+  const host = globalThis.location.hostname.toLowerCase();
   const forcedMode = process.env.EXPO_PUBLIC_API_MODE;
 
   if (forcedMode === 'direct') return false;
@@ -73,10 +73,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.code === 'ECONNABORTED') {
-      error.message = 'El servidor tardó demasiado en responder.';
+      error.message = 'El servicio está tardando en responder. Revisá tu conexión e intentá nuevamente.';
     }
     if (!error?.response && error?.message === 'Network Error') {
-      error.message = 'No pudimos conectarnos con el servicio. Revisá tu conexión e intentá nuevamente.';
+      error.message = 'No hay conexión a internet. Revisá tu conexión e intentá nuevamente.';
     }
     return Promise.reject(error);
   }

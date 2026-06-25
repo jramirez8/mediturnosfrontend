@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { appointmentService, TurnoResponse } from '../../api/appointmentService';
 import { useAuthStore } from '../../auth/authStore';
-import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtLoading, MtPill, MtScreen } from '../../components/mediturnos';
+import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtLoading, MtNotice, MtPill, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
@@ -12,7 +12,7 @@ import { addAppointmentToDeviceCalendar } from '../../utils/calendar';
 type Tab = 'proximos' | 'historial' | 'todos';
 type Notice = { type: 'success' | 'error' | 'warning'; title: string; message: string };
 
-const FINAL_STATES = ['FINALIZADO', 'ATENDIDO', 'CANCELADO', 'AUSENTE'];
+const FINAL_STATES = new Set(['FINALIZADO', 'ATENDIDO', 'CANCELADO', 'AUSENTE']);
 
 export default function MisTurnosScreen() {
   const { pacienteId } = useAuthStore();
@@ -47,8 +47,8 @@ export default function MisTurnosScreen() {
     return appointments
       .filter((turno) => {
         const estado = String(turno.estado).toUpperCase();
-        if (tab === 'proximos') return !FINAL_STATES.includes(estado);
-        if (tab === 'historial') return FINAL_STATES.includes(estado);
+        if (tab === 'proximos') return !FINAL_STATES.has(estado);
+        if (tab === 'historial') return FINAL_STATES.has(estado);
         return true;
       })
       .sort((a, b) => `${a.fecha} ${a.hora}`.localeCompare(`${b.fecha} ${b.hora}`));
@@ -113,7 +113,7 @@ export default function MisTurnosScreen() {
       <MtScreen scroll={false}>
         <MtHeader eyebrow="AGENDA" title="Mis turnos" subtitle="Consultá próximos turnos, historial y acciones rápidas." />
 
-        {!!notice && <NoticeBox notice={notice} styles={styles} />}
+        {!!notice && <NoticeBox notice={notice} />}
 
         <View style={styles.tabs}>
           <MtPill label="Próximos" selected={tab === 'proximos'} onPress={() => setTab('proximos')} />
@@ -156,15 +156,8 @@ export default function MisTurnosScreen() {
   );
 }
 
-function NoticeBox({ notice, styles }: { notice: Notice; styles: ReturnType<typeof createStyles> }) {
-  const success = notice.type === 'success';
-  const warning = notice.type === 'warning';
-  return (
-    <View style={[styles.noticeBox, success ? styles.noticeSuccess : warning ? styles.noticeWarning : styles.noticeError]}>
-      <Text style={[styles.noticeTitle, success ? styles.noticeSuccessText : warning ? styles.noticeWarningText : styles.noticeErrorText]}>{notice.title}</Text>
-      <Text style={[styles.noticeMessage, success ? styles.noticeSuccessText : warning ? styles.noticeWarningText : styles.noticeErrorText]}>{notice.message}</Text>
-    </View>
-  );
+function NoticeBox({ notice }: { notice: Notice }) {
+  return <MtNotice type={notice.type === 'error' ? 'danger' : notice.type} title={notice.title} message={notice.message} style={{ marginBottom: 14 }} />;
 }
 
 function AppointmentCard({
@@ -191,7 +184,7 @@ function AppointmentCard({
   styles: ReturnType<typeof createStyles>;
 }) {
   const estado = String(item.estado).toUpperCase();
-  const isFinal = FINAL_STATES.includes(estado);
+  const isFinal = FINAL_STATES.has(estado);
   const tone = estado === 'CONFIRMADO' || estado === 'REPROGRAMADO' ? 'success' : estado === 'PENDIENTE' ? 'warning' : estado === 'CANCELADO' ? 'danger' : 'muted';
 
   return (

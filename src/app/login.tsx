@@ -144,8 +144,14 @@ export default function LoginScreen() {
     } catch (error: any) {
       const message = readableError(error, t('login.checkCredentials'));
       const status = Number(error?.response?.status);
-      setInvalidCredentials(status === 400 || status === 401);
-      setErrorMessage(message);
+      const accountNeedsVerification = /verific/i.test(message);
+      if (accountNeedsVerification) {
+        setErrorMessage(message);
+        return;
+      }
+      const invalid = status === 400 || status === 401;
+      setInvalidCredentials(invalid);
+      Alert.alert(t('login.signInErrorTitle'), invalid ? t('login.errorInvalid') : message, [{ text: 'OK' }]);
     }
   };
 
@@ -162,7 +168,7 @@ export default function LoginScreen() {
       const result = await verifyTwoFactor(twoFactorUserId, twoFactorCode.trim());
       router.replace(result.route as any);
     } catch (error: any) {
-      setErrorMessage(readableError(error, t('login.invalidCode')));
+      Alert.alert(t('login.signInErrorTitle'), readableError(error, t('login.invalidCode')), [{ text: 'OK' }]);
     }
   };
 
@@ -175,11 +181,10 @@ export default function LoginScreen() {
       const result = await loginWithDeviceAuth();
       router.replace(result.route as any);
     } catch (error: any) {
-      setErrorMessage(
-        readableError(
-          error,
-          t('login.deviceLoginError'),
-        ),
+      Alert.alert(
+        t('login.signInErrorTitle'),
+        readableError(error, t('login.deviceLoginError')),
+        [{ text: 'OK' }],
       );
     }
   };
@@ -196,6 +201,7 @@ export default function LoginScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
         <ScrollView
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >

@@ -58,22 +58,41 @@ export function readableError(error: unknown, fallback = 'Ocurrió un error ines
   const response = (error as any)?.response;
   const data = response?.data;
   const status = response?.status;
+  const rawMessage = stringify((error as any)?.message);
 
-  let message =
+  if (!response && (
+    (error as any)?.code === 'ECONNABORTED'
+    || /timeout|tard[oó] demasiado/i.test(rawMessage ?? '')
+  )) {
+    return 'El servicio está tardando en responder. Revisá tu conexión e intentá nuevamente.';
+  }
+
+  if (!response && (
+    /network error|failed to fetch|internet|conexi[oó]n|conectarnos|servidor/i.test(rawMessage ?? '')
+    || (error as any)?.request
+  )) {
+    return 'No hay conexión a internet. Revisá tu conexión e intentá nuevamente.';
+  }
+
+  if (status >= 500) {
+    return 'El servicio no está disponible en este momento. Intentá nuevamente más tarde.';
+  }
+
+  const message =
     stringify(data?.message) ||
     stringify(data?.mensaje) ||
     stringify(data?.error) ||
     stringify(data?.detail) ||
     stringify(data?.details) ||
     stringify(data) ||
-    stringify((error as any)?.message) ||
+    rawMessage ||
     fallback;
 
-  if (status && !String(message).includes(String(status))) {
-    message = `HTTP ${status}: ${message}`;
-  }
+  return String(message).replace(/^HTTP\s+\d+\s*:\s*/i, '').trim() || fallback;
+}
 
-  return String(message);
+export function isConnectivityMessage(message?: string | null) {
+  return /conexi[oó]n a internet|tardando en responder|servicio no est[aá] disponible/i.test(String(message ?? ''));
 }
 
 export function debugErrorPayload(error: any) {

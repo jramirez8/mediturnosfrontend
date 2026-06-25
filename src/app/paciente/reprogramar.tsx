@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { appointmentService, AppointmentSlot, TurnoResponse } from '../../api/appointmentService';
-import { MtBottomNav, MtButton, MtCard, MtHeader, MtLoading, MtScreen } from '../../components/mediturnos';
+import { MtBottomNav, MtButton, MtCard, MtHeader, MtLoading, MtNotice, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
@@ -122,7 +122,7 @@ export default function ReprogramarScreen() {
       <MtScreen scroll>
         <MtHeader eyebrow="AGENDA" title="Reprogramar turno" subtitle="Elegí una nueva fecha y horario disponible." />
 
-        {!!notice && <NoticeBox notice={notice} styles={styles} />}
+        {!!notice && <NoticeBox notice={notice} />}
 
         {!turno ? (
           <MtCard style={styles.section}>
@@ -216,14 +216,8 @@ export default function ReprogramarScreen() {
   );
 }
 
-function NoticeBox({ notice, styles }: { notice: Notice; styles: ReturnType<typeof createStyles> }) {
-  const success = notice.type === 'success';
-  return (
-    <View style={[styles.noticeBox, success ? styles.noticeSuccess : styles.noticeError]}>
-      <Text style={[styles.noticeTitle, success ? styles.noticeSuccessText : styles.noticeErrorText]}>{notice.title}</Text>
-      <Text style={[styles.noticeMessage, success ? styles.noticeSuccessText : styles.noticeErrorText]}>{notice.message}</Text>
-    </View>
-  );
+function NoticeBox({ notice }: { notice: Notice }) {
+  return <MtNotice type={notice.type === 'error' ? 'danger' : 'success'} title={notice.title} message={notice.message} style={{ marginBottom: 14 }} />;
 }
 
 function DropdownBox({

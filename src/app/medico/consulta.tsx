@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtScreen } from '../../components/mediturnos';
+import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtNotice, MtScreen } from '../../components/mediturnos';
 import { MtSelect } from '../../components/MtSelect';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { TurnoCard } from '../../components/TurnoCard';
@@ -166,7 +166,7 @@ export default function MedicoConsultaScreen() {
     <MtScreen scroll>
       <MtHeader eyebrow="MÉDICO" title="Atención de consulta" subtitle="La consulta alimenta la historia clínica y marca el turno como atendido." />
       {error ? <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}><Text style={{ color: theme.colors.danger, fontWeight: '900' }}>{error}</Text></MtCard> : null}
-      {message ? <MtCard style={{ borderColor: theme.colors.success, marginBottom: 14 }}><Text style={{ color: theme.colors.success, fontWeight: '900' }}>{message}</Text><MtButton title="Volver a agenda" onPress={() => router.replace('/medico/agenda')} style={{ marginTop: 12 }} /></MtCard> : null}
+      {message ? <MtNotice type="success" title="Consulta guardada" message={message} /> : null}
       {turno ? <TurnoCard turno={turno} /> : null}
 
       <MtCard style={{ gap: 12 }}>

@@ -10,6 +10,7 @@ import { useAuthStore } from '../../auth/authStore';
 import { useMtTheme } from '../../theme/themeStore';
 import { useTranslation } from '../../i18n/languageStore';
 import { todayLocalIso } from '../../utils/date';
+import { readableError } from '../../utils/errors';
 
 export default function SecretariaDashboard() {
   const nombre = useAuthStore((s) => s.nombreCompleto);
@@ -22,7 +23,7 @@ export default function SecretariaDashboard() {
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try { setTurnos(await secretariaService.turnos()); }
-    catch (e: any) { setError(e?.response?.data?.message || e?.message || language === 'en' ? 'We could not load appointments.' : 'No pudimos cargar turnos.'); }
+    catch (e: any) { setError(readableError(e, language === 'en' ? 'We could not load appointments.' : 'No pudimos cargar turnos.')); }
     finally { setLoading(false); }
   }, [language]);
 

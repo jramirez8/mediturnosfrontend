@@ -4,7 +4,7 @@ import { MtButton, MtCard, MtHeader, MtLoading, MtNotice, MtScreen } from '../..
 import { MtSelect } from '../../components/MtSelect';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { professionalService, Professional } from '../../api/professionalService';
-import { agendaService, AgendaBloqueo, HorarioAtencion } from '../../api/agendaService';
+import { agendaService, AgendaBloqueo, hasActiveScheduleForDay, HorarioAtencion } from '../../api/agendaService';
 import { useMtTheme } from '../../theme/themeStore';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { readableError } from '../../utils/errors';
@@ -97,6 +97,10 @@ export default function AgendaAvanzadaAdmin() {
   const addHorario = async () => {
     if (!selected?.profesionalInstitucionId || !selected.especialidadId) {
       setNotice({ type: 'warning', title: 'Asignación incompleta', message: 'El profesional necesita una sede y una especialidad vinculadas antes de configurar horarios.' });
+      return;
+    }
+    if (hasActiveScheduleForDay(horarios, dia)) {
+      setNotice({ type: 'warning', title: 'Día ya configurado', message: 'Ya existe un horario para este día. Eliminá el actual antes de cargar uno nuevo.' });
       return;
     }
     if (!validateTime(desde) || !validateTime(hasta) || desde >= hasta) {

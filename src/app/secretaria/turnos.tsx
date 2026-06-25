@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtPill, MtScreen } from '../../components/mediturnos';
+import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtNotice, MtPill, MtScreen } from '../../components/mediturnos';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { TurnoCard } from '../../components/TurnoCard';
 import { secretariaService } from '../../api/staffService';
 import { TurnoResponse } from '../../api/appointmentService';
 import { useMtTheme } from '../../theme/themeStore';
+import { readableError } from '../../utils/errors';
 
 const estados = ['TODOS', 'CONFIRMADO', 'REPROGRAMADO', 'PENDIENTE', 'CANCELADO', 'ATENDIDO', 'AUSENTE'];
 
@@ -25,7 +26,7 @@ export default function SecretariaTurnosScreen() {
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try { setTurnos(await secretariaService.turnos()); }
-    catch (e: any) { setError(e?.response?.data?.message || e?.message || 'No pudimos cargar los turnos.'); }
+    catch (e: any) { setError(readableError(e, 'No pudimos cargar los turnos.')); }
     finally { setLoading(false); }
   }, []);
 
@@ -48,7 +49,7 @@ export default function SecretariaTurnosScreen() {
       scrollToTop();
       await load();
     } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'No pudimos actualizar el turno.');
+      setError(readableError(e, 'No pudimos actualizar el turno.'));
       scrollToTop();
     } finally { setWorkingId(null); }
   };
@@ -58,8 +59,8 @@ export default function SecretariaTurnosScreen() {
   return (
     <MtScreen scroll scrollRef={scrollRef}>
       <MtHeader eyebrow="SECRETARÍA" title="Gestión de turnos" subtitle="Confirmar, cancelar, marcar ausente o reprogramar sin borrar historial." />
-      {message ? <MtCard style={{ borderColor: theme.colors.success, marginBottom: 14 }}><Text style={{ color: theme.colors.success, fontWeight: '900' }}>{message}</Text></MtCard> : null}
-      {error ? <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}><Text style={{ color: theme.colors.danger, fontWeight: '900' }}>{error}</Text></MtCard> : null}
+      {message ? <MtNotice type="success" title="Turno actualizado" message={message} /> : null}
+      {error ? <MtNotice type="danger" title="No pudimos actualizar el turno" message={error} style={{ marginBottom: 14 }} /> : null}
       <MtCard style={{ marginBottom: 14, gap: 12 }}>
         <MtInput label="Buscar" value={query} onChangeText={setQuery} placeholder="DNI, paciente, médico, especialidad..." />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

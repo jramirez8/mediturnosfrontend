@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { MtButton, MtCard, MtHeader, MtInput, MtPill, MtScreen } from '../../components/mediturnos';
+import { MtButton, MtCard, MtHeader, MtInput, MtNotice, MtPill, MtScreen } from '../../components/mediturnos';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { secretariaService } from '../../api/staffService';
 import { professionalService, Professional } from '../../api/professionalService';
 import { appointmentService, AppointmentSlot } from '../../api/appointmentService';
 import { useMtTheme } from '../../theme/themeStore';
+import { readableError } from '../../utils/errors';
 
 export default function SecretariaNuevoTurnoScreen() {
   const theme = useMtTheme();
@@ -27,7 +28,7 @@ export default function SecretariaNuevoTurnoScreen() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    professionalService.getAll().then(setProfesionales).catch((e) => setError(e?.message || 'No pudimos cargar profesionales.'));
+    professionalService.getAll().then(setProfesionales).catch((e) => setError(readableError(e, 'No pudimos cargar profesionales.')));
   }, []);
 
   const dates = useMemo(() => Array.from(new Set(slots.map((s) => s.fecha))).slice(0, 12), [slots]);
@@ -36,7 +37,7 @@ export default function SecretariaNuevoTurnoScreen() {
   const searchPaciente = async () => {
     setLoadingPaciente(true); setError(null); setPaciente(null);
     try { setPaciente(await secretariaService.buscarPaciente(dni.trim())); }
-    catch (e: any) { setError(e?.response?.data?.message || e?.message || 'No encontramos paciente con ese DNI.'); }
+    catch (e: any) { setError(readableError(e, 'No encontramos paciente con ese DNI.')); }
     finally { setLoadingPaciente(false); }
   };
 
@@ -48,7 +49,7 @@ export default function SecretariaNuevoTurnoScreen() {
     }
     setLoadingSlots(true);
     try { setSlots(await appointmentService.getDisponibilidad(p.profesionalInstitucionId)); }
-    catch (e: any) { setError(e?.response?.data?.message || e?.message || 'No pudimos cargar disponibilidad.'); }
+    catch (e: any) { setError(readableError(e, 'No pudimos cargar disponibilidad.')); }
     finally { setLoadingSlots(false); }
   };
 
@@ -68,7 +69,7 @@ export default function SecretariaNuevoTurnoScreen() {
       setMessage(`Turno #${created.id} creado y confirmado para ${created.fecha} ${created.hora}.`);
       scrollToTop();
     } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || 'No pudimos crear el turno.');
+      setError(readableError(e, 'No pudimos crear el turno.'));
       scrollToTop();
     } finally { setSaving(false); }
   };
@@ -76,8 +77,8 @@ export default function SecretariaNuevoTurnoScreen() {
   return (
     <MtScreen scroll scrollRef={scrollRef}>
       <MtHeader eyebrow="SECRETARÍA" title="Nuevo turno" subtitle="Alta operativa usando paciente existente y disponibilidad disponible." />
-      {message ? <MtCard style={{ borderColor: theme.colors.success, marginBottom: 14 }}><Text style={{ color: theme.colors.success, fontWeight: '900' }}>{message}</Text><MtButton title="Ver turnos" onPress={() => router.replace('/secretaria/turnos')} style={{ marginTop: 12 }} /></MtCard> : null}
-      {error ? <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}><Text style={{ color: theme.colors.danger, fontWeight: '900' }}>{error}</Text></MtCard> : null}
+      {message ? <MtNotice type="success" title="Turno creado" message={message} /> : null}
+      {error ? <MtNotice type="danger" title="No pudimos completar la operación" message={error} style={{ marginBottom: 14 }} /> : null}
 
       <MtCard style={{ gap: 12, marginBottom: 14 }}>
         <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18 }}>1. Paciente</Text>

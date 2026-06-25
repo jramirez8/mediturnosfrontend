@@ -21,10 +21,33 @@ export type AgendaBloqueo = {
   motivo?: string;
 };
 
+export function normalizeScheduleDay(value?: string) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toUpperCase();
+}
+
+export function uniqueSchedulesByDay(horarios: HorarioAtencion[]) {
+  const seen = new Set<string>();
+  return horarios.filter((horario) => {
+    const day = normalizeScheduleDay(horario.diaSemana);
+    if (!day || seen.has(day)) return false;
+    seen.add(day);
+    return true;
+  });
+}
+
+export function hasActiveScheduleForDay(horarios: HorarioAtencion[], day: string) {
+  const normalizedDay = normalizeScheduleDay(day);
+  return horarios.some((horario) => horario.activo !== false && normalizeScheduleDay(horario.diaSemana) === normalizedDay);
+}
+
 export const agendaService = {
   getHorarios: async (profesionalInstitucionId: number) => {
     const response = await api.get<HorarioAtencion[]>('/api/agenda/horarios', { params: { profesionalInstitucionId } });
-    return response.data;
+    return uniqueSchedulesByDay(response.data);
   },
   createHorario: async (data: Partial<HorarioAtencion>) => {
     const response = await api.post<HorarioAtencion>('/api/agenda/horarios', data);

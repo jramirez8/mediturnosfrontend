@@ -1,24 +1,20 @@
 import React from 'react';
 import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
-import { MtButton, MtCard, MtPill } from '../mediturnos';
+import { MtButton, MtCard, MtNotice, MtPill } from '../mediturnos';
 import { useMtTheme } from '../../theme/themeStore';
 import { translateLiteral, useTranslation } from '../../i18n/languageStore';
 
 export function AdminNotice({ type = 'info', title, message, onRetry }: { type?: 'info' | 'success' | 'danger' | 'warning'; title: string; message?: string; onRetry?: () => void }) {
-  const theme = useMtTheme();
-  const { t, language } = useTranslation();
-  const color = type === 'success' ? theme.colors.success : type === 'danger' ? theme.colors.danger : type === 'warning' ? theme.colors.warning : theme.colors.primary;
+  const { t } = useTranslation();
   return (
-    <MtCard style={{ borderColor: color, marginBottom: 14, backgroundColor: theme.colors.surface }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: `${color}22`, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color, fontWeight: '900' }}>{type === 'success' ? '✓' : type === 'danger' ? '!' : type === 'warning' ? '!' : 'i'}</Text>
-        </View>
-        <Text style={{ color, fontWeight: '900', fontSize: 16, flex: 1 }}>{translateLiteral(title, language)}</Text>
-      </View>
-      {message ? <Text style={{ color: theme.colors.muted, marginTop: 10, lineHeight: 20, fontWeight: '600' }}>{translateLiteral(message, language)}</Text> : null}
-      {onRetry ? <MtButton title={t('common.retry')} onPress={onRetry} style={{ marginTop: 12 }} /> : null}
-    </MtCard>
+    <MtNotice
+      type={type}
+      title={title}
+      message={message ?? title}
+      actionTitle={onRetry ? t('common.retry') : undefined}
+      onAction={onRetry}
+      style={{ marginBottom: 14 }}
+    />
   );
 }
 

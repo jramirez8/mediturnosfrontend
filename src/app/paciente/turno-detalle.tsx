@@ -11,7 +11,7 @@ import { readableError } from '../../utils/errors';
 
 type Notice = { type: 'success' | 'danger' | 'warning' | 'info'; title: string; message: string };
 
-const FINAL_STATES = ['FINALIZADO', 'ATENDIDO', 'CANCELADO', 'AUSENTE'];
+const FINAL_STATES = new Set(['FINALIZADO', 'ATENDIDO', 'CANCELADO', 'AUSENTE']);
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -68,7 +68,7 @@ export default function AppointmentDetailScreen() {
   }, [id]);
 
   const estado = String(turno?.estado ?? '').toUpperCase();
-  const isFinal = FINAL_STATES.includes(estado);
+  const isFinal = FINAL_STATES.has(estado);
 
   const goBack = () => {
     if (router.canGoBack()) router.back();

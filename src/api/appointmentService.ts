@@ -135,6 +135,16 @@ const normalizeTurno = (t: any): TurnoResponse => {
   };
 };
 
+export function uniqueAppointmentSlots(slots: AppointmentSlot[]) {
+  const seen = new Set<string>();
+  return slots.filter((slot) => {
+    const key = `${slot.fecha}|${String(slot.hora).slice(0, 5)}`;
+    if (!slot.fecha || !slot.hora || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 const normalizeSlot = (slot: any): AppointmentSlot => {
   const fechaHora = slot?.fechaHora ?? slot?.fechaHoraIso ?? slot?.fechaHoraInicio ?? slot?.fecha_hora;
   const derived = splitFechaHora(fechaHora);
@@ -223,7 +233,7 @@ export const appointmentService = {
       const response = await api.get<any[]>('/api/turnos/disponibilidad', {
         params: { profesionalInstitucionId },
       });
-      const data = response.data.map(normalizeSlot).filter((slot) => !!slot.fecha && !!slot.hora);
+      const data = uniqueAppointmentSlots(response.data.map(normalizeSlot));
       await setCachedJson(cacheKey, data);
       return data;
     } catch (error) {
@@ -321,7 +331,7 @@ export const appointmentService = {
     return verified;
   },
 
-  actualizarEstado: async (id: number, estado: 'PENDIENTE' | 'CONFIRMADO' | 'REPROGRAMADO' | 'CANCELADO' | 'ATENDIDO' | 'AUSENTE' | string) => {
+  actualizarEstado: async (id: number, estado: string) => {
     await api.put<any>(`/api/turnos/${id}/estado`, { estado });
     const verified = await verifyEstado(id, estado);
     await clearAppCache();

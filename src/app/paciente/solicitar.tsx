@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { appointmentService, AppointmentSlot, TurnoResponse } from '../../api/appointmentService';
 import { professionalService, Professional } from '../../api/professionalService';
 import { useAuthStore } from '../../auth/authStore';
-import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtLoading, MtScreen } from '../../components/mediturnos';
+import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtLoading, MtNotice, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { useTranslation } from '../../i18n/languageStore';
@@ -286,7 +286,7 @@ export default function SolicitarTurnoScreen() {
       <MtScreen scroll>
         <MtHeader eyebrow={language === 'en' ? 'NEW APPOINTMENT' : 'NUEVO TURNO'} title={t('appointment.requestTitle')} subtitle={t('appointment.requestSubtitle')} />
 
-        {!!notice && <NoticeBox notice={notice} styles={styles} />}
+        {!!notice && <NoticeBox notice={notice} />}
 
         <Text style={styles.step}>{t('appointment.professionalStep')}</Text>
         <MtCard style={styles.block}>
@@ -447,14 +447,8 @@ export default function SolicitarTurnoScreen() {
   );
 }
 
-function NoticeBox({ notice, styles }: { notice: Notice; styles: ReturnType<typeof createStyles> }) {
-  const success = notice.type === 'success';
-  return (
-    <View style={[styles.noticeBox, success ? styles.noticeSuccess : styles.noticeError]}>
-      <Text style={[styles.noticeTitle, success ? styles.noticeSuccessText : styles.noticeErrorText]}>{notice.title}</Text>
-      <Text style={[styles.noticeMessage, success ? styles.noticeSuccessText : styles.noticeErrorText]}>{notice.message}</Text>
-    </View>
-  );
+function NoticeBox({ notice }: { notice: Notice }) {
+  return <MtNotice type={notice.type === 'error' ? 'danger' : 'success'} title={notice.title} message={notice.message} style={{ marginBottom: 14 }} />;
 }
 
 function createStyles(theme: MediturnosTheme) {

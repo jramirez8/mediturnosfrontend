@@ -1,6 +1,8 @@
 import React from 'react';
+import { router } from 'expo-router';
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   ScrollView,
   StyleProp,
@@ -17,6 +19,9 @@ import { AppBottomNav } from './AppBottomNav';
 import { MediturnosTheme } from '../constants/mediturnosTheme';
 import { useMtTheme } from '../theme/themeStore';
 import { translateLiteral, useTranslation } from '../i18n/languageStore';
+import { useAuthStore } from '../auth/authStore';
+import { routeForRole } from '../auth/roles';
+import { isConnectivityMessage } from '../utils/errors';
 
 type ScreenProps = {
   children: React.ReactNode;
@@ -64,7 +69,7 @@ export function MtScreen({ children, scroll = false, padded = true, bottomSpace 
     <SafeAreaView style={styles.safe} edges={['top']}>
       <DecorativeBackground />
       {scroll ? (
-        <ScrollView ref={scrollRef} style={styles.fill} contentContainerStyle={contentStyle} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scrollRef} style={styles.fill} contentContainerStyle={contentStyle} showsVerticalScrollIndicator={false} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
           {content}
         </ScrollView>
       ) : (
@@ -190,6 +195,7 @@ export function MtNotice({
   actionTitle,
   onAction,
   style,
+  popup,
 }: {
   type?: 'info' | 'success' | 'danger' | 'warning';
   title?: string;
@@ -197,9 +203,12 @@ export function MtNotice({
   actionTitle?: string;
   onAction?: () => void;
   style?: StyleProp<ViewStyle>;
+  popup?: boolean;
 }) {
-  const { theme } = useStyles();
+  const { theme, styles } = useStyles();
   const { language } = useTranslation();
+  const role = useAuthStore((state) => state.role);
+  const [visible, setVisible] = React.useState(true);
   const color = type === 'success' ? theme.colors.success : type === 'danger' ? theme.colors.danger : type === 'warning' ? theme.colors.warning : theme.colors.primary;
   const bg = type === 'success'
     ? (theme.mode === 'dark' ? 'rgba(34,197,94,0.12)' : '#F0FDF4')
@@ -208,6 +217,27 @@ export function MtNotice({
       : type === 'warning'
         ? (theme.mode === 'dark' ? 'rgba(251,191,36,0.12)' : '#FFFBEB')
         : (theme.mode === 'dark' ? 'rgba(124,58,237,0.14)' : '#F3ECFF');
+  const shouldPopup = popup ?? (type === 'success' || isConnectivityMessage(message));
+
+  const closePopup = () => {
+    setVisible(false);
+    router.replace(routeForRole(role) as any);
+  };
+
+  if (shouldPopup) {
+    return (
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={closePopup}>
+        <View style={styles.noticeModalBackdrop}>
+          <View style={[styles.noticeModalCard, { backgroundColor: theme.colors.surface, borderColor: `${color}66` }]}>
+            {!!title && <Text style={[styles.noticeModalTitle, { color }]}>{translateLiteral(title, language)}</Text>}
+            <Text selectable style={[styles.noticeModalMessage, { color: theme.colors.ink }]}>{translateLiteral(message, language)}</Text>
+            <MtButton title="OK" onPress={closePopup} style={{ marginTop: 12 }} />
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
   return (
     <View style={[{
       borderRadius: 20,
@@ -218,7 +248,7 @@ export function MtNotice({
       gap: 5,
     }, style]}>
       {!!title && <Text style={{ color, fontWeight: '900', fontSize: 14 }}>{translateLiteral(title, language)}</Text>}
-      <Text style={{ color: theme.colors.ink, fontWeight: '700', lineHeight: 20 }}>{translateLiteral(message, language)}</Text>
+      <Text selectable style={{ color: theme.colors.ink, fontWeight: '700', lineHeight: 20 }}>{translateLiteral(message, language)}</Text>
       {!!actionTitle && !!onAction && <MtButton title={actionTitle} onPress={onAction} variant="ghost" style={{ marginTop: 8, minHeight: 42 }} />}
     </View>
   );
@@ -373,6 +403,10 @@ function createStyles(theme: MediturnosTheme) {
     statCard: { flex: 1, minWidth: 96, backgroundColor: theme.colors.surface, borderRadius: 22, borderWidth: 1, padding: 15, ...theme.shadow },
     statValue: { fontSize: 25, fontWeight: '900', letterSpacing: -0.3 },
     statLabel: { marginTop: 2, color: theme.colors.muted, fontSize: 12, fontWeight: '800' },
+    noticeModalBackdrop: { flex: 1, backgroundColor: 'rgba(15, 10, 28, 0.58)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+    noticeModalCard: { width: '100%', maxWidth: 430, borderRadius: 24, borderWidth: 1, padding: 22, ...theme.shadow },
+    noticeModalTitle: { fontWeight: '900', fontSize: 20, marginBottom: 8 },
+    noticeModalMessage: { fontWeight: '700', fontSize: 15, lineHeight: 22 },
     navBar: {
       position: 'absolute',
       left: 12,

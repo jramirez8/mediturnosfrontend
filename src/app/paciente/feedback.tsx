@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { feedbackService } from '../../api/feedbackService';
-import { MtBottomNav, MtButton, MtCard, MtHeader, MtScreen } from '../../components/mediturnos';
+import { MtBottomNav, MtButton, MtCard, MtHeader, MtNotice, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
@@ -44,8 +44,8 @@ export default function FeedbackScreen() {
         </View>
         <Text style={styles.label}>Comentario opcional</Text>
         <TextInput value={comment} onChangeText={setComment} placeholder="Contanos cómo fue la atención" placeholderTextColor={theme.colors.muted} multiline style={styles.textarea} />
-        {!!error && <Text style={styles.error}>{error}</Text>}
-        {!!message && <Text style={styles.success}>{message}</Text>}
+        {!!error && <MtNotice type="danger" title="No pudimos guardar la calificación" message={error} />}
+        {!!message && <MtNotice type="success" title="Calificación registrada" message={message} />}
         <MtButton title="Guardar calificación" onPress={save} loading={saving} disabled={saving || !!message} />
         <MtButton title="Volver a mis turnos" variant="ghost" onPress={() => router.replace('/paciente/turnos')} />
       </MtCard>

@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { MtButton, MtCard, MtHeader, MtLoading, MtScreen } from '../../components/mediturnos';
+import { MtButton, MtCard, MtHeader, MtLoading, MtNotice, MtScreen } from '../../components/mediturnos';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
-import { agendaService, AgendaBloqueo, HorarioAtencion } from '../../api/agendaService';
+import { agendaService, AgendaBloqueo, hasActiveScheduleForDay, HorarioAtencion } from '../../api/agendaService';
 import { professionalService, Professional } from '../../api/professionalService';
 import { appointmentService, AppointmentSlot } from '../../api/appointmentService';
 import { useAuthStore } from '../../auth/authStore';
@@ -217,6 +217,12 @@ export default function MedicoDisponibilidadScreen() {
 
   const addHorario = async () => {
     if (!professional || !selectedWeekday) return;
+    if (hasActiveScheduleForDay(horarios, selectedWeekday)) {
+      setError('Ya existe un horario para este día. Eliminá el actual antes de cargar uno nuevo.');
+      setNotice(null);
+      scrollToTop();
+      return;
+    }
     if (!/^\d{2}:\d{2}$/.test(desde) || !/^\d{2}:\d{2}$/.test(hasta)) {
       setError('Usá formato HH:mm. Ejemplo: 09:00 a 13:00.');
       setNotice(null);
@@ -278,8 +284,8 @@ export default function MedicoDisponibilidadScreen() {
   return (
     <MtScreen scroll scrollRef={scrollRef}>
       <MtHeader eyebrow="MÉDICO" title="Mi disponibilidad" subtitle="Definí días de atención, bloqueos y revisá exactamente qué fechas ve el paciente." />
-      {!!error && <MtCard style={{ borderColor: theme.colors.danger, marginBottom: 14 }}><Text style={styles.error}>{error}</Text></MtCard>}
-      {!!notice && <MtCard style={{ borderColor: theme.colors.success, marginBottom: 14 }}><Text style={styles.success}>{notice}</Text></MtCard>}
+      {!!error && <MtNotice type="danger" title="Revisá la disponibilidad" message={error} style={{ marginBottom: 14 }} />}
+      {!!notice && <MtNotice type="success" title="Disponibilidad actualizada" message={notice} />}
 
       <MtCard style={{ gap: 10, marginBottom: 14 }}>
         <Text style={styles.title}>Profesional logueado</Text>
@@ -294,7 +300,7 @@ export default function MedicoDisponibilidadScreen() {
 
       <MtCard style={{ gap: 12, marginBottom: 14 }}>
         <Text style={styles.title}>1. Plan semanal de atención</Text>
-        <Text style={styles.muted}>Marcá los bloques de atención habituales. Podés cargar más de un bloque para el mismo día y también habilitar sábados/domingos como excepción.</Text>
+        <Text style={styles.muted}>Marcá el horario habitual de cada día. Solo puede existir un registro por día; para cambiarlo, eliminá el actual y cargá el nuevo.</Text>
         <View style={styles.weekPicker}>{WEEKDAY_OPTIONS.map((d) => (
           <Pressable key={d.api} onPress={() => setSelectedWeekday(d.api)} style={[styles.weekChip, selectedWeekday === d.api && styles.weekChipActive]}>
             <Text style={[styles.weekChipText, selectedWeekday === d.api && styles.weekChipTextActive]}>{d.short}</Text>
