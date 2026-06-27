@@ -17,20 +17,35 @@ export type Professional = {
   email?: string;
 };
 
-const normalizeProfessional = (p: any): Professional => ({
-  id: Number(p.id ?? p.profesionalId ?? p.profesionalInstitucionId),
-  profesionalInstitucionId: p.profesionalInstitucionId ? Number(p.profesionalInstitucionId) : undefined,
-  institucionId: p.institucionId ? Number(p.institucionId) : undefined,
-  especialidadId: p.especialidadId ? Number(p.especialidadId) : undefined,
-  nombre: p.nombre ?? p.profesionalNombre ?? '',
-  apellido: p.apellido ?? p.profesionalApellido ?? '',
-  especialidad: p.especialidad ?? p.especialidadNombre ?? 'Sin especialidad',
-  institucion: p.institucion ?? p.institucionNombre ?? 'Institución no informada',
-  matricula: p.matricula,
-  proximaDisponibilidad: p.proximaDisponibilidad,
-  telefono: p.telefono,
-  email: p.email,
-});
+type UnknownRecord = Record<string, unknown>;
+
+function asString(value: unknown, fallback = ''): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return fallback;
+}
+
+function maybeString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+const normalizeProfessional = (p: unknown): Professional => {
+  const source = typeof p === 'object' && p !== null ? p as UnknownRecord : {};
+  return {
+    id: Number(source.id ?? source.profesionalId ?? source.profesionalInstitucionId),
+    profesionalInstitucionId: source.profesionalInstitucionId ? Number(source.profesionalInstitucionId) : undefined,
+    institucionId: source.institucionId ? Number(source.institucionId) : undefined,
+    especialidadId: source.especialidadId ? Number(source.especialidadId) : undefined,
+    nombre: asString(source.nombre ?? source.profesionalNombre),
+    apellido: asString(source.apellido ?? source.profesionalApellido),
+    especialidad: asString(source.especialidad ?? source.especialidadNombre, 'Sin especialidad'),
+    institucion: asString(source.institucion ?? source.institucionNombre, 'Institución no informada'),
+    matricula: maybeString(source.matricula),
+    proximaDisponibilidad: maybeString(source.proximaDisponibilidad),
+    telefono: maybeString(source.telefono),
+    email: maybeString(source.email),
+  };
+};
 
 const filterLocal = (items: Professional[], especialidad?: string, query?: string) => {
   const normalizedQuery = (query ?? '').trim().toLowerCase();
@@ -72,14 +87,14 @@ export const professionalService = {
 
   getMe: async () => {
     try {
-      const response = await api.get<any>('/api/profesionales/me');
+      const response = await api.get<unknown>('/api/profesionales/me');
       const data = normalizeProfessional(response.data);
       if (Number.isFinite(data.id)) {
         await setCachedJson('professionals:me', data);
         return data;
       }
       throw new Error('Respuesta de profesional inválida.');
-    } catch (error) {
+    } catch (error: unknown) {
       const fromList = await findMeFromList();
       if (fromList) return fromList;
       const cached = await getCachedJson<Professional>('professionals:me');
@@ -92,7 +107,7 @@ export const professionalService = {
     const cacheKey = `professionals:all:${especialidad ?? 'Todos'}:${query ?? ''}`;
 
     try {
-      const response = await api.get<any[]>('/api/profesionales', {
+      const response = await api.get<unknown[]>('/api/profesionales', {
         params: {
           especialidad: especialidad === 'Todos' ? undefined : especialidad,
           q: query || undefined,
@@ -103,7 +118,7 @@ export const professionalService = {
       await setCachedJson(cacheKey, data);
       await setCachedJson('professionals:last', data);
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       const cached = await getCachedJson<Professional[]>(cacheKey);
       if (cached) return cached;
       const last = await getCachedJson<Professional[]>('professionals:last');
@@ -114,11 +129,15 @@ export const professionalService = {
 
   getEspecialidades: async () => {
     try {
-      const response = await api.get<any[]>('/api/profesionales/especialidades');
-      const data = response.data.map((item) => typeof item === 'string' ? item : item.nombre ?? item.especialidad ?? String(item));
+      const response = await api.get<unknown[]>('/api/profesionales/especialidades');
+      const data = response.data.map((item) => {
+        if (typeof item === 'string') return item;
+        const source = typeof item === 'object' && item !== null ? item as UnknownRecord : {};
+        return asString(source.nombre ?? source.especialidad ?? String(item));
+      });
       await setCachedJson('specialties', data);
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       const cached = await getCachedJson<string[]>('specialties');
       if (cached) return cached;
       throw error;

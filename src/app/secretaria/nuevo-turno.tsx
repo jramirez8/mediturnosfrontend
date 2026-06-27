@@ -37,7 +37,7 @@ export default function SecretariaNuevoTurnoScreen() {
   const searchPaciente = async () => {
     setLoadingPaciente(true); setError(null); setPaciente(null);
     try { setPaciente(await secretariaService.buscarPaciente(dni.trim())); }
-    catch (e: any) { setError(readableError(e, 'No encontramos paciente con ese DNI.')); }
+    catch (e: unknown) { setError(readableError(e, 'No encontramos paciente con ese DNI.')); }
     finally { setLoadingPaciente(false); }
   };
 
@@ -49,7 +49,7 @@ export default function SecretariaNuevoTurnoScreen() {
     }
     setLoadingSlots(true);
     try { setSlots(await appointmentService.getDisponibilidad(p.profesionalInstitucionId)); }
-    catch (e: any) { setError(readableError(e, 'No pudimos cargar disponibilidad.')); }
+    catch (e: unknown) { setError(readableError(e, 'No pudimos cargar disponibilidad.')); }
     finally { setLoadingSlots(false); }
   };
 
@@ -68,7 +68,7 @@ export default function SecretariaNuevoTurnoScreen() {
       });
       setMessage(`Turno #${created.id} creado y confirmado para ${created.fecha} ${created.hora}.`);
       scrollToTop();
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(readableError(e, 'No pudimos crear el turno.'));
       scrollToTop();
     } finally { setSaving(false); }

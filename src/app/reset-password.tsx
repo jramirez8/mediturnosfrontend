@@ -47,7 +47,7 @@ export default function ResetPasswordScreen() {
       setPassword('');
       setConfirmPassword('');
       scrollTop();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(readableError(err, 'No pudimos cambiar la contraseña. Revisá el código o pedí uno nuevo.'));
       scrollTop();
     } finally {

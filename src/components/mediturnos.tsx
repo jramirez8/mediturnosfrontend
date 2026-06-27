@@ -231,7 +231,7 @@ export function MtNotice({ type = 'info', title, message, actionTitle, onAction,
     const shouldPopup = popup ?? (type === 'success' || isConnectivityMessage(message));
     const closePopup = () => {
         setVisible(false);
-        router.replace(routeForRole(role) as any);
+        router.replace(routeForRole(role));
     };
     if (shouldPopup) {
         return <NoticePopup visible={visible} title={title} message={message} color={noticeColor(type, theme)} onClose={closePopup}/>;

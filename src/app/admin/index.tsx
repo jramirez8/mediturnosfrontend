@@ -30,7 +30,7 @@ function ActionCard({ title, subtitle, icon, path, danger, theme }: {
     danger?: boolean;
     theme: ReturnType<typeof useMtTheme>;
 }) {
-    return (<Pressable onPress={() => router.push(path as any)} style={{ width: '48%' }}>
+    return (<Pressable onPress={() => router.push(path)} style={{ width: '48%' }}>
       <MtCard style={{ minHeight: 138, borderColor: danger ? theme.colors.danger : theme.colors.border }}>
         <Text style={{ fontSize: 28 }}>{icon}</Text>
         <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 16, marginTop: 10 }}>{title}</Text>
@@ -80,7 +80,7 @@ function ChecklistCard({ items, diagnosticOpen, diagnostic, runDiagnostic, toggl
     runDiagnostic: () => void;
     toggleDiagnostic: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) { return <MtCard style={{ marginBottom: 14 }}><AdminTitle title="Configuración inicial" subtitle="Checklist rápido para dejar la app lista después de limpiar la base."/>{items.map((item) => <Pressable key={item.label} onPress={() => router.push(item.path as any)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}><Text style={{ color: theme.colors.ink, fontWeight: '900' }}>{item.ok ? '✅' : '❌'} {item.label}</Text><Text style={{ color: theme.colors.primary, fontWeight: '900' }}>Ir</Text></Pressable>)}<DiagnosticPanel open={diagnosticOpen} diagnostic={diagnostic} run={runDiagnostic} toggle={toggleDiagnostic} theme={theme}/></MtCard>; }
+}) { return <MtCard style={{ marginBottom: 14 }}><AdminTitle title="Configuración inicial" subtitle="Checklist rápido para dejar la app lista después de limpiar la base."/>{items.map((item) => <Pressable key={item.label} onPress={() => router.push(item.path)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}><Text style={{ color: theme.colors.ink, fontWeight: '900' }}>{item.ok ? '✅' : '❌'} {item.label}</Text><Text style={{ color: theme.colors.primary, fontWeight: '900' }}>Ir</Text></Pressable>)}<DiagnosticPanel open={diagnosticOpen} diagnostic={diagnostic} run={runDiagnostic} toggle={toggleDiagnostic} theme={theme}/></MtCard>; }
 function StatsGrid({ stats }: {
     stats: StatItem[];
 }) { return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>{stats.map((stat) => <MtStat key={stat.label} label={stat.label} value={stat.value} tone={stat.tone}/>)}</View>; }
@@ -116,7 +116,7 @@ export default function AdminDashboard() {
             setSummary(resumen);
             setTurnos(allTurnos);
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, language === 'en' ? 'We could not load the administration panel.' : 'No pudimos cargar el panel de administración.'));
         }
         finally {
@@ -154,7 +154,7 @@ export default function AdminDashboard() {
             const r = await systemService.diagnostico();
             setDiagnostico(r);
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setDiagnostico({ error: readableError(e, 'No pudimos verificar el estado del sistema. Intentá nuevamente.') });
         }
     };

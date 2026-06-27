@@ -10,7 +10,7 @@ export default function NoAutorizadoScreen() {
   const { role, logout } = useAuthStore();
   const theme = useMtTheme();
 
-  const goHome = () => router.replace(routeForRole(role) as any);
+  const goHome = () => router.replace(routeForRole(role));
   const close = async () => {
     await logout();
     router.replace('/login');

@@ -27,7 +27,7 @@ export async function addAppointmentToDeviceCalendar(turno: TurnoResponse) {
     title: `Mediturnos · ${turno.especialidad || 'Turno médico'}`,
     startDate: start,
     endDate: end,
-    location: [turno.institucionNombre, (turno as any).direccionAtencion].filter(Boolean).join(' - '),
+    location: [turno.institucionNombre, typeof turno.direccionAtencion === 'string' ? turno.direccionAtencion : ''].filter(Boolean).join(' - '),
     notes: `Profesional: ${turno.profesionalNombre || ''}
 Estado: ${turno.estado || ''}`,
     alarms: [{ relativeOffset: -180 }],

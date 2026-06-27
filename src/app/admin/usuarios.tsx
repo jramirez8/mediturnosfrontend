@@ -189,7 +189,7 @@ export default function AdminUsuariosScreen() {
             if (!pacienteForm.obraSocialId && os[0]?.id)
                 setPacienteForm((f) => ({ ...f, obraSocialId: String(os[0].id) }));
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, 'No pudimos cargar usuarios.'));
         }
         finally {
@@ -231,7 +231,7 @@ export default function AdminUsuariosScreen() {
                 await load();
                 scrollToTop();
             }
-            catch (e: any) {
+            catch (e: unknown) {
                 setError(readableError(e, 'No pudimos actualizar el usuario.'));
                 scrollToTop();
             }
@@ -266,7 +266,7 @@ export default function AdminUsuariosScreen() {
             await load();
             scrollToTop();
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, 'No pudimos guardar el usuario.'));
             scrollToTop();
         }
@@ -284,7 +284,7 @@ export default function AdminUsuariosScreen() {
             await load();
             scrollToTop();
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, active ? 'No pudimos activar el usuario.' : 'No pudimos desactivar el usuario.'));
             scrollToTop();
         }
@@ -301,7 +301,7 @@ export default function AdminUsuariosScreen() {
             setMessage(r?.message || 'Código de verificación reenviado.');
             scrollToTop();
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, 'No pudimos reenviar el código.'));
             scrollToTop();
         }

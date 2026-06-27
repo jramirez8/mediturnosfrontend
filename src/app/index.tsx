@@ -24,5 +24,5 @@ export default function Index() {
     );
   }
 
-  return token ? <Redirect href={routeForRole(role) as any} /> : <Redirect href="/login" />;
+  return token ? <Redirect href={routeForRole(role)} /> : <Redirect href="/login" />;
 }

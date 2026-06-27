@@ -128,19 +128,19 @@ export default function LoginScreen() {
     }, []);
     const askBiometricSetup = async (route: string, userIdentifier: string) => {
         if (Platform.OS === 'web') {
-            router.replace(route as any);
+            router.replace(route);
             return;
         }
         const available = await canUseDeviceAuth();
         if (!available.ok) {
-            router.replace(route as any);
+            router.replace(route);
             return;
         }
         Alert.alert(t('login.enableSecureTitle'), t('login.enableSecureText'), [
             {
                 text: t('login.notNow'),
                 style: 'cancel',
-                onPress: () => router.replace(route as any),
+                onPress: () => router.replace(route),
             },
             {
                 text: t('login.enable'),
@@ -154,7 +154,7 @@ export default function LoginScreen() {
                         // El ingreso normal sigue disponible si el dispositivo rechaza la biometría.
                     }
                     finally {
-                        router.replace(route as any);
+                        router.replace(route);
                     }
                 },
             },
@@ -180,9 +180,9 @@ export default function LoginScreen() {
             }
             await askBiometricSetup(result.route, identifier.trim());
         }
-        catch (error: any) {
+        catch (error: unknown) {
             const message = readableError(error, t('login.checkCredentials'));
-            const status = Number(error?.response?.status);
+            const status = Number((error as { response?: { status?: unknown } })?.response?.status);
             const accountNeedsVerification = /verific/i.test(message);
             if (accountNeedsVerification) {
                 setErrorMessage(message);
@@ -202,9 +202,9 @@ export default function LoginScreen() {
         }
         try {
             const result = await verifyTwoFactor(twoFactorUserId, twoFactorCode.trim());
-            router.replace(result.route as any);
+            router.replace(result.route);
         }
-        catch (error: any) {
+        catch (error: unknown) {
             Alert.alert(t('login.signInErrorTitle'), readableError(error, t('login.invalidCode')), [{ text: 'OK' }]);
         }
     };
@@ -214,9 +214,9 @@ export default function LoginScreen() {
         setInvalidCredentials(false);
         try {
             const result = await loginWithDeviceAuth();
-            router.replace(result.route as any);
+            router.replace(result.route);
         }
-        catch (error: any) {
+        catch (error: unknown) {
             Alert.alert(t('login.signInErrorTitle'), readableError(error, t('login.deviceLoginError')), [{ text: 'OK' }]);
         }
     };
@@ -362,7 +362,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         paddingVertical: 0,
         paddingHorizontal: 0,
-        outlineStyle: 'none' as any,
         textAlignVertical: 'center',
         includeFontPadding: false,
     },

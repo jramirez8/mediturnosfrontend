@@ -75,7 +75,7 @@ export default function AgendaAvanzadaAdmin() {
         agendaService.getBloqueos(professional.profesionalInstitucionId),
       ]);
       setHorarios(h); setBloqueos(b);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setNotice({ type: 'danger', title: 'No pudimos cargar la agenda', message: readableError(e, 'Reintentá en unos segundos.') });
     }
   };
@@ -120,7 +120,7 @@ export default function AgendaAvanzadaAdmin() {
       });
       await loadAgenda(selected);
       setNotice({ type: 'success', title: 'Horario agregado', message: 'La disponibilidad semanal quedó actualizada.' });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setNotice({ type: 'danger', title: 'No pudimos guardar el horario', message: readableError(e, 'Revisá los datos e intentá nuevamente.') });
     } finally { setSaving(false); }
   };
@@ -141,7 +141,7 @@ export default function AgendaAvanzadaAdmin() {
       });
       await loadAgenda(selected);
       setNotice({ type: 'success', title: 'Fecha bloqueada', message: `Se bloqueó el ${displayDate(selectedDate)}.` });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setNotice({ type: 'danger', title: 'No pudimos crear el bloqueo', message: readableError(e, 'Revisá los datos e intentá nuevamente.') });
     } finally { setSaving(false); }
   };
@@ -149,14 +149,14 @@ export default function AgendaAvanzadaAdmin() {
   const removeHorario = async (id: number) => {
     if (!selected) return;
     try { setSaving(true); await agendaService.deleteHorario(id); await loadAgenda(selected); }
-    catch (e: any) { setNotice({ type: 'danger', title: 'No pudimos eliminar el horario', message: readableError(e, 'Reintentá.') }); }
+    catch (e: unknown) { setNotice({ type: 'danger', title: 'No pudimos eliminar el horario', message: readableError(e, 'Reintentá.') }); }
     finally { setSaving(false); }
   };
 
   const removeBloqueo = async (id: number) => {
     if (!selected) return;
     try { setSaving(true); await agendaService.deleteBloqueo(id); await loadAgenda(selected); }
-    catch (e: any) { setNotice({ type: 'danger', title: 'No pudimos eliminar el bloqueo', message: readableError(e, 'Reintentá.') }); }
+    catch (e: unknown) { setNotice({ type: 'danger', title: 'No pudimos eliminar el bloqueo', message: readableError(e, 'Reintentá.') }); }
     finally { setSaving(false); }
   };
 

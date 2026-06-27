@@ -25,6 +25,7 @@ export type TurnoResponse = {
   especialidad: string;
   institucionId?: number;
   institucionNombre: string;
+  direccionAtencion?: string;
   estado: string;
   motivoConsulta?: string;
   diagnostico?: string;
@@ -112,6 +113,7 @@ const normalizeTurno = (t: any): TurnoResponse => {
     especialidad: t?.especialidad ?? t?.especialidadNombre ?? 'Consulta médica',
     institucionId: t?.institucionId ? Number(t.institucionId) : undefined,
     institucionNombre: t?.institucionNombre ?? t?.institucion ?? t?.profesionalInstitucion?.institucion?.nombre ?? 'Institución',
+    direccionAtencion: t?.direccionAtencion,
     estado: t?.estado ?? 'SIN_ESTADO',
     motivoConsulta: t?.motivoConsulta,
     diagnostico: t?.diagnostico,
@@ -207,7 +209,7 @@ export const appointmentService = {
       await setCachedJson(cacheKey, data);
       await setCachedJson('appointments:last', data);
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       const cached = await getCachedJson<TurnoResponse[]>(cacheKey);
       if (cached) return cached;
       const last = await getCachedJson<TurnoResponse[]>('appointments:last');
@@ -223,7 +225,7 @@ export const appointmentService = {
       const data = normalizeTurno(response.data);
       await setCachedJson(cacheKey, data);
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       const cached = await getCachedJson<TurnoResponse>(cacheKey);
       if (cached) return cached;
       throw error;
@@ -239,7 +241,7 @@ export const appointmentService = {
       const data = uniqueAppointmentSlots(response.data.map(normalizeSlot));
       await setCachedJson(cacheKey, data);
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       const cached = await getCachedJson<AppointmentSlot[]>(cacheKey);
       if (cached) return cached;
       throw error;

@@ -56,7 +56,7 @@ export default function AppointmentDetailScreen() {
         setLoading(true);
         const detail = await appointmentService.getAppointmentDetail(id);
         if (alive) setTurno(detail);
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (alive) showNotice({ type: 'danger', title: 'No se pudo cargar el detalle', message: readableError(error, 'No tenés permiso o el turno ya no existe.') });
       } finally {
         if (alive) setLoading(false);
@@ -81,7 +81,7 @@ export default function AppointmentDetailScreen() {
       setActionLoading(true);
       await addAppointmentToDeviceCalendar(turno);
       showNotice({ type: 'success', title: 'Agregado al calendario', message: 'El turno se guardó con recordatorio 3 horas antes.' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       showNotice({ type: 'danger', title: 'No se pudo agregar', message: readableError(error, 'Revisá los permisos del calendario.') });
     } finally {
       setActionLoading(false);
@@ -104,7 +104,7 @@ export default function AppointmentDetailScreen() {
               const updated = await appointmentService.cancelar(turno.id);
               setTurno(updated);
               showNotice({ type: 'success', title: 'Turno cancelado', message: 'Quedó guardado en tu historial.' });
-            } catch (error: any) {
+            } catch (error: unknown) {
               showNotice({ type: 'danger', title: 'No se pudo cancelar', message: readableError(error, 'Intentá nuevamente en unos segundos.') });
             } finally {
               setActionLoading(false);
@@ -152,7 +152,7 @@ export default function AppointmentDetailScreen() {
                 </View>
               </View>
               <View style={styles.heroStatusRow}>
-                <MtPill label={estado || 'SIN ESTADO'} tone={toneForStatus(estado) as any} />
+                <MtPill label={estado || 'SIN ESTADO'} tone={toneForStatus(estado)} />
               </View>
             </View>
 

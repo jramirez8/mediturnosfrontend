@@ -43,7 +43,7 @@ export default function MedicoDashboard() {
       setHiddenCount(Math.max(0, agendaData.length - ownAgenda.length));
       setNext(nextData && turnoBelongsToDoctor(nextData, doctorIdentity) ? nextData : ownAgenda[0] ?? null);
       setFeedback(feedbackData);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(readableError(e, language === 'en' ? 'We could not load the medical schedule.' : 'No pudimos cargar la agenda médica.'));
     } finally {
       setLoading(false);

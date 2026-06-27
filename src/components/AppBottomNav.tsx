@@ -75,7 +75,7 @@ export function AppBottomNav({ role, active }: { role: AppNavRole; active: strin
       {items.map((item) => {
         const selected = item.key === active;
         return (
-          <Pressable key={`${role}-${item.key}`} style={styles.item} onPress={() => router.replace(item.path as any)}>
+          <Pressable key={`${role}-${item.key}`} style={styles.item} onPress={() => router.replace(item.path)}>
             <View
               style={[
                 styles.iconBubble,

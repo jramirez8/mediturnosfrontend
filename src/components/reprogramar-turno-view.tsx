@@ -59,14 +59,14 @@ function SelectionContent(props: Props & {
     if (!props.availableSlots.length)
         return <Text style={props.styles.muted}>No hay otros horarios disponibles.</Text>;
     if (props.updatedTurno)
-        return <View style={props.styles.successActions}><MtButton title={props.backTitle} onPress={() => router.replace(props.backPath as any)}/><MtButton title="Elegir otro horario" variant="ghost" onPress={props.onChooseAnother}/></View>;
+        return <View style={props.styles.successActions}><MtButton title={props.backTitle} onPress={() => router.replace(props.backPath)}/><MtButton title="Elegir otro horario" variant="ghost" onPress={props.onChooseAnother}/></View>;
     return <SlotDropdowns {...props}/>;
 }
 function LoadedContent(props: Props & {
     styles: ReturnType<typeof createStyles>;
 }) {
     if (!props.turno)
-        return <MtCard style={props.styles.section}><Text style={props.styles.muted}>No se encontró el turno.</Text><MtButton title={props.backTitle} onPress={() => router.replace(props.backPath as any)} style={{ marginTop: 14 }}/></MtCard>;
+        return <MtCard style={props.styles.section}><Text style={props.styles.muted}>No se encontró el turno.</Text><MtButton title={props.backTitle} onPress={() => router.replace(props.backPath)} style={{ marginTop: 14 }}/></MtCard>;
     return <><MtCard style={props.styles.doctorCard}><Text style={props.styles.doctorName}>{props.turno.profesionalNombre || 'Profesional'}</Text><Text style={props.styles.specialty}>{props.turno.especialidad}</Text><Text style={props.styles.currentDate}>Actual: {props.turno.fecha} · {props.turno.hora} hs</Text></MtCard><Text style={props.styles.sectionTitle}>Nueva fecha y horario</Text><MtCard style={props.styles.section}><SelectionContent {...props}/></MtCard>{!props.updatedTurno ? <View style={props.styles.actionButtons}><MtButton title="Confirmar nueva fecha" loading={props.rescheduling} disabled={!props.selectedSlot || props.rescheduling} onPress={props.onConfirm}/><MtButton title="Cancelar" variant="ghost" onPress={() => router.back()}/></View> : null}</>;
 }
 export function ReprogramarTurnoView(props: Props) {

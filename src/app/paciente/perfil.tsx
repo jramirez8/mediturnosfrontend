@@ -161,7 +161,7 @@ export default function PerfilScreen() {
             setCarnet(data.carnetObraSocialUrl ? { uri: data.carnetObraSocialUrl, fileName: 'carnet-obra-social.jpg', mimeType: 'image/jpeg' } : null);
             fillForm(data, obras);
         }
-        catch (error: any) {
+        catch (error: unknown) {
             showNotice({ type: 'danger', title: language === 'en' ? 'We could not load your profile' : 'No se pudo cargar perfil', message: readableError(error) });
         }
         finally {
@@ -222,7 +222,7 @@ export default function PerfilScreen() {
             setProfile(updated);
             showNotice({ type: 'success', title: t('profile.saved'), message: t('profile.savedMsg') });
         }
-        catch (error: any) {
+        catch (error: unknown) {
             showNotice({ type: 'danger', title: language === 'en' ? 'Could not save' : 'No se pudo guardar', message: readableError(error) });
         }
         finally {

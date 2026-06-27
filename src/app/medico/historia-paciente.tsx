@@ -36,7 +36,7 @@ export default function HistoriaPacienteMedicoScreen() {
         setPacienteId(Number(foundId));
         setDocs(await documentService.listByPaciente(Number(foundId), includeArchived));
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       setNotice({ type: 'danger', title: 'No pudimos cargar la historia', message: readableError(e, 'No hay atenciones asociadas a tu perfil profesional o no tenés permiso.') });
     } finally { setLoading(false); }
   };
@@ -58,7 +58,7 @@ export default function HistoriaPacienteMedicoScreen() {
       await documentService.archive(doc.id);
       if (pacienteId) setDocs(await documentService.listByPaciente(pacienteId, includeArchived));
       setNotice({ type: 'success', title: 'Documento archivado', message: 'Se retiró de la vista activa de la historia clínica.' });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setNotice({ type: 'danger', title: 'No pudimos archivar', message: readableError(e, 'Reintentá en unos segundos.') });
     }
   };

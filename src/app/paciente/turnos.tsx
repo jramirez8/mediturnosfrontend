@@ -35,7 +35,7 @@ export default function MisTurnosScreen() {
       if (showLoading) setLoading(true);
       const data = await appointmentService.getMyAppointments(pacienteId);
       setAppointments(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setNotice({ type: 'error', title: 'No se pudieron cargar los turnos', message: readableError(error, 'No se pudieron cargar los turnos.') });
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ export default function MisTurnosScreen() {
 
       // Refresco real para que la pantalla quede alineada con MySQL, no con estado local.
       await fetchAppointments(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setNotice({ type: 'error', title: 'No se pudo cancelar', message: readableError(error, 'No pudimos confirmar la cancelación del turno.') });
     } finally {
       setCancelingId(null);
@@ -92,7 +92,7 @@ export default function MisTurnosScreen() {
       const updated = await appointmentService.confirmarAsistencia(turno.id);
       setAppointments((prev) => prev.map((item) => Number(item.id) === Number(updated.id) ? updated : item));
       setNotice({ type: 'success', title: 'Asistencia confirmada', message: 'Gracias por confirmar. Te esperamos en el horario indicado.' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       setNotice({ type: 'error', title: 'No se pudo confirmar asistencia', message: readableError(error, 'Intentá nuevamente en unos segundos.') });
     }
   };
@@ -101,7 +101,7 @@ export default function MisTurnosScreen() {
     try {
       await addAppointmentToDeviceCalendar(turno);
       setNotice({ type: 'success', title: 'Agregado al calendario', message: 'El turno se agregó al calendario del dispositivo con recordatorio 3 horas antes.' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       setNotice({ type: 'error', title: 'No se pudo agregar al calendario', message: readableError(error, 'Revisá los permisos del calendario.') });
     }
   };
@@ -201,7 +201,7 @@ function AppointmentCard({
         </View>
       </View>
       <View style={styles.statusRow}>
-        <MtPill label={estado} tone={tone as any} />
+        <MtPill label={estado} tone={tone} />
       </View>
 
       <View style={styles.dateBox}>

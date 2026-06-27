@@ -136,7 +136,7 @@ export default function MedicalInfoScreen() {
         setObrasSociales(obras);
         setInstituciones(insts);
         setProfesionales(pros);
-      } catch (err) {
+      } catch (err: unknown) {
         if (!mounted) return;
         setError(readableError(err, 'No pudimos cargar obras sociales, instituciones o profesionales.'));
       } finally {
@@ -221,7 +221,7 @@ export default function MedicalInfoScreen() {
       const email = data.email;
       reset();
       router.replace({ pathname: '/registro/verificar', params: { email, created: '1', message: response?.message || response?.mensaje || 'Cuenta creada. Revisá tu correo.' } });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Registration error:', err);
       setError(readableError(err, 'No se pudo completar el registro. Revisá los datos e intentá nuevamente.'));
       scrollToTop();

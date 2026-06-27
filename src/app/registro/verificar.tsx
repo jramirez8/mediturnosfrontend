@@ -49,7 +49,7 @@ export default function VerifyAccountScreen() {
       const response = await authService.verifyAccount(identifier.trim(), code.trim());
       setSuccess(response?.message || response?.mensaje || '✅ Cuenta verificada correctamente. Ya podés iniciar sesión.');
       scrollTop();
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(readableError(e, 'No pudimos verificar la cuenta. Revisá el código e intentá nuevamente.'));
       scrollTop();
     } finally {

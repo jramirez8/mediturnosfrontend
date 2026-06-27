@@ -70,7 +70,7 @@ export default function MedicoAgendaScreen() {
         const firstAvailable = ownAgenda.find((turno) => turno.fecha >= today) ?? ownAgenda[0];
         setSelectedDate(firstAvailable?.fecha ?? desde);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(readableError(e, 'No pudimos cargar la agenda mensual.'));
     } finally { setLoading(false); }
   }, [usuarioId, cursor, doctorIdentity]);

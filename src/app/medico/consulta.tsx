@@ -78,7 +78,7 @@ export default function MedicoConsultaScreen() {
         const rawAgenda = await medicoService.agenda(usuarioId);
         setAgenda(filterTurnosForDoctor(rawAgenda, doctorIdentity));
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(readableError(e, 'No pudimos cargar la consulta.'));
     } finally {
       setLoading(false);
@@ -106,7 +106,7 @@ export default function MedicoConsultaScreen() {
       }
       setTurno(updated);
       setMessage('Consulta guardada correctamente y turno marcado como atendido.');
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(readableError(e, 'No pudimos guardar la consulta.'));
     } finally {
       setSaving(false);
@@ -125,7 +125,7 @@ export default function MedicoConsultaScreen() {
           setError(null);
           await documentService.upload(Number(turno.pacienteId), media, documentType, turno.id);
           setMessage('Documento adjuntado a la atención.');
-        } catch (e: any) {
+        } catch (e: unknown) {
           setError(readableError(e, 'No pudimos adjuntar el documento.'));
         } finally {
           setUploadingDoc(false);

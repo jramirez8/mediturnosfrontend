@@ -41,6 +41,16 @@ function stringify(value: unknown, seen = new WeakSet<object>()): string | undef
         return objectText(value, seen);
     return undefined;
 }
+type ApiError = {
+    response?: { data?: unknown; status?: unknown };
+    request?: unknown;
+    message?: unknown;
+    code?: unknown;
+    config?: { method?: string; url?: string };
+};
+function asApiError(error: unknown): ApiError {
+    return typeof error === 'object' && error !== null ? error as ApiError : {};
+}
 function stringifyObjectEntries(value: Record<string, unknown>, seen: WeakSet<object>): string | undefined {
     const lines = Object.entries(value)
         .map(([key, nestedValue]) => {
@@ -50,45 +60,49 @@ function stringifyObjectEntries(value: Record<string, unknown>, seen: WeakSet<ob
         .filter((line): line is string => Boolean(line));
     return lines.length ? lines.join(' · ') : undefined;
 }
-function isTimeoutError(error: any, rawMessage?: string) {
-    return !error?.response && (error?.code === 'ECONNABORTED' || /timeout|tard[oó] demasiado/i.test(rawMessage ?? ''));
+function isTimeoutError(error: unknown, rawMessage?: string) {
+    const apiError = asApiError(error);
+    return !apiError.response && (apiError.code === 'ECONNABORTED' || /timeout|tard[oó] demasiado/i.test(rawMessage ?? ''));
 }
-function isNetworkError(error: any, rawMessage?: string) {
+function isNetworkError(error: unknown, rawMessage?: string) {
+    const apiError = asApiError(error);
     const networkText = /network error|failed to fetch|internet|conexi[oó]n|conectarnos|servidor/i.test(rawMessage ?? '');
-    return !error?.response && (networkText || Boolean(error?.request));
+    return !apiError.response && (networkText || Boolean(apiError.request));
 }
-function backendMessage(error: any, fallback: string) {
-    const data = error?.response?.data;
+function backendMessage(error: unknown, fallback: string) {
+    const apiError = asApiError(error);
+    const data = apiError.response?.data as Record<string, unknown> | undefined;
     return stringify(data?.message)
         ?? stringify(data?.mensaje)
         ?? stringify(data?.error)
         ?? stringify(data?.detail)
         ?? stringify(data?.details)
         ?? stringify(data)
-        ?? stringify(error?.message)
+        ?? stringify(apiError.message)
         ?? fallback;
 }
 export function readableError(error: unknown, fallback = 'Ocurrió un error inesperado.') {
-    const apiError = error as any;
-    const rawMessage = stringify(apiError?.message);
+    const apiError = asApiError(error);
+    const rawMessage = stringify(apiError.message);
     if (isTimeoutError(apiError, rawMessage))
         return 'El servicio está tardando en responder. Revisá tu conexión e intentá nuevamente.';
     if (isNetworkError(apiError, rawMessage))
         return 'No hay conexión a internet. Revisá tu conexión e intentá nuevamente.';
-    if (Number(apiError?.response?.status) >= 500)
+    if (Number(apiError.response?.status) >= 500)
         return 'El servicio no está disponible en este momento. Intentá nuevamente más tarde.';
     return backendMessage(apiError, fallback).replace(/^HTTP\s+\d+\s*:\s*/i, '').trim() || fallback;
 }
 export function isConnectivityMessage(message?: string | null) {
     return /conexi[oó]n a internet|tardando en responder|servicio no est[aá] disponible/i.test(String(message ?? ''));
 }
-export function debugErrorPayload(error: any) {
+export function debugErrorPayload(error: unknown) {
+    const apiError = asApiError(error);
     return {
-        status: error?.response?.status,
-        method: error?.config?.method?.toUpperCase?.(),
-        url: error?.config?.url,
-        data: error?.response?.data,
-        message: error?.message,
+        status: apiError.response?.status,
+        method: apiError.config?.method?.toUpperCase?.(),
+        url: apiError.config?.url,
+        data: apiError.response?.data,
+        message: apiError.message,
     };
 }
 

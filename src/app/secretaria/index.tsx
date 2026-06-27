@@ -23,7 +23,7 @@ export default function SecretariaDashboard() {
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try { setTurnos(await secretariaService.turnos()); }
-    catch (e: any) { setError(readableError(e, language === 'en' ? 'We could not load appointments.' : 'No pudimos cargar turnos.')); }
+    catch (e: unknown) { setError(readableError(e, language === 'en' ? 'We could not load appointments.' : 'No pudimos cargar turnos.')); }
     finally { setLoading(false); }
   }, [language]);
 

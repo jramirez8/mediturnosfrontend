@@ -82,8 +82,9 @@ export function chooseDocumentSource(onPicked: (media: PickedMedia) => void, onE
     try {
       const picked = await picker();
       if (picked) onPicked(picked);
-    } catch (error: any) {
-      onError(error?.message ?? 'No pudimos adjuntar el archivo.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error ?? 'No pudimos adjuntar el archivo.');
+      onError(message);
     }
   };
 

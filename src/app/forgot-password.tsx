@@ -29,7 +29,7 @@ export default function ForgotPasswordScreen() {
       }
 
       router.push('/forgot-password-success');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Forgot password error:', error);
       setErrorMessage(readableError(error, 'No pudimos procesar la solicitud. Intentá nuevamente.'));
     } finally {

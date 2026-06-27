@@ -45,7 +45,7 @@ export default function ReprogramarScreen() {
         setSelectedSlot(slots[0] ?? null);
         setSelectedDate(slots[0]?.fecha ?? '');
     }
-    catch (error: any) {
+    catch (error: unknown) {
         setNotice({ type: 'error', title: 'No se pudo cargar el turno', message: readableError(error, 'No se pudo cargar la información del turno.') });
     }
     finally {
@@ -66,7 +66,7 @@ export default function ReprogramarScreen() {
         setUpdatedTurno(updated);
         setNotice({ type: 'success', title: 'Turno reprogramado', message: `Tu turno quedó reprogramado para el ${updated.fecha || selectedSlot.fecha} a las ${updated.hora || selectedSlot.hora} hs.` });
     }
-    catch (error: any) {
+    catch (error: unknown) {
         setNotice({ type: 'error', title: 'No se pudo reprogramar', message: readableError(error, 'El horario no está disponible o faltan datos del turno.') });
     }
     finally {

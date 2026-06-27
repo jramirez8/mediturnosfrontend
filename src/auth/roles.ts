@@ -14,7 +14,9 @@ export function normalizeRole(role?: string | null): AppRole | null {
   return null;
 }
 
-export function routeForRole(role?: string | null) {
+export type AppRoute = '/admin' | '/secretaria' | '/medico' | '/paciente' | '/login';
+
+export function routeForRole(role?: string | null): AppRoute {
   const normalized = normalizeRole(role);
   if (normalized === 'ADMIN') return '/admin';
   if (normalized === 'SECRETARY') return '/secretaria';

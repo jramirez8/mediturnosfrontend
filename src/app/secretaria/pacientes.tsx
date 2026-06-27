@@ -37,7 +37,7 @@ export default function SecretariaPacientesScreen() {
       setPaciente(found);
       const foundId = Number(found?.id ?? found?.pacienteId);
       if (foundId) await loadDocuments(foundId);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setNotice({ type: 'danger', title: 'No encontramos el paciente', message: readableError(e, 'No encontramos paciente con ese DNI.') });
     } finally { setLoading(false); }
   };
@@ -61,7 +61,7 @@ export default function SecretariaPacientesScreen() {
           await documentService.upload(pacienteId, media, documentType);
           await loadDocuments(pacienteId);
           setNotice({ type: 'success', title: 'Documento subido', message: 'Quedó disponible para el paciente y el equipo médico.' });
-        } catch (e: any) {
+        } catch (e: unknown) {
           setNotice({ type: 'danger', title: 'No pudimos subir el documento', message: readableError(e, 'Verificá formato y tamaño máximo de 1 MB.') });
         } finally {
           setUploading(false);
@@ -82,7 +82,7 @@ export default function SecretariaPacientesScreen() {
       await documentService.archive(doc.id);
       if (pacienteId) await loadDocuments(pacienteId);
       setNotice({ type: 'success', title: 'Documento archivado', message: 'Ya no aparece entre los documentos activos.' });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setNotice({ type: 'danger', title: 'No pudimos archivar', message: readableError(e, 'Reintentá en unos segundos.') });
     }
   };

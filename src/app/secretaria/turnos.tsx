@@ -26,7 +26,7 @@ export default function SecretariaTurnosScreen() {
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try { setTurnos(await secretariaService.turnos()); }
-    catch (e: any) { setError(readableError(e, 'No pudimos cargar los turnos.')); }
+    catch (e: unknown) { setError(readableError(e, 'No pudimos cargar los turnos.')); }
     finally { setLoading(false); }
   }, []);
 
@@ -51,7 +51,7 @@ export default function SecretariaTurnosScreen() {
       setMessage(`Turno #${updated.id} actualizado a ${updated.estado}.`);
       scrollToTop();
       await load();
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(readableError(e, 'No pudimos actualizar el turno.'));
       scrollToTop();
     } finally { setWorkingId(null); }

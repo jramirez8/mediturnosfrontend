@@ -302,7 +302,7 @@ export default function SolicitarTurnoScreen() {
             }
             setProfessionals(nextData);
         }
-        catch (error: any) {
+        catch (error: unknown) {
             setNotice({ type: 'error', title: language === 'en' ? 'Professionals could not be loaded' : 'No se pudieron cargar profesionales', message: readableError(error) });
         }
         finally {
@@ -326,7 +326,7 @@ export default function SolicitarTurnoScreen() {
             }
             setShowTimes(false);
         }
-        catch (error: any) {
+        catch (error: unknown) {
             setSlots([]);
             setSelectedSlot(null);
             setSelectedDate('');
@@ -383,7 +383,7 @@ export default function SolicitarTurnoScreen() {
             setCreatedTurno(created);
             setNotice({ type: 'success', title: language === 'en' ? 'Appointment confirmed' : 'Turno confirmado', message: language === 'en' ? `Your appointment was registered for ${created.fecha || slot.fecha} at ${created.hora || slot.hora}. #${created.id}.` : `Tu turno quedó registrado para el ${created.fecha || slot.fecha} a las ${created.hora || slot.hora} hs. N° ${created.id}.` });
         }
-        catch (error: any) {
+        catch (error: unknown) {
             setNotice({ type: 'error', title: language === 'en' ? 'Appointment could not be requested' : 'No se pudo solicitar el turno', message: readableError(error, language === 'en' ? 'The time may no longer be available. Try another one.' : 'El horario pudo haber sido tomado. Probá otro.') });
         }
         finally {
@@ -401,7 +401,7 @@ export default function SolicitarTurnoScreen() {
             await waitlistService.join({ pacienteId, profesionalInstitucionId: selectedProfessional.profesionalInstitucionId ?? selectedProfessional.id, especialidadId: selectedProfessional.especialidadId ?? 1, observaciones: query || undefined });
             setNotice({ type: 'success', title: copy.waitlistSuccessTitle, message: copy.waitlistSuccess });
         }
-        catch (error: any) {
+        catch (error: unknown) {
             setNotice({ type: 'error', title: copy.waitlistErrorTitle, message: readableError(error, copy.retry) });
         }
         finally {

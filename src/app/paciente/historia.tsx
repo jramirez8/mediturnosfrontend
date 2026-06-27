@@ -61,7 +61,7 @@ export default function ClinicalHistoryScreen() {
       setProfile(perfil);
       setHistory(Array.isArray(atenciones) ? atenciones : []);
       setDocuments(docs);
-    } catch (error: any) {
+    } catch (error: unknown) {
       showNotice({ type: 'danger', title: 'No pudimos cargar tu historia', message: readableError(error, 'Reintentá en unos segundos.') });
     } finally {
       setLoading(false);
@@ -89,7 +89,7 @@ export default function ClinicalHistoryScreen() {
       setDocuments(docs);
       setTab('Documentos');
       showNotice({ type: 'success', title: 'Documento subido', message: 'Quedó guardado en tu historia clínica.' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       showNotice({ type: 'danger', title: 'No pudimos subir el documento', message: readableError(error, 'Verificá formato y tamaño máximo de 1 MB.') });
     } finally {
       setUploading(false);
@@ -110,7 +110,7 @@ export default function ClinicalHistoryScreen() {
     }
     try {
       await Linking.openURL(doc.url);
-    } catch (error: any) {
+    } catch (error: unknown) {
       showNotice({ type: 'danger', title: 'No pudimos abrir el documento', message: readableError(error, 'Intentá desde otro dispositivo o navegador.') });
     }
   };

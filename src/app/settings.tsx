@@ -47,7 +47,7 @@ export default function GlobalSettingsScreen() {
         <Text style={styles.cardTitle}>{t('settings.account')}</Text>
         <Text style={styles.text}>{nombreCompleto || 'Usuario'}</Text>
         <Text style={styles.muted}>{t('role.admin')}: {humanRole(role)}</Text>
-        <MtButton title={t('settings.backToPanel')} onPress={() => router.replace(routeForRole(role) as any)} style={{ marginTop: 14 }} />
+        <MtButton title={t('settings.backToPanel')} onPress={() => router.replace(routeForRole(role))} style={{ marginTop: 14 }} />
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>

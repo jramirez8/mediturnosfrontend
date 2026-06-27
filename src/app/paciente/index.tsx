@@ -55,7 +55,7 @@ export default function PacienteHomeScreen() {
         const profileData = await userService.getProfile(usuarioId);
         if (!alive) return;
         setProfile(profileData);
-      } catch (error) {
+      } catch (error: unknown) {
         if (!alive) return;
         setProfile(null);
         setAppointments([]);
@@ -69,7 +69,7 @@ export default function PacienteHomeScreen() {
         const appointmentsData = await appointmentService.getMyAppointments(pacienteId);
         if (!alive) return;
         setAppointments(appointmentsData);
-      } catch (error) {
+      } catch (error: unknown) {
         if (!alive) return;
         setAppointments([]);
         nextErrors.appointments = readableError(error, 'No pudimos cargar tus turnos.');

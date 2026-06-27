@@ -221,7 +221,7 @@ export default function AdminProfesionalesScreen() {
             setInstituciones(i);
             setObras(o);
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, 'No pudimos cargar personal y pacientes.'));
         }
         finally {
@@ -357,7 +357,7 @@ export default function AdminProfesionalesScreen() {
             closeForm();
             await load();
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, 'No pudimos guardar el médico.'));
             scrollTop();
         }
@@ -392,7 +392,7 @@ export default function AdminProfesionalesScreen() {
             closeForm();
             await load();
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, 'No pudimos guardar secretaría.'));
         }
         finally {
@@ -432,7 +432,7 @@ export default function AdminProfesionalesScreen() {
             closeForm();
             await load();
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, 'No pudimos guardar el paciente.'));
             scrollTop();
         }
@@ -454,7 +454,7 @@ export default function AdminProfesionalesScreen() {
             setMessage(active ? 'Registro activado.' : 'Registro desactivado.');
             await load();
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, 'No pudimos cambiar el estado.'));
         }
         finally {

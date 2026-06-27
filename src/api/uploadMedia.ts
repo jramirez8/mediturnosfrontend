@@ -2,6 +2,12 @@ import { Platform } from 'react-native';
 import { PickedMedia } from '../utils/mediaPicker';
 import { API_BASE_URL } from './client';
 
+type ReactNativeFormDataFile = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
 export function absoluteApiUrl(url?: string | null) {
   if (!url) return undefined;
   if (/^https?:\/\//i.test(url)) return url;
@@ -18,11 +24,12 @@ export async function mediaToFormData(media: PickedMedia) {
     const blob = await response.blob();
     form.append('file', blob, name);
   } else {
-    form.append('file', {
+    const filePart: ReactNativeFormDataFile = {
       uri: media.uri,
       name,
       type,
-    } as any);
+    };
+    form.append('file', filePart as unknown as Blob);
   }
 
   return form;

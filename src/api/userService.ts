@@ -28,33 +28,42 @@ export type UserProfile = {
   carnetObraSocialSizeBytes?: number;
 };
 
-const normalizeProfile = (p: any): UserProfile => {
-  const pacienteId = p.pacienteId ? Number(p.pacienteId) : p.id ? Number(p.id) : undefined;
-  const obraSocialId = p.obraSocialId ? Number(p.obraSocialId) : p.obraSocial?.id ? Number(p.obraSocial.id) : undefined;
+type UnknownRecord = Record<string, unknown>;
+
+const normalizeProfile = (p: unknown): UserProfile => {
+  const profile = typeof p === 'object' && p !== null ? (p as UnknownRecord) : {};
+  const usuario = typeof profile.usuario === 'object' && profile.usuario !== null ? (profile.usuario as UnknownRecord) : {};
+  const obraSocial = typeof profile.obraSocial === 'object' && profile.obraSocial !== null ? (profile.obraSocial as UnknownRecord) : profile.obraSocial;
+  const obraSocialRecord = typeof obraSocial === 'object' && obraSocial !== null ? (obraSocial as UnknownRecord) : {};
+
+  const value = (input: unknown) => input === undefined || input === null ? '' : String(input);
+
+  const pacienteId = profile.pacienteId ? Number(profile.pacienteId) : profile.id ? Number(profile.id) : undefined;
+  const obraSocialId = profile.obraSocialId ? Number(profile.obraSocialId) : obraSocialRecord.id ? Number(obraSocialRecord.id) : undefined;
 
   return {
-    id: Number(p.pacienteId ?? p.id),
+    id: Number(profile.pacienteId ?? profile.id),
     pacienteId,
-    usuarioId: Number(p.usuarioId ?? p.usuario?.id),
-    nombre: p.nombre ?? p.usuario?.nombre ?? '',
-    apellido: p.apellido ?? p.usuario?.apellido ?? '',
-    dni: p.dni ?? p.usuario?.dni ?? '',
-    email: p.email ?? p.usuario?.email ?? '',
-    telefono: p.telefono,
+    usuarioId: Number(profile.usuarioId ?? usuario.id),
+    nombre: value(profile.nombre ?? usuario.nombre),
+    apellido: value(profile.apellido ?? usuario.apellido),
+    dni: value(profile.dni ?? usuario.dni),
+    email: value(profile.email ?? usuario.email),
+    telefono: value(profile.telefono) || undefined,
     obraSocialId,
-    obraSocial: p.obraSocialNombre ?? p.obraSocial ?? p.obraSocial?.nombre,
-    obraSocialNombre: p.obraSocialNombre ?? p.obraSocial ?? p.obraSocial?.nombre,
-    numeroAfiliado: p.numeroCarnet ?? p.numeroAfiliado ?? p.numCarnet,
-    numeroCarnet: p.numeroCarnet ?? p.numeroAfiliado ?? p.numCarnet,
-    numeroHistoriaClinica: p.numeroHistoriaClinica,
-    institucionCabecera: p.hospitalClinicaCabecera ?? p.institucionCabecera,
-    hospitalClinicaCabecera: p.hospitalClinicaCabecera ?? p.institucionCabecera,
-    medicoCabecera: p.doctorCabecera ?? p.medicoCabecera,
-    doctorCabecera: p.doctorCabecera ?? p.medicoCabecera,
-    fotoPerfilUrl: absoluteApiUrl(p.fotoPerfilUrl),
-    carnetObraSocialUrl: absoluteApiUrl(p.carnetObraSocialUrl),
-    fotoPerfilSizeBytes: p.fotoPerfilSizeBytes ? Number(p.fotoPerfilSizeBytes) : undefined,
-    carnetObraSocialSizeBytes: p.carnetObraSocialSizeBytes ? Number(p.carnetObraSocialSizeBytes) : undefined,
+    obraSocial: value(profile.obraSocialNombre ?? profile.obraSocial ?? obraSocialRecord.nombre) || undefined,
+    obraSocialNombre: value(profile.obraSocialNombre ?? profile.obraSocial ?? obraSocialRecord.nombre) || undefined,
+    numeroAfiliado: value(profile.numeroCarnet ?? profile.numeroAfiliado ?? profile.numCarnet) || undefined,
+    numeroCarnet: value(profile.numeroCarnet ?? profile.numeroAfiliado ?? profile.numCarnet) || undefined,
+    numeroHistoriaClinica: value(profile.numeroHistoriaClinica) || undefined,
+    institucionCabecera: value(profile.hospitalClinicaCabecera ?? profile.institucionCabecera) || undefined,
+    hospitalClinicaCabecera: value(profile.hospitalClinicaCabecera ?? profile.institucionCabecera) || undefined,
+    medicoCabecera: value(profile.doctorCabecera ?? profile.medicoCabecera) || undefined,
+    doctorCabecera: value(profile.doctorCabecera ?? profile.medicoCabecera) || undefined,
+    fotoPerfilUrl: absoluteApiUrl(value(profile.fotoPerfilUrl) || ''),
+    carnetObraSocialUrl: absoluteApiUrl(value(profile.carnetObraSocialUrl) || ''),
+    fotoPerfilSizeBytes: profile.fotoPerfilSizeBytes ? Number(profile.fotoPerfilSizeBytes) : undefined,
+    carnetObraSocialSizeBytes: profile.carnetObraSocialSizeBytes ? Number(profile.carnetObraSocialSizeBytes) : undefined,
   };
 };
 
@@ -88,12 +97,12 @@ export const userService = {
     const cacheKey = `profile:${usuarioId ?? 'me'}`;
     try {
       const endpoint = usuarioId ? `/api/pacientes/perfil/${usuarioId}` : '/api/pacientes/perfil/me';
-      const response = await api.get<any>(endpoint);
+      const response = await api.get<unknown>(endpoint);
       const data = normalizeProfile(response.data);
       await setCachedJson(cacheKey, data);
       await setCachedJson('profile:last', data);
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       const cached = await getCachedJson<UserProfile>(cacheKey);
       if (cached) return cached;
       const last = await getCachedJson<UserProfile>('profile:last');
@@ -112,7 +121,7 @@ export const userService = {
       ?? await userService.getProfile(usuarioId);
 
     const endpoint = usuarioId ? `/api/pacientes/perfil/${usuarioId}` : '/api/pacientes/perfil/me';
-    const response = await api.put<any>(endpoint, buildProfilePayload(current, data));
+    const response = await api.put<unknown>(endpoint, buildProfilePayload(current, data));
     const profile = normalizeProfile(response.data);
     await setCachedJson(cacheKey, profile);
     await setCachedJson('profile:last', profile);
@@ -121,7 +130,7 @@ export const userService = {
 
   uploadProfilePhoto: async (media: PickedMedia, usuarioId?: string | null) => {
     const form = await mediaToFormData(media);
-    const response = await api.post<any>('/api/pacientes/perfil/me/foto-perfil', form, {
+    const response = await api.post<unknown>('/api/pacientes/perfil/me/foto-perfil', form, {
       timeout: 30000,
     });
     const profile = normalizeProfile(response.data);
@@ -132,7 +141,7 @@ export const userService = {
 
   uploadOossCard: async (media: PickedMedia, usuarioId?: string | null) => {
     const form = await mediaToFormData(media);
-    const response = await api.post<any>('/api/pacientes/perfil/me/carnet-obra-social', form, {
+    const response = await api.post<unknown>('/api/pacientes/perfil/me/carnet-obra-social', form, {
       timeout: 30000,
     });
     const profile = normalizeProfile(response.data);

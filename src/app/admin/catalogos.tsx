@@ -25,6 +25,9 @@ const tipoOptions = [
     { label: 'Consultorio', value: 'CONSULTORIO' }, { label: 'Centro médico', value: 'CENTRO_MEDICO' }, { label: 'Otro', value: 'OTRO' },
 ];
 function active(item: AdminCatalogItem) { return item.activa !== false && item.activo !== false; }
+function formFromItem(item: AdminCatalogItem): Form {
+    return { id: item.id, nombre: item.nombre, codigo: item.codigo ?? '', tipo: item.tipo ?? 'CLINICA', direccion: item.direccion ?? '', telefono: item.telefono ?? '', whatsapp: item.whatsapp ?? '', activa: active(item) };
+}
 function catalogTitle(kind: Kind) { return ({ ESPECIALIDADES: 'Crear especialidad', OBRAS: 'Crear obra social', INSTITUCIONES: 'Crear institución' } as const)[kind]; }
 function validateCatalog(kind: Kind, form: Form) {
     if (!form.nombre.trim())
@@ -113,7 +116,7 @@ export default function AdminCatalogosScreen() {
             const [especialidades, obras, instituciones] = await Promise.all([adminService.especialidades(), adminService.obrasSociales(), adminService.instituciones()]);
             setCollections({ ESPECIALIDADES: especialidades, OBRAS: obras, INSTITUCIONES: instituciones });
         }
-        catch (caught: any) {
+        catch (caught: unknown) {
             setError(readableError(caught, 'No pudimos cargar catálogos.'));
         }
         finally {
@@ -125,7 +128,7 @@ export default function AdminCatalogosScreen() {
     const filtered = useMemo(() => { const text = query.toLowerCase().trim(); return items.filter((item) => !text || JSON.stringify(item).toLowerCase().includes(text)); }, [items, query]);
     const closeForm = () => { setFormOpen(false); setForm(emptyForm); };
     const openCreate = () => { setError(null); setMessage(null); setForm(emptyForm); setFormOpen(true); };
-    const edit = (item: AdminCatalogItem) => { setError(null); setMessage(null); setFormOpen(true); setForm({ id: item.id, nombre: item.nombre, codigo: item.codigo ?? '', tipo: item.tipo ?? 'CLINICA', direccion: item.direccion ?? '', telefono: item.telefono ?? '', whatsapp: item.whatsapp ?? '', activa: active(item) }); };
+    const edit = (item: AdminCatalogItem) => { setError(null); setMessage(null); setFormOpen(true); setForm(formFromItem(item)); };
     const changeKind = (value: Kind) => { setKind(value); closeForm(); };
     const save = async () => {
         const problem = validateCatalog(kind, form);
@@ -142,7 +145,7 @@ export default function AdminCatalogosScreen() {
             closeForm();
             await load();
         }
-        catch (caught: any) {
+        catch (caught: unknown) {
             setError(readableError(caught, 'No pudimos guardar el catálogo.'));
         }
         finally {
@@ -158,7 +161,7 @@ export default function AdminCatalogosScreen() {
             setMessage('Elemento desactivado correctamente.');
             await load();
         }
-        catch (caught: any) {
+        catch (caught: unknown) {
             setError(readableError(caught, 'No pudimos desactivar el elemento.'));
         }
         finally {

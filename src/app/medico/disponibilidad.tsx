@@ -196,7 +196,7 @@ export default function MedicoDisponibilidadScreen() {
       }
       setProfessional(own);
       await loadAgenda(own);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(readableError(e, 'No pudimos cargar la disponibilidad.'));
     } finally { setLoading(false); }
   }, [profesionalId, profesionalInstitucionId, nombreCompleto, loadAgenda]);
@@ -256,7 +256,7 @@ export default function MedicoDisponibilidadScreen() {
       setNotice(`Listo: ${API_DAY_TO_LABEL[selectedWeekday]} queda disponible de ${desde} a ${hasta}.`);
       scrollToTop();
       await loadAgenda(professional);
-    } catch (e: any) { setError(readableError(e, 'No pudimos guardar el horario semanal.')); scrollToTop(); }
+    } catch (e: unknown) { setError(readableError(e, 'No pudimos guardar el horario semanal.')); scrollToTop(); }
     finally { setSaving(false); }
   };
 
@@ -268,21 +268,21 @@ export default function MedicoDisponibilidadScreen() {
       setNotice(`Listo: ${formatDate(selectedDate)} quedó bloqueado.`);
       scrollToTop();
       await loadAgenda(professional);
-    } catch (e: any) { setError(readableError(e, 'No pudimos bloquear la fecha.')); scrollToTop(); }
+    } catch (e: unknown) { setError(readableError(e, 'No pudimos bloquear la fecha.')); scrollToTop(); }
     finally { setSaving(false); }
   };
 
   const deleteHorario = async (id: number) => {
     if (!professional) return;
     try { setSaving(true); setNotice(null); setError(null); await agendaService.deleteHorario(id); setNotice('Horario eliminado.'); scrollToTop(); await loadAgenda(professional); }
-    catch (e: any) { setError(readableError(e, 'No pudimos eliminar el horario.')); scrollToTop(); }
+    catch (e: unknown) { setError(readableError(e, 'No pudimos eliminar el horario.')); scrollToTop(); }
     finally { setSaving(false); }
   };
 
   const deleteBloqueo = async (id: number) => {
     if (!professional) return;
     try { setSaving(true); setNotice(null); setError(null); await agendaService.deleteBloqueo(id); setNotice('Bloqueo eliminado.'); scrollToTop(); await loadAgenda(professional); }
-    catch (e: any) { setError(readableError(e, 'No pudimos eliminar el bloqueo.')); scrollToTop(); }
+    catch (e: unknown) { setError(readableError(e, 'No pudimos eliminar el bloqueo.')); scrollToTop(); }
     finally { setSaving(false); }
   };
 

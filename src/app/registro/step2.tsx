@@ -81,7 +81,7 @@ export default function RegisterStep2() {
 
       setStep2(cleanEmail, cleanTelefono, password, repeatPassword);
       router.push('/registro/medical-info');
-    } catch (err) {
+    } catch (err: unknown) {
       setError(readableError(err, 'No pudimos validar si tus datos ya están registrados. Intentá nuevamente.'));
     } finally {
       setLoading(false);

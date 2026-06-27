@@ -32,7 +32,7 @@ export async function purgeLegacyCache() {
     Object.keys(globalThis.localStorage)
       .filter((key) => LEGACY_PREFIXES.some((prefix) => key.startsWith(prefix)))
       .forEach((key) => globalThis.localStorage.removeItem(key));
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('No se pudo limpiar cache legacy:', error);
   }
 }
@@ -44,7 +44,7 @@ export async function setCachedJson<T>(key: string, value: T) {
   if (canUseLocalStorage()) {
     try {
       globalThis.localStorage.setItem(webKey(key), JSON.stringify(entry));
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('No se pudo guardar cache real:', error);
     }
   }
@@ -57,7 +57,7 @@ export async function getCachedJson<T>(key: string, maxAgeMs?: number): Promise<
     try {
       const raw = globalThis.localStorage.getItem(webKey(key));
       if (raw) entry = JSON.parse(raw) as CacheEntry;
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('No se pudo leer cache real:', error);
     }
   }
@@ -77,7 +77,7 @@ export async function clearAppCache() {
       Object.keys(globalThis.localStorage)
         .filter((key) => key.startsWith(CACHE_PREFIX) || LEGACY_PREFIXES.some((prefix) => key.startsWith(prefix)))
         .forEach((key) => globalThis.localStorage.removeItem(key));
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('No se pudo limpiar cache:', error);
     }
   }

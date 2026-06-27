@@ -24,7 +24,7 @@ export default function FeedbackScreen() {
       setError(null);
       await feedbackService.save(turnoId, rating, comment);
       setMessage('Gracias por tu opinión. Tu calificación fue registrada.');
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(readableError(e, 'No pudimos guardar la calificación.'));
     } finally {
       setSaving(false);

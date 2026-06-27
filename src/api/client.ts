@@ -7,9 +7,12 @@ const configuredApiOrigin = process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_API_
 
 function isVercelHostedWeb() {
   if (Platform.OS !== 'web') return false;
-  if (typeof globalThis.location === 'undefined') return false;
 
-  const host = globalThis.location.hostname.toLowerCase();
+  const location = (globalThis as { location?: { hostname?: string } }).location;
+  if (!location?.hostname)
+    return false;
+
+  const host = location.hostname.toLowerCase();
   const forcedMode = process.env.EXPO_PUBLIC_API_MODE;
 
   if (forcedMode === 'direct') return false;

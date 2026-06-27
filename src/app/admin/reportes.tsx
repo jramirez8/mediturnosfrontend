@@ -60,7 +60,7 @@ export default function AdminReportesScreen() {
     try {
       const [resumen, allTurnos, feedbackData] = await Promise.all([adminService.resumen(), secretariaService.turnos(), feedbackService.latest().catch(() => [])]);
       setSummary(resumen); setTurnos(allTurnos); setFeedback(feedbackData);
-    } catch (e: any) { setError(readableError(e, 'No pudimos cargar reportes.')); }
+    } catch (e: unknown) { setError(readableError(e, 'No pudimos cargar reportes.')); }
     finally { setLoading(false); }
   }, []);
 
@@ -117,7 +117,7 @@ export default function AdminReportesScreen() {
       }
       await Share.share({ title: filename, message: csv });
       setNotice(`CSV generado para ${filtered.length} turnos.`);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(readableError(e, 'No pudimos exportar el CSV.'));
     }
   };

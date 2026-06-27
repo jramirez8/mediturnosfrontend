@@ -45,7 +45,7 @@ export default function AuditoriaAdmin() {
             setError(null);
             setItems(await auditService.latest());
         }
-        catch (e: any) {
+        catch (e: unknown) {
             setError(readableError(e, 'No pudimos cargar auditoría.'));
         }
         finally {
