@@ -13,6 +13,13 @@ import { readableError } from '../../utils/errors';
 
 type Notice = { type: 'success' | 'danger' | 'warning' | 'info'; title: string; message: string };
 
+function HistoryResults({ loading, items, searched }: { loading: boolean; items: TurnoResponse[]; searched: boolean }) {
+  if (loading) return <MtLoading text="Buscando..." />;
+  if (items.length) return <>{items.map((turno) => <TurnoCard key={turno.id} turno={turno} />)}</>;
+  if (searched) return <MtEmptyState title="Sin historia cargada" subtitle="No hay atenciones registradas para ese DNI bajo tu perfil profesional." />;
+  return null;
+}
+
 export default function HistoriaPacienteMedicoScreen() {
   const params = useLocalSearchParams<{ dni?: string }>();
   const [dni, setDni] = useState(params.dni || '');
@@ -71,7 +78,7 @@ export default function HistoriaPacienteMedicoScreen() {
         <MtInput label="DNI del paciente" value={dni} onChangeText={setDni} keyboardType="numeric" />
         <MtButton title="Buscar historia" onPress={search} loading={loading} disabled={!dni.trim() || loading} />
       </MtCard>
-      {loading ? <MtLoading text="Buscando..." /> : items.length ? items.map((turno) => <TurnoCard key={turno.id} turno={turno} />) : searched ? <MtEmptyState title="Sin historia cargada" subtitle="No hay atenciones registradas para ese DNI bajo tu perfil profesional." /> : null}
+      <HistoryResults loading={loading} items={items} searched={searched} />
       {pacienteId ? <MtCard style={{ gap: 10, marginTop: 14 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Text style={{ flex: 1, color: theme.colors.ink, fontWeight: '900', fontSize: 18 }}>Documentos del paciente</Text>

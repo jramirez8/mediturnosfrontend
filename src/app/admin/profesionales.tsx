@@ -464,6 +464,7 @@ export default function AdminProfesionalesScreen() {
     if (loading)
         return <MtLoading text="Cargando gestión de personas..."/>;
     const changeTab = (value: Tab) => { setTab(value); closeForm(); };
+    const formButtonTitle = formOpen ? 'Cerrar formulario' : tab === 'MEDICOS' ? 'Crear mÃ©dico' : 'Crear secretarÃ­a';
     return <MtScreen scroll scrollRef={scrollRef}>
     <MtHeader eyebrow="ADMIN" title="Personal" subtitle="Médicos y secretarías. Los pacientes se crean desde Admin > Usuarios."/>
     {message ? <AdminNotice type="success" title="Listo" message={message}/> : null}

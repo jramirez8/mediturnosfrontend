@@ -6,10 +6,15 @@ import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { TurnoCard } from '../../components/TurnoCard';
 import { secretariaService } from '../../api/staffService';
 import { TurnoResponse } from '../../api/appointmentService';
-import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 
 const estados = ['TODOS', 'CONFIRMADO', 'REPROGRAMADO', 'PENDIENTE', 'CANCELADO', 'ATENDIDO', 'AUSENTE'];
+
+function toneForStatusFilter(estado: string) {
+  if (estado === 'CANCELADO' || estado === 'AUSENTE') return 'danger';
+  if (estado === 'ATENDIDO' || estado === 'CONFIRMADO') return 'success';
+  return 'warning';
+}
 
 export default function SecretariaTurnosScreen() {
   const scrollRef = useRef<ScrollView | null>(null);
@@ -21,7 +26,6 @@ export default function SecretariaTurnosScreen() {
   const [estado, setEstado] = useState('TODOS');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const theme = useMtTheme();
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
@@ -68,7 +72,7 @@ export default function SecretariaTurnosScreen() {
         <MtInput label="Buscar" value={query} onChangeText={setQuery} placeholder="DNI, paciente, médico, especialidad..." />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {estados.map((e) => {
-            const tone = e === 'CANCELADO' || e === 'AUSENTE' ? 'danger' : e === 'ATENDIDO' || e === 'CONFIRMADO' ? 'success' : 'warning';
+            const tone = toneForStatusFilter(e);
             return <MtPill key={e} label={e} selected={estado === e} tone={tone} onPress={() => setEstado(e)} />;
           })}
         </View>

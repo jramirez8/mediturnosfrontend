@@ -8,6 +8,14 @@ import { humanRole, routeForRole } from '../auth/roles';
 import { ThemeMode, useThemeStore, useMtTheme } from '../theme/themeStore';
 import { useTranslation } from '../i18n/languageStore';
 
+function SettingsOption({ label, selected, onPress, styles }: { label: string; selected: boolean; onPress: () => void; styles: ReturnType<typeof createStyles> }) {
+  return (
+    <Pressable onPress={onPress} style={[styles.option, selected && styles.optionSelected]}>
+      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export default function GlobalSettingsScreen() {
   const { token, role, nombreCompleto, hydrated, loadToken, logout } = useAuthStore();
   const theme = useMtTheme();
@@ -26,12 +34,6 @@ export default function GlobalSettingsScreen() {
     await logout();
     router.replace('/login');
   };
-
-  const Option = ({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) => (
-    <Pressable onPress={onPress} style={[styles.option, selected && styles.optionSelected]}>
-      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>{label}</Text>
-    </Pressable>
-  );
 
   const getThemeLabel = (item: ThemeMode) => {
     if (item === 'light') return t('settings.light');
@@ -55,7 +57,7 @@ export default function GlobalSettingsScreen() {
         <Text style={styles.muted}>{t('settings.appearanceHelp')}</Text>
         <View style={styles.optionRow}>
           {(['light', 'dark', 'system'] as ThemeMode[]).map((item) => (
-            <Option key={item} label={getThemeLabel(item)} selected={mode === item} onPress={() => setMode(item)} />
+            <SettingsOption key={item} label={getThemeLabel(item)} selected={mode === item} onPress={() => setMode(item)} styles={styles} />
           ))}
         </View>
       </MtCard>
@@ -64,9 +66,9 @@ export default function GlobalSettingsScreen() {
         <Text style={styles.cardTitle}>{t('settings.language')}</Text>
         <Text style={styles.muted}>{t('settings.languageHelp')}</Text>
         <View style={styles.optionRow}>
-          <Option label={t('settings.spanish')} selected={language === 'es'} onPress={() => setLanguage('es')} />
-          <Option label={t('settings.english')} selected={language === 'en'} onPress={() => setLanguage('en')} />
-          <Option label={t('settings.portuguese')} selected={language === 'pt'} onPress={() => setLanguage('pt')} />
+          <SettingsOption label={t('settings.spanish')} selected={language === 'es'} onPress={() => setLanguage('es')} styles={styles} />
+          <SettingsOption label={t('settings.english')} selected={language === 'en'} onPress={() => setLanguage('en')} styles={styles} />
+          <SettingsOption label={t('settings.portuguese')} selected={language === 'pt'} onPress={() => setLanguage('pt')} styles={styles} />
         </View>
       </MtCard>
 

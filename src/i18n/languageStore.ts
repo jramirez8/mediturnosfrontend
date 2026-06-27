@@ -240,7 +240,7 @@ const en: Dictionary = {
   'login.welcome': 'Welcome back',
   'login.email': 'Email or ID',
   'login.emailPlaceholder': 'Email or ID',
-  'login.password': 'Password',
+  'login.password': 'Password', // NOSONAR - translation label, not a hard-coded credential.
   'login.submit': 'Sign in',
   'login.biometric': 'Sign in with biometrics / PIN',
   'login.createAccount': 'Create account',
@@ -583,7 +583,8 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
 
   toggleLanguage: async () => {
     const current = get().language;
-    await get().setLanguage(current === 'es' ? 'en' : current === 'en' ? 'pt' : 'es');
+    const nextLanguage: AppLanguage = current === 'es' ? 'en' : current === 'en' ? 'pt' : 'es';
+    await get().setLanguage(nextLanguage);
   },
 
   loadLanguage: async () => {
@@ -742,7 +743,9 @@ export function translateLiteral(value: string | undefined, language: AppLanguag
 }
 
 export function languageCopy(language: AppLanguage, esText: string, enText: string, ptText: string): string {
-  return language === 'en' ? enText : language === 'pt' ? ptText : esText;
+  if (language === 'en') return enText;
+  if (language === 'pt') return ptText;
+  return esText;
 }
 
 export function useTranslation() {

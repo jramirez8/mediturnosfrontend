@@ -97,7 +97,18 @@ function normalizeEstado(value: unknown) {
   return String(value ?? '').trim().toUpperCase();
 }
 
-const normalizeTurno = (t: any): TurnoResponse => {
+function institutionNameFrom(t: any) {
+  if (t?.institucionNombre) return t.institucionNombre;
+  if (t?.institucion) return t.institucion;
+  if (typeof t?.profesionalInstitucion?.institucion?.nombre === 'string') return t.profesionalInstitucion.institucion.nombre;
+  return 'InstituciÃ³n';
+}
+
+function specialtyFrom(t: any) {
+  return t?.especialidad || t?.especialidadNombre || 'Consulta mÃ©dica';
+}
+
+const normalizeTurno = (t: any): TurnoResponse => { // NOSONAR - accepts several backend response shapes in one legacy normalizer.
   const derived = splitFechaHora(t?.fechaHora ?? t?.fechaHoraInicio ?? t?.fecha_hora);
   const fecha = t?.fecha ?? derived.fecha;
 

@@ -44,6 +44,21 @@ function buildCsv(turnos: TurnoResponse[]) {
   return [headers, ...rows].map((row) => row.map(csvEscape).join(',')).join('\n');
 }
 
+function ReportBar({ label, value, total, theme }: { label: string; value: number; total: number; theme: ReturnType<typeof useMtTheme> }) {
+  const pct = total ? Math.max(5, Math.round((value / total) * 100)) : 0;
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
+        <Text style={{ color: theme.colors.ink, fontWeight: '800', flex: 1 }}>{label}</Text>
+        <Text style={{ color: theme.colors.muted, fontWeight: '900' }}>{value}</Text>
+      </View>
+      <View style={{ height: 10, backgroundColor: theme.colors.primaryLight, borderRadius: 999, overflow: 'hidden', marginTop: 7 }}>
+        <View style={{ width: `${pct}%`, height: 10, backgroundColor: theme.colors.primary, borderRadius: 999 }} />
+      </View>
+    </View>
+  );
+}
+
 export default function AdminReportesScreen() {
   const [turnos, setTurnos] = useState<TurnoResponse[]>([]);
   const [summary, setSummary] = useState<AdminSummary>({});
@@ -124,21 +139,6 @@ export default function AdminReportesScreen() {
 
   if (loading) return <MtLoading text="Cargando reportes..." />;
 
-  const Bar = ({ label, value, total }: { label: string; value: number; total: number }) => {
-    const pct = total ? Math.max(5, Math.round((value / total) * 100)) : 0;
-    return (
-      <View style={{ marginBottom: 12 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
-          <Text style={{ color: theme.colors.ink, fontWeight: '800', flex: 1 }}>{label}</Text>
-          <Text style={{ color: theme.colors.muted, fontWeight: '900' }}>{value}</Text>
-        </View>
-        <View style={{ height: 10, backgroundColor: theme.colors.primaryLight, borderRadius: 999, overflow: 'hidden', marginTop: 7 }}>
-          <View style={{ width: `${pct}%`, height: 10, backgroundColor: theme.colors.primary, borderRadius: 999 }} />
-        </View>
-      </View>
-    );
-  };
-
   return (
     <MtScreen scroll>
       <MtHeader eyebrow="ADMIN" title="Reportes" subtitle="Indicadores operativos de turnos y resumen del sistema." />
@@ -165,23 +165,23 @@ export default function AdminReportesScreen() {
 
       <MtCard style={{ marginBottom: 14 }}>
         <AdminTitle title="Turnos por estado" />
-        {topEntries(byStatus, 12).map(([label, value]) => <Bar key={label} label={label} value={value} total={filtered.length} />)}
+        {topEntries(byStatus, 12).map(([label, value]) => <ReportBar key={label} label={label} value={value} total={filtered.length} theme={theme} />)}
         {!Object.keys(byStatus).length ? <Text style={{ color: theme.colors.muted }}>Sin datos para el filtro.</Text> : null}
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>
         <AdminTitle title="Especialidades más demandadas" />
-        {topEntries(bySpecialty).map(([label, value]) => <Bar key={label} label={label} value={value} total={filtered.length} />)}
+        {topEntries(bySpecialty).map(([label, value]) => <ReportBar key={label} label={label} value={value} total={filtered.length} theme={theme} />)}
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>
         <AdminTitle title="Médicos con más turnos" />
-        {topEntries(byProfessional).map(([label, value]) => <Bar key={label} label={label} value={value} total={filtered.length} />)}
+        {topEntries(byProfessional).map(([label, value]) => <ReportBar key={label} label={label} value={value} total={filtered.length} theme={theme} />)}
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>
         <AdminTitle title="Instituciones" />
-        {topEntries(byInstitution).map(([label, value]) => <Bar key={label} label={label} value={value} total={filtered.length} />)}
+        {topEntries(byInstitution).map(([label, value]) => <ReportBar key={label} label={label} value={value} total={filtered.length} theme={theme} />)}
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>
@@ -207,7 +207,7 @@ export default function AdminReportesScreen() {
 
       <MtCard style={{ marginBottom: 14 }}>
         <AdminTitle title="Actividad por fecha" />
-        {topEntries(byDate, 10).map(([label, value]) => <Bar key={label} label={label || 'Sin fecha'} value={value} total={filtered.length} />)}
+        {topEntries(byDate, 10).map(([label, value]) => <ReportBar key={label} label={label || 'Sin fecha'} value={value} total={filtered.length} theme={theme} />)}
       </MtCard>
 
       <MtButton title="Exportar CSV filtrado" variant="secondary" onPress={exportCsv} disabled={!filtered.length} />

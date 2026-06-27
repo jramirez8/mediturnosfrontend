@@ -77,6 +77,15 @@ function chunkRows<T>(items: T[], size: number) {
   return rows;
 }
 
+function calendarStatus(inMonth: boolean, past: boolean, blocked: boolean, slotCount: number, attends: boolean): DayStatus {
+  if (!inMonth) return 'outside';
+  if (past) return 'past';
+  if (blocked) return 'blocked';
+  if (slotCount > 0) return 'withSlots';
+  if (attends) return 'weeklyNoSlots';
+  return 'noSchedule';
+}
+
 function buildCalendarCells(monthCursor: Date, horarios: HorarioAtencion[], bloqueos: AgendaBloqueo[], slots: AppointmentSlot[]): CalendarCell[] {
   const attendsDays = new Set(horarios.filter((h) => h.activo !== false).map((h) => normalizeApiDay(h.diaSemana)));
   const blockedDates = new Set(bloqueos.map((b) => isoFromDateTime(b.fechaDesde)).filter(Boolean));
@@ -99,17 +108,7 @@ function buildCalendarCells(monthCursor: Date, horarios: HorarioAtencion[], bloq
     const blocked = blockedDates.has(iso);
     const past = iso < today;
     const slotCount = slotMap[iso]?.length ?? 0;
-    const status: DayStatus = !inMonth
-      ? 'outside'
-      : past
-        ? 'past'
-        : blocked
-          ? 'blocked'
-          : slotCount > 0
-            ? 'withSlots'
-            : attends
-              ? 'weeklyNoSlots'
-              : 'noSchedule';
+    const status = calendarStatus(inMonth, past, blocked, slotCount, attends);
 
     return {
       key: `${iso}-${index}`,
@@ -332,8 +331,8 @@ export default function MedicoDisponibilidadScreen() {
         </View>
 
         <View style={styles.weekRow}>{WEEKDAYS.map((d) => <Text key={d} style={styles.weekDay}>{d}</Text>)}</View>
-        <View style={styles.calendarGrid}>{calendarRows.map((row, rowIndex) => (
-          <View key={`row-${rowIndex}`} style={styles.calendarRow}>{row.map((cell) => {
+        <View style={styles.calendarGrid}>{calendarRows.map((row) => (
+          <View key={row.map((cell) => cell.key).join('|')} style={styles.calendarRow}>{row.map((cell) => {
             const selected = cell.iso === selectedDate;
             return (
               <CalendarDay key={cell.key} cell={cell} selected={selected} styles={styles} onPress={() => cell.inMonth && setSelectedDate(cell.iso)} />

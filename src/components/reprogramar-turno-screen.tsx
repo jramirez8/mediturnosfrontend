@@ -11,12 +11,12 @@ type Notice = {
   message: string;
 };
 
-type Props = {
+type Props = Readonly<{
   eyebrow: string;
   backTitle: string;
   backPath: string;
   navigation: React.ReactNode;
-};
+}>;
 
 export function ReprogramarTurnoScreen({ eyebrow, backTitle, backPath, navigation }: Props) {
   const params = useLocalSearchParams<{

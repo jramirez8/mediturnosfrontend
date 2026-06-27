@@ -52,7 +52,14 @@ export function AdminActionRow({ children, style }: { children: React.ReactNode;
 export function AdminMiniButton({ label, onPress, tone = 'primary', disabled }: { label: string; onPress?: () => void; tone?: 'primary' | 'danger' | 'success' | 'warning' | 'muted'; disabled?: boolean }) {
   const theme = useMtTheme();
   const { language } = useTranslation();
-  const color = tone === 'danger' ? theme.colors.danger : tone === 'success' ? theme.colors.success : tone === 'warning' ? theme.colors.warning : tone === 'muted' ? theme.colors.muted : theme.colors.primary;
+  const colors = {
+    danger: theme.colors.danger,
+    success: theme.colors.success,
+    warning: theme.colors.warning,
+    muted: theme.colors.muted,
+    primary: theme.colors.primary,
+  };
+  const color = colors[tone];
   const filled = tone === 'primary' || tone === 'success';
   return (
     <Pressable

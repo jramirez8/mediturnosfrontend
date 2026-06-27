@@ -23,7 +23,7 @@ function useStyles() {
     return { theme, styles };
 }
 function DecorativeBackground() {
-    const { theme, styles } = useStyles();
+    const { styles } = useStyles();
     return (<View pointerEvents="none" style={styles.decorRoot}>
       <View style={styles.topWash}/>
       <View style={styles.topOrb}/>
