@@ -213,6 +213,13 @@ function ReasonSection({ motivo, setMotivo, observaciones, setObservaciones, sty
     const { t } = useTranslation();
     return <><Text style={styles.step}>{t('appointment.reasonStep')}</Text><MtCard style={styles.block}><Text style={styles.label}>{t('appointment.reason')} *</Text><TextInput value={motivo} onChangeText={setMotivo} placeholder={language === 'en' ? 'Example: checkup, pain, test...' : 'Ej: control general, dolor, estudio...'} placeholderTextColor={theme.colors.soft} style={styles.input}/><Text style={[styles.label, { marginTop: 14 }]}>{t('appointment.observations')} *</Text><TextInput value={observaciones} onChangeText={setObservaciones} placeholder={language === 'en' ? 'Additional information for the professional' : 'Información adicional para el profesional'} placeholderTextColor={theme.colors.soft} multiline textAlignVertical="top" style={[styles.input, styles.textArea]}/></MtCard></>;
 }
+function getAttachButtonTitle(documentation: PickedMedia | null, language: string) {
+    if (documentation) {
+        return language === 'en' ? 'Change document' : 'Cambiar documentación';
+    }
+    return language === 'en' ? '📎 Attach document' : '📎 Adjuntar documentación';
+}
+
 function AttachmentSection({ documentation, pick, styles, language }: {
     documentation: PickedMedia | null;
     pick: () => void;
@@ -220,7 +227,7 @@ function AttachmentSection({ documentation, pick, styles, language }: {
     language: string;
 }) {
     const { t } = useTranslation();
-    const buttonTitle = documentation ? (language === 'en' ? 'Change document' : 'Cambiar documentación') : (language === 'en' ? '📎 Attach document' : '📎 Adjuntar documentación');
+    const buttonTitle = getAttachButtonTitle(documentation, language);
     return <><Text style={styles.step}>{t('appointment.attachStep')}</Text><MtCard style={styles.block}><Text style={styles.attachIntro}>📎 {t('appointment.attachOptional')}</Text><MtButton title={buttonTitle} variant="secondary" onPress={pick} style={{ marginTop: 12 }}/>{documentation ? <Text style={styles.attachmentName}>{language === 'en' ? 'Selected file:' : 'Archivo seleccionado:'} {documentation.fileName ?? 'imagen'}</Text> : null}</MtCard></>;
 }
 function SummaryActions({ created, sending, confirm, reset, language, styles }: {

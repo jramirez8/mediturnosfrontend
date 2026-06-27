@@ -63,7 +63,16 @@ function DiagnosticLine({ label, value, theme }: {
     label: string;
     value: string;
     theme: ReturnType<typeof useMtTheme>;
-}) { const text = String(value); const color = text.includes('OK') ? theme.colors.success : (text.includes('ERROR') || label === 'error' ? theme.colors.danger : theme.colors.muted); return <Text style={{ color, fontWeight: '800', fontSize: 12 }}>{label}: {text}</Text>; }
+}) {
+    const text = String(value);
+    let color = theme.colors.muted;
+    if (text.includes('OK')) {
+        color = theme.colors.success;
+    } else if (text.includes('ERROR') || label === 'error') {
+        color = theme.colors.danger;
+    }
+    return <Text style={{ color, fontWeight: '800', fontSize: 12 }}>{label}: {text}</Text>;
+}
 function ChecklistCard({ items, diagnosticOpen, diagnostic, runDiagnostic, toggleDiagnostic, theme }: {
     items: ChecklistItem[];
     diagnosticOpen: boolean;

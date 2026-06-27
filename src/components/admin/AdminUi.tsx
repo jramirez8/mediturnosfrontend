@@ -31,10 +31,16 @@ export function AdminTabs<T extends string>({ value, options, onChange }: { valu
 export function AdminKV({ label, value }: { label: string; value?: string | number | null }) {
   const theme = useMtTheme();
   const { language } = useTranslation();
+  const missingValueText = () => {
+    if (language === 'en') return 'Not provided';
+    if (language === 'pt') return 'Não informado';
+    return 'No informado';
+  };
+
   return (
     <View style={{ marginTop: 7, paddingVertical: 3 }}>
       <Text style={{ color: theme.colors.primary, fontSize: 11, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.7 }}>{translateLiteral(label, language)}</Text>
-      <Text style={{ color: theme.colors.muted, fontWeight: '800', marginTop: 3 }}>{value || (language === 'en' ? 'Not provided' : language === 'pt' ? 'Não informado' : 'No informado')}</Text>
+      <Text style={{ color: theme.colors.muted, fontWeight: '800', marginTop: 3 }}>{value || missingValueText()}</Text>
     </View>
   );
 }

@@ -67,7 +67,10 @@ function TwoFactorField(props: LoginCardProps) {
 function LoginMessages(props: LoginCardProps) {
     const { t } = useTranslation();
     const needsVerification = Boolean(props.errorMessage && /verific/i.test(props.errorMessage));
-    const displayedError = needsVerification ? props.errorMessage : props.invalidCredentials ? t('login.errorInvalid') : props.errorMessage;
+    let displayedError = props.errorMessage;
+    if (!needsVerification) {
+      displayedError = props.invalidCredentials ? t('login.errorInvalid') : props.errorMessage;
+    }
     return <>
     {props.infoMessage ? <View style={[styles.messageBox, styles.infoBox]}><Text style={[styles.messageTitle, styles.infoTitle]}>{t('login.verificationRequired')}</Text><Text style={styles.messageText}>{props.infoMessage}</Text>{props.twoFactorDestination ? <Text style={styles.messageFoot}>{props.twoFactorDestination}</Text> : null}</View> : null}
     {props.errorMessage ? <View style={[styles.messageBox, styles.errorBox]}><Text style={[styles.messageTitle, styles.errorTitle]}>{t('login.signInErrorTitle')}</Text><Text style={styles.messageText}>{displayedError}</Text>{needsVerification ? <Pressable style={styles.verifyAccountButton} onPress={() => router.push({ pathname: '/registro/verificar', params: { email: props.identifier.trim() } })}><Text style={styles.verifyAccountText}>Ingresar código de verificación</Text></Pressable> : null}</View> : null}

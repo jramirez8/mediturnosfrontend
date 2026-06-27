@@ -28,30 +28,35 @@ export type UserProfile = {
   carnetObraSocialSizeBytes?: number;
 };
 
-const normalizeProfile = (p: any): UserProfile => ({
-  id: Number(p.pacienteId ?? p.id),
-  pacienteId: p.pacienteId ? Number(p.pacienteId) : p.id ? Number(p.id) : undefined,
-  usuarioId: Number(p.usuarioId ?? p.usuario?.id),
-  nombre: p.nombre ?? p.usuario?.nombre ?? '',
-  apellido: p.apellido ?? p.usuario?.apellido ?? '',
-  dni: p.dni ?? p.usuario?.dni ?? '',
-  email: p.email ?? p.usuario?.email ?? '',
-  telefono: p.telefono,
-  obraSocialId: p.obraSocialId ? Number(p.obraSocialId) : p.obraSocial?.id ? Number(p.obraSocial.id) : undefined,
-  obraSocial: p.obraSocialNombre ?? p.obraSocial ?? p.obraSocial?.nombre,
-  obraSocialNombre: p.obraSocialNombre ?? p.obraSocial ?? p.obraSocial?.nombre,
-  numeroAfiliado: p.numeroCarnet ?? p.numeroAfiliado ?? p.numCarnet,
-  numeroCarnet: p.numeroCarnet ?? p.numeroAfiliado ?? p.numCarnet,
-  numeroHistoriaClinica: p.numeroHistoriaClinica,
-  institucionCabecera: p.hospitalClinicaCabecera ?? p.institucionCabecera,
-  hospitalClinicaCabecera: p.hospitalClinicaCabecera ?? p.institucionCabecera,
-  medicoCabecera: p.doctorCabecera ?? p.medicoCabecera,
-  doctorCabecera: p.doctorCabecera ?? p.medicoCabecera,
-  fotoPerfilUrl: absoluteApiUrl(p.fotoPerfilUrl),
-  carnetObraSocialUrl: absoluteApiUrl(p.carnetObraSocialUrl),
-  fotoPerfilSizeBytes: p.fotoPerfilSizeBytes ? Number(p.fotoPerfilSizeBytes) : undefined,
-  carnetObraSocialSizeBytes: p.carnetObraSocialSizeBytes ? Number(p.carnetObraSocialSizeBytes) : undefined,
-});
+const normalizeProfile = (p: any): UserProfile => {
+  const pacienteId = p.pacienteId ? Number(p.pacienteId) : p.id ? Number(p.id) : undefined;
+  const obraSocialId = p.obraSocialId ? Number(p.obraSocialId) : p.obraSocial?.id ? Number(p.obraSocial.id) : undefined;
+
+  return {
+    id: Number(p.pacienteId ?? p.id),
+    pacienteId,
+    usuarioId: Number(p.usuarioId ?? p.usuario?.id),
+    nombre: p.nombre ?? p.usuario?.nombre ?? '',
+    apellido: p.apellido ?? p.usuario?.apellido ?? '',
+    dni: p.dni ?? p.usuario?.dni ?? '',
+    email: p.email ?? p.usuario?.email ?? '',
+    telefono: p.telefono,
+    obraSocialId,
+    obraSocial: p.obraSocialNombre ?? p.obraSocial ?? p.obraSocial?.nombre,
+    obraSocialNombre: p.obraSocialNombre ?? p.obraSocial ?? p.obraSocial?.nombre,
+    numeroAfiliado: p.numeroCarnet ?? p.numeroAfiliado ?? p.numCarnet,
+    numeroCarnet: p.numeroCarnet ?? p.numeroAfiliado ?? p.numCarnet,
+    numeroHistoriaClinica: p.numeroHistoriaClinica,
+    institucionCabecera: p.hospitalClinicaCabecera ?? p.institucionCabecera,
+    hospitalClinicaCabecera: p.hospitalClinicaCabecera ?? p.institucionCabecera,
+    medicoCabecera: p.doctorCabecera ?? p.medicoCabecera,
+    doctorCabecera: p.doctorCabecera ?? p.medicoCabecera,
+    fotoPerfilUrl: absoluteApiUrl(p.fotoPerfilUrl),
+    carnetObraSocialUrl: absoluteApiUrl(p.carnetObraSocialUrl),
+    fotoPerfilSizeBytes: p.fotoPerfilSizeBytes ? Number(p.fotoPerfilSizeBytes) : undefined,
+    carnetObraSocialSizeBytes: p.carnetObraSocialSizeBytes ? Number(p.carnetObraSocialSizeBytes) : undefined,
+  };
+};
 
 function clean(value?: string | number | null) {
   if (value === undefined || value === null) return undefined;

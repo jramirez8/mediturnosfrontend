@@ -44,7 +44,10 @@ export default function SecretariaTurnosScreen() {
   const changeState = async (turno: TurnoResponse, action: 'confirmar' | 'cancelar' | 'ausente') => {
     setWorkingId(turno.id); setError(null); setMessage(null);
     try {
-      const updated = action === 'confirmar' ? await secretariaService.confirmar(turno.id) : action === 'cancelar' ? await secretariaService.cancelar(turno.id) : await secretariaService.ausente(turno.id);
+      let updated: TurnoResponse;
+      if (action === 'confirmar') updated = await secretariaService.confirmar(turno.id);
+      else if (action === 'cancelar') updated = await secretariaService.cancelar(turno.id);
+      else updated = await secretariaService.ausente(turno.id);
       setMessage(`Turno #${updated.id} actualizado a ${updated.estado}.`);
       scrollToTop();
       await load();
@@ -64,7 +67,10 @@ export default function SecretariaTurnosScreen() {
       <MtCard style={{ marginBottom: 14, gap: 12 }}>
         <MtInput label="Buscar" value={query} onChangeText={setQuery} placeholder="DNI, paciente, médico, especialidad..." />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {estados.map((e) => <MtPill key={e} label={e} selected={estado === e} tone={e === 'CANCELADO' || e === 'AUSENTE' ? 'danger' : e === 'ATENDIDO' || e === 'CONFIRMADO' ? 'success' : 'warning'} onPress={() => setEstado(e)} />)}
+          {estados.map((e) => {
+            const tone = e === 'CANCELADO' || e === 'AUSENTE' ? 'danger' : e === 'ATENDIDO' || e === 'CONFIRMADO' ? 'success' : 'warning';
+            return <MtPill key={e} label={e} selected={estado === e} tone={tone} onPress={() => setEstado(e)} />;
+          })}
         </View>
       </MtCard>
       {filtered.length ? filtered.map((turno) => (

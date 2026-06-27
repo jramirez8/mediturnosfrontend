@@ -94,15 +94,18 @@ const normalizeTurno = (t: any): TurnoResponse => {
   const pacienteNombre = t?.pacienteNombreCompleto
     ?? `${t?.pacienteNombre ?? t?.paciente?.nombre ?? ''} ${t?.pacienteApellido ?? t?.paciente?.apellido ?? ''}`.trim();
 
+  const pacienteId = t?.pacienteId ? Number(t.pacienteId) : t?.paciente?.id ? Number(t.paciente.id) : undefined;
+  const profesionalId = t?.profesionalId ? Number(t.profesionalId) : t?.profesional?.id ? Number(t.profesional.id) : undefined;
+
   return {
     id: Number(t?.id),
     fecha,
     hora,
     fechaHora: buildFechaHora(fecha, hora, t?.fechaHora ?? t?.fechaHoraInicio),
-    pacienteId: t?.pacienteId ? Number(t.pacienteId) : t?.paciente?.id ? Number(t.paciente.id) : undefined,
+    pacienteId,
     pacienteNombre,
     pacienteDni: t?.pacienteDni ?? t?.dni ?? t?.paciente?.dni,
-    profesionalId: t?.profesionalId ? Number(t.profesionalId) : t?.profesional?.id ? Number(t.profesional.id) : undefined,
+    profesionalId,
     profesionalInstitucionId: t?.profesionalInstitucionId ? Number(t.profesionalInstitucionId) : undefined,
     especialidadId: t?.especialidadId ? Number(t.especialidadId) : undefined,
     profesionalNombre,

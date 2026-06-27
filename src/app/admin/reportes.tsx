@@ -70,7 +70,11 @@ export default function AdminReportesScreen() {
     const q = query.toLowerCase().trim();
     return turnos.filter((t) => {
       const fecha = t.fecha || t.fechaHora;
-      const matchRange = range === 'TODOS' ? true : range === 'HOY' ? dateKey(fecha) === todayKey() : range === 'FUTUROS' ? isFuture(fecha) : isPast(fecha);
+      let matchRange = false;
+      if (range === 'TODOS') matchRange = true;
+      else if (range === 'HOY') matchRange = dateKey(fecha) === todayKey();
+      else if (range === 'FUTUROS') matchRange = isFuture(fecha);
+      else matchRange = isPast(fecha);
       const text = `${t.pacienteNombre} ${t.profesionalNombre} ${t.especialidad} ${t.institucionNombre} ${t.estado} ${t.fecha} ${t.hora}`.toLowerCase();
       return matchRange && (!q || text.includes(q));
     });

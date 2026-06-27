@@ -185,7 +185,10 @@ function AppointmentCard({
 }) {
   const estado = String(item.estado).toUpperCase();
   const isFinal = FINAL_STATES.has(estado);
-  const tone = estado === 'CONFIRMADO' || estado === 'REPROGRAMADO' ? 'success' : estado === 'PENDIENTE' ? 'warning' : estado === 'CANCELADO' ? 'danger' : 'muted';
+  let tone: 'success' | 'warning' | 'danger' | 'muted' = 'muted';
+  if (estado === 'CONFIRMADO' || estado === 'REPROGRAMADO') tone = 'success';
+  else if (estado === 'PENDIENTE') tone = 'warning';
+  else if (estado === 'CANCELADO') tone = 'danger';
 
   return (
     <MtCard style={styles.card}>

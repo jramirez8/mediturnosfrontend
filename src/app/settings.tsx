@@ -33,6 +33,12 @@ export default function GlobalSettingsScreen() {
     </Pressable>
   );
 
+  const getThemeLabel = (item: ThemeMode) => {
+    if (item === 'light') return t('settings.light');
+    if (item === 'dark') return t('settings.dark');
+    return t('settings.system');
+  };
+
   return (
     <MtScreen scroll>
       <MtHeader eyebrow="CONFIG" title={t('settings.title')} subtitle={t('settings.subtitle')} />
@@ -49,7 +55,7 @@ export default function GlobalSettingsScreen() {
         <Text style={styles.muted}>{t('settings.appearanceHelp')}</Text>
         <View style={styles.optionRow}>
           {(['light', 'dark', 'system'] as ThemeMode[]).map((item) => (
-            <Option key={item} label={item === 'light' ? t('settings.light') : item === 'dark' ? t('settings.dark') : t('settings.system')} selected={mode === item} onPress={() => setMode(item)} />
+            <Option key={item} label={getThemeLabel(item)} selected={mode === item} onPress={() => setMode(item)} />
           ))}
         </View>
       </MtCard>

@@ -82,9 +82,9 @@ export default function AgendaAvanzadaAdmin() {
 
   useEffect(() => {
     professionalService.getAll().then((data) => {
-      const valid = data.filter((p) => p.profesionalInstitucionId);
+      const firstValid = data.find((p) => p.profesionalInstitucionId);
       setProfessionals(data);
-      setSelectedId(valid[0]?.profesionalInstitucionId ? String(valid[0].profesionalInstitucionId) : '');
+      setSelectedId(firstValid?.profesionalInstitucionId ? String(firstValid.profesionalInstitucionId) : '');
     }).catch((e) => {
       setNotice({ type: 'danger', title: 'No pudimos cargar profesionales', message: readableError(e, 'Reintentá en unos segundos.') });
     }).finally(() => setLoading(false));

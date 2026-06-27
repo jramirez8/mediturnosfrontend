@@ -210,6 +210,13 @@ export default function MedicoDisponibilidadScreen() {
   const selectedDaySchedules = useMemo(() => horarios.filter((h) => normalizeApiDay(h.diaSemana) === selectedDateWeekday && h.activo !== false), [horarios, selectedDateWeekday]);
   const selectedDayBlocked = useMemo(() => bloqueos.some((b) => isoFromDateTime(b.fechaDesde) === selectedDate), [bloqueos, selectedDate]);
   const selectedDaySlots = useMemo(() => slotsVisibles.filter((s) => s.fecha === selectedDate && s.disponible !== false), [slotsVisibles, selectedDate]);
+  const selectedDayMessage = selectedDayBlocked
+    ? 'Bloqueado'
+    : selectedDaySlots.length
+      ? `${selectedDaySlots.length} cupos libres`
+      : selectedDaySchedules.length
+        ? 'Atiende, pero sin cupos libres'
+        : 'Sin atención semanal';
   const horariosOrdenados = useMemo(() => [...horarios].sort((a, b) => WEEKDAY_OPTIONS.findIndex((d) => d.api === normalizeApiDay(a.diaSemana)) - WEEKDAY_OPTIONS.findIndex((d) => d.api === normalizeApiDay(b.diaSemana))), [horarios]);
   const availableDaysCount = useMemo(() => new Set(slotsVisibles.map((slot) => slot.fecha)).size, [slotsVisibles]);
 
@@ -344,7 +351,7 @@ export default function MedicoDisponibilidadScreen() {
 
       <MtCard style={{ gap: 12, marginBottom: 14 }}>
         <Text style={styles.title}>Día seleccionado: {formatDate(selectedDate)}</Text>
-        <Text style={styles.muted}>{API_DAY_TO_LABEL[selectedDateWeekday]} · {selectedDayBlocked ? 'Bloqueado' : selectedDaySlots.length ? `${selectedDaySlots.length} cupos libres` : selectedDaySchedules.length ? 'Atiende, pero sin cupos libres' : 'Sin atención semanal'}</Text>
+        <Text style={styles.muted}>{API_DAY_TO_LABEL[selectedDateWeekday]} · {selectedDayMessage}</Text>
         {!!selectedDaySchedules.length && <View style={styles.detailBox}>{selectedDaySchedules.map((h) => <Text key={h.id} style={styles.detailText}>• {formatTime(h.horaDesde)} a {formatTime(h.horaHasta)} · cada {h.duracionTurnoMin} min</Text>)}</View>}
         {!!selectedDaySlots.length && <View style={styles.detailBox}><Text style={styles.detailTitle}>Primeros cupos visibles</Text>{selectedDaySlots.slice(0, 6).map((slot) => <Text key={`${slot.fecha}-${slot.hora}`} style={styles.detailText}>• {formatTime(slot.hora)}</Text>)}</View>}
         <Field label="Motivo bloqueo" value={bloqueoMotivo} setValue={setBloqueoMotivo} styles={styles} />

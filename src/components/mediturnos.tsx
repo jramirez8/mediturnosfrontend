@@ -113,6 +113,14 @@ export function MtInput({ label, style, ...props }: TextInputProps & {
       <TextInput placeholderTextColor={theme.colors.soft} style={[styles.input, style]} {...props}/>
     </View>);
 }
+function getToneColor(theme: MediturnosTheme, tone: 'primary' | 'success' | 'warning' | 'danger' | 'muted') {
+    if (tone === 'success') return theme.colors.success;
+    if (tone === 'warning') return theme.colors.warning;
+    if (tone === 'danger') return theme.colors.danger;
+    if (tone === 'muted') return theme.colors.muted;
+    return theme.colors.primary;
+}
+
 export function MtPill({ label, tone = 'primary', selected = false, onPress }: {
     label: string;
     tone?: 'primary' | 'success' | 'warning' | 'danger' | 'muted';
@@ -121,7 +129,7 @@ export function MtPill({ label, tone = 'primary', selected = false, onPress }: {
 }) {
     const { theme, styles } = useStyles();
     const { language } = useTranslation();
-    const toneColor = tone === 'success' ? theme.colors.success : tone === 'warning' ? theme.colors.warning : tone === 'danger' ? theme.colors.danger : tone === 'muted' ? theme.colors.muted : theme.colors.primary;
+    const toneColor = getToneColor(theme, tone);
     return (<Pressable onPress={onPress} disabled={!onPress} style={[styles.pill, selected && { backgroundColor: toneColor, borderColor: toneColor, shadowColor: toneColor, shadowOpacity: 0.18 }]}> 
       <Text style={[styles.pillText, { color: selected ? '#FFFFFF' : toneColor }]} numberOfLines={1} adjustsFontSizeToFit>{translateLiteral(label, language)}</Text>
     </Pressable>);
@@ -237,7 +245,7 @@ export function MtStat({ label, value, tone = 'primary' }: {
 }) {
     const { theme, styles } = useStyles();
     const { language } = useTranslation();
-    const color = tone === 'success' ? theme.colors.success : tone === 'warning' ? theme.colors.warning : tone === 'danger' ? theme.colors.danger : theme.colors.primary;
+    const color = getToneColor(theme, tone);
     return (<View style={[styles.statCard, { borderColor: `${color}55` }]}> 
       <Text style={[styles.statValue, { color }]}>{value}</Text>
       <Text style={styles.statLabel}>{translateLiteral(label, language)}</Text>

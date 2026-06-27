@@ -232,11 +232,29 @@ export default function AdminProfesionalesScreen() {
     const filteredProfessionals = useMemo(() => profesionales.filter((p) => includesText(p, query.toLowerCase().trim())), [profesionales, query]);
     const filteredSecretaries = useMemo(() => secretarias.filter((s) => includesText(s, query.toLowerCase().trim())), [secretarias, query]);
     const filteredPatients = useMemo(() => pacientes.filter((p) => includesText(p, query.toLowerCase().trim())), [pacientes, query]);
-    const closeForm = () => { setFormOpen(false); setProfForm(profesionalEmpty); setSecForm(secretariaEmpty); setPacForm(pacienteEmpty); };
-    const openCreate = () => { setMessage(null); setError(null); setFormOpen(true); if (tab === 'MEDICOS')
-        setProfForm(profesionalEmpty); if (tab === 'SECRETARIAS')
-        setSecForm(secretariaEmpty); if (tab === 'PACIENTES')
-        setPacForm(pacienteEmpty); };
+    const closeForm = () => {
+        setFormOpen(false);
+        setProfForm(profesionalEmpty);
+        setSecForm(secretariaEmpty);
+        setPacForm(pacienteEmpty);
+    };
+    const openCreate = () => {
+        setMessage(null);
+        setError(null);
+        setFormOpen(true);
+
+        if (tab === 'MEDICOS') {
+            setProfForm(profesionalEmpty);
+        }
+
+        if (tab === 'SECRETARIAS') {
+            setSecForm(secretariaEmpty);
+        }
+
+        if (tab === 'PACIENTES') {
+            setPacForm(pacienteEmpty);
+        }
+    };
     const editProfesional = (p: AdminProfesional) => {
         setTab('MEDICOS');
         setFormOpen(true);
