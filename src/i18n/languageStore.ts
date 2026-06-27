@@ -58,7 +58,7 @@ const es: Dictionary = {
   'login.welcome': 'Bienvenido de nuevo',
   'login.email': 'Email o DNI',
   'login.emailPlaceholder': 'DNI o email',
-  'login.password': 'Contraseña',
+  'login.password': 'Contraseña', // NOSONAR - translation label, not a hard-coded credential.
   'login.submit': 'Ingresar',
   'login.biometric': 'Ingresar con biometría / PIN',
   'login.createAccount': 'Crear cuenta',
@@ -422,7 +422,7 @@ const pt: Dictionary = {
   'login.welcome': 'Bem-vindo novamente',
   'login.email': 'Email ou DNI',
   'login.emailPlaceholder': 'DNI ou email',
-  'login.password': 'Senha',
+  'login.password': 'Senha', // NOSONAR - translation label, not a hard-coded credential.
   'login.submit': 'Entrar',
   'login.biometric': 'Entrar com biometria / PIN',
   'login.createAccount': 'Criar conta',
@@ -572,6 +572,12 @@ function interpolate(text: string, params?: Record<string, string | number>) {
   return Object.entries(params).reduce((acc, [key, value]) => acc.split(`{${key}}`).join(String(value)), text);
 }
 
+function nextLanguageFrom(current: AppLanguage): AppLanguage {
+  if (current === 'es') return 'en';
+  if (current === 'en') return 'pt';
+  return 'es';
+}
+
 export const useLanguageStore = create<LanguageState>((set, get) => ({
   language: 'es',
   hydrated: false,
@@ -583,8 +589,7 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
 
   toggleLanguage: async () => {
     const current = get().language;
-    const nextLanguage: AppLanguage = current === 'es' ? 'en' : current === 'en' ? 'pt' : 'es';
-    await get().setLanguage(nextLanguage);
+    await get().setLanguage(nextLanguageFrom(current));
   },
 
   loadLanguage: async () => {

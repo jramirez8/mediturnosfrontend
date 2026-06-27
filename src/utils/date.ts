@@ -71,7 +71,7 @@ export function formatTime(value?: string | null) {
 
 export function minutesFromTime(value?: string | null) {
   const normalized = normalizeTimeInput(value);
-  if (!normalized) return NaN;
+  if (!normalized) return Number.NaN;
   const [h, m] = normalized.split(':').map(Number);
   return h * 60 + m;
 }

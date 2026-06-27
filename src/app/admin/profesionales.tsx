@@ -31,6 +31,13 @@ function toggleId(ids: number[], id: number) {
 function quickPassword(prefix: string) {
     return `${prefix}${new Date().getFullYear()}!`;
 }
+function personnelFormButtonTitle(open: boolean, tab: Tab) {
+    if (open)
+        return 'Cerrar formulario';
+    if (tab === 'MEDICOS')
+        return 'Crear médico';
+    return 'Crear secretaría';
+}
 type ProfessionalForm = typeof profesionalEmpty;
 type SecretaryForm = typeof secretariaEmpty;
 type PatientForm = typeof pacienteEmpty;
@@ -464,7 +471,6 @@ export default function AdminProfesionalesScreen() {
     if (loading)
         return <MtLoading text="Cargando gestión de personas..."/>;
     const changeTab = (value: Tab) => { setTab(value); closeForm(); };
-    const formButtonTitle = formOpen ? 'Cerrar formulario' : tab === 'MEDICOS' ? 'Crear mÃ©dico' : 'Crear secretarÃ­a';
     return <MtScreen scroll scrollRef={scrollRef}>
     <MtHeader eyebrow="ADMIN" title="Personal" subtitle="Médicos y secretarías. Los pacientes se crean desde Admin > Usuarios."/>
     {message ? <AdminNotice type="success" title="Listo" message={message}/> : null}
@@ -472,7 +478,7 @@ export default function AdminProfesionalesScreen() {
     <MtCard style={{ marginBottom: 14 }}>
       <AdminTabs value={tab} onChange={changeTab} options={[{ value: 'MEDICOS', label: `Médicos ${profesionales.length}` }, { value: 'SECRETARIAS', label: `Secretaría ${secretarias.length}`, tone: 'warning' }]}/>
       <MtInput label="Buscar" value={query} onChangeText={setQuery} placeholder="nombre, dni, email, matrícula..." autoCapitalize="none"/>
-      <MtButton title={formOpen ? 'Cerrar formulario' : tab === 'MEDICOS' ? 'Crear médico' : 'Crear secretaría'} onPress={formOpen ? closeForm : openCreate} style={{ marginTop: 12 }}/>
+      <MtButton title={personnelFormButtonTitle(formOpen, tab)} onPress={formOpen ? closeForm : openCreate} style={{ marginTop: 12 }}/>
     </MtCard>
     <PersonnelFormArea open={formOpen} tab={tab} profForm={profForm} setProfForm={setProfForm} secForm={secForm} setSecForm={setSecForm} pacForm={pacForm} setPacForm={setPacForm} especialidades={especialidades} instituciones={instituciones} obras={obras} profesionales={profesionales} saving={saving} saveProfessional={saveProfesional} saveSecretary={saveSecretaria} savePatient={savePaciente} theme={theme}/>
     <PersonnelListArea tab={tab} professionals={filteredProfessionals} secretaries={filteredSecretaries} patients={filteredPatients} working={working} editProfessional={editProfesional} editSecretary={editSecretaria} editPatient={editPaciente} changeActive={setEntityActive} theme={theme}/>

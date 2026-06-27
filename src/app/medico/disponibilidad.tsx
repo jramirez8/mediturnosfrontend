@@ -145,6 +145,13 @@ function findOwnProfessional(professionals: Professional[], professionalId?: str
   return null;
 }
 
+function selectedDayStatusMessage(blocked: boolean, slotCount: number, scheduleCount: number) {
+  if (blocked) return 'Bloqueado';
+  if (slotCount) return `${slotCount} cupos libres`;
+  if (scheduleCount) return 'Atiende, pero sin cupos libres';
+  return 'Sin atención semanal';
+}
+
 export default function MedicoDisponibilidadScreen() {
   const profesionalId = useAuthStore((s) => s.profesionalId);
   const profesionalInstitucionId = useAuthStore((s) => s.profesionalInstitucionId);
@@ -209,13 +216,7 @@ export default function MedicoDisponibilidadScreen() {
   const selectedDaySchedules = useMemo(() => horarios.filter((h) => normalizeApiDay(h.diaSemana) === selectedDateWeekday && h.activo !== false), [horarios, selectedDateWeekday]);
   const selectedDayBlocked = useMemo(() => bloqueos.some((b) => isoFromDateTime(b.fechaDesde) === selectedDate), [bloqueos, selectedDate]);
   const selectedDaySlots = useMemo(() => slotsVisibles.filter((s) => s.fecha === selectedDate && s.disponible !== false), [slotsVisibles, selectedDate]);
-  const selectedDayMessage = selectedDayBlocked
-    ? 'Bloqueado'
-    : selectedDaySlots.length
-      ? `${selectedDaySlots.length} cupos libres`
-      : selectedDaySchedules.length
-        ? 'Atiende, pero sin cupos libres'
-        : 'Sin atención semanal';
+  const selectedDayMessage = selectedDayStatusMessage(selectedDayBlocked, selectedDaySlots.length, selectedDaySchedules.length);
   const horariosOrdenados = useMemo(() => [...horarios].sort((a, b) => WEEKDAY_OPTIONS.findIndex((d) => d.api === normalizeApiDay(a.diaSemana)) - WEEKDAY_OPTIONS.findIndex((d) => d.api === normalizeApiDay(b.diaSemana))), [horarios]);
   const availableDaysCount = useMemo(() => new Set(slotsVisibles.map((slot) => slot.fecha)).size, [slotsVisibles]);
 

@@ -78,6 +78,14 @@ function userMatchesFilter(user: AdminUsuario, filter: Filter, query: string) {
         return user.emailVerificado !== true;
     return role === filter;
 }
+
+function userSubmitTitle(saving: boolean, editing: boolean) {
+    if (saving)
+        return 'Guardando...';
+    if (editing)
+        return 'Guardar cambios';
+    return 'Crear usuario';
+}
 function AdminAccessFields({ form, setForm }: {
     form: UsuarioForm;
     setForm: React.Dispatch<React.SetStateAction<UsuarioForm>>;
@@ -126,7 +134,7 @@ function UserFormCard({ adminForm, setAdminForm, pacienteForm, setPacienteForm, 
     <AdminTitle title={editing ? 'Editar usuario' : 'Crear usuario'} subtitle={editing ? 'Editá acceso, estado y verificación.' : 'Elegí si querés crear administrador o paciente.'}/>
     {!editing ? <AdminTabs value={kind} onChange={setKind} options={[{ value: 'ADMIN', label: 'Administrador', tone: 'danger' }, { value: 'PATIENT', label: 'Paciente', tone: 'success' }]}/> : null}
     {showAdminFields ? <AdminAccessFields form={adminForm} setForm={setAdminForm}/> : <PatientCreateFields form={pacienteForm} setForm={setPacienteForm} obras={obras}/>}
-    <MtButton title={saving ? 'Guardando...' : editing ? 'Guardar cambios' : 'Crear usuario'} onPress={submit} disabled={saving} loading={saving} style={{ marginTop: 12 }}/>
+    <MtButton title={userSubmitTitle(saving, editing)} onPress={submit} disabled={saving} loading={saving} style={{ marginTop: 12 }}/>
     {!editing ? <Text style={{ color: theme.colors.muted, fontWeight: '700', marginTop: 10 }}>Médicos y secretarías se crean desde Admin → Personal para no generar usuarios huérfanos.</Text> : null}
   </MtCard>;
 }
