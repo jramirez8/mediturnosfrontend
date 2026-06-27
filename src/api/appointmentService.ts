@@ -52,9 +52,21 @@ export type TurnoResponse = {
 };
 
 function splitFechaHora(raw?: string | null) {
-  const value = raw ? String(raw) : '';
+  let value = '';
+  if (raw) {
+    value = String(raw);
+  }
+
   if (!value) return { fecha: '', hora: '' };
-  const [fecha, time = ''] = value.includes('T') ? value.split('T') : value.split(' ');
+
+  let fecha: string;
+  let time = '';
+  if (value.includes('T')) {
+    [fecha, time] = value.split('T');
+  } else {
+    [fecha, time] = value.split(' ');
+  }
+
   return { fecha: fecha ?? '', hora: time.slice(0, 5) };
 }
 
@@ -88,15 +100,72 @@ function normalizeEstado(value: unknown) {
 const normalizeTurno = (t: any): TurnoResponse => {
   const derived = splitFechaHora(t?.fechaHora ?? t?.fechaHoraInicio ?? t?.fecha_hora);
   const fecha = t?.fecha ?? derived.fecha;
-  const hora = t?.hora ? String(t.hora).slice(0, 5) : derived.hora;
-  const profesionalNombre = t?.profesionalNombreCompleto
-    ?? t?.profesionalNombreApellido
-    ?? `${t?.profesionalNombre ?? t?.profesional?.nombre ?? ''} ${t?.profesionalApellido ?? t?.profesional?.apellido ?? ''}`.trim();
-  const pacienteNombre = t?.pacienteNombreCompleto
-    ?? `${t?.pacienteNombre ?? t?.paciente?.nombre ?? ''} ${t?.pacienteApellido ?? t?.paciente?.apellido ?? ''}`.trim();
 
-  const pacienteId = t?.pacienteId ? Number(t.pacienteId) : t?.paciente?.id ? Number(t.paciente.id) : undefined;
-  const profesionalId = t?.profesionalId ? Number(t.profesionalId) : t?.profesional?.id ? Number(t.profesional.id) : undefined;
+  let hora = derived.hora;
+  if (t?.hora) {
+    hora = String(t.hora).slice(0, 5);
+  }
+
+  let profesionalNombre = '';
+  if (t?.profesionalNombreCompleto) {
+    profesionalNombre = t.profesionalNombreCompleto;
+  } else if (t?.profesionalNombreApellido) {
+    profesionalNombre = t.profesionalNombreApellido;
+  } else {
+    profesionalNombre = `${t?.profesionalNombre ?? t?.profesional?.nombre ?? ''} ${t?.profesionalApellido ?? t?.profesional?.apellido ?? ''}`.trim();
+  }
+
+  let pacienteNombre = '';
+  if (t?.pacienteNombreCompleto) {
+    pacienteNombre = t.pacienteNombreCompleto;
+  } else {
+    pacienteNombre = `${t?.pacienteNombre ?? t?.paciente?.nombre ?? ''} ${t?.pacienteApellido ?? t?.paciente?.apellido ?? ''}`.trim();
+  }
+
+  let pacienteId: number | undefined;
+  if (t?.pacienteId) {
+    pacienteId = Number(t.pacienteId);
+  } else if (t?.paciente?.id) {
+    pacienteId = Number(t.paciente.id);
+  }
+
+  let profesionalId: number | undefined;
+  if (t?.profesionalId) {
+    profesionalId = Number(t.profesionalId);
+  } else if (t?.profesional?.id) {
+    profesionalId = Number(t.profesional.id);
+  }
+
+  let profesionalInstitucionId: number | undefined;
+  if (t?.profesionalInstitucionId) {
+    profesionalInstitucionId = Number(t.profesionalInstitucionId);
+  }
+
+  let especialidadId: number | undefined;
+  if (t?.especialidadId) {
+    especialidadId = Number(t.especialidadId);
+  }
+
+  let institucionId: number | undefined;
+  if (t?.institucionId) {
+    institucionId = Number(t.institucionId);
+  }
+
+  let institucionNombre = 'Institución';
+  if (t?.institucionNombre) {
+    institucionNombre = t.institucionNombre;
+  } else if (t?.institucion) {
+    institucionNombre = t.institucion;
+  } else if (typeof t?.profesionalInstitucion?.institucion?.nombre === 'string') {
+    institucionNombre = t.profesionalInstitucion.institucion.nombre;
+  }
+
+  let especialidad = 'Consulta médica';
+  if (t?.especialidad) {
+    especialidad = t.especialidad;
+  } else if (t?.especialidadNombre) {
+    especialidad = t.especialidadNombre;
+  }
 
   return {
     id: Number(t?.id),
@@ -107,12 +176,12 @@ const normalizeTurno = (t: any): TurnoResponse => {
     pacienteNombre,
     pacienteDni: t?.pacienteDni ?? t?.dni ?? t?.paciente?.dni,
     profesionalId,
-    profesionalInstitucionId: t?.profesionalInstitucionId ? Number(t.profesionalInstitucionId) : undefined,
-    especialidadId: t?.especialidadId ? Number(t.especialidadId) : undefined,
+    profesionalInstitucionId,
+    especialidadId,
     profesionalNombre,
-    especialidad: t?.especialidad ?? t?.especialidadNombre ?? 'Consulta médica',
-    institucionId: t?.institucionId ? Number(t.institucionId) : undefined,
-    institucionNombre: t?.institucionNombre ?? t?.institucion ?? t?.profesionalInstitucion?.institucion?.nombre ?? 'Institución',
+    especialidad,
+    institucionId,
+    institucionNombre,
     direccionAtencion: t?.direccionAtencion,
     estado: t?.estado ?? 'SIN_ESTADO',
     motivoConsulta: t?.motivoConsulta,
@@ -129,11 +198,11 @@ const normalizeTurno = (t: any): TurnoResponse => {
     habitos: t?.habitos,
     hallazgosExamenFisico: t?.hallazgosExamenFisico,
     conducta: t?.conducta,
-    documentacionId: t?.documentacionId ? Number(t.documentacionId) : undefined,
+    documentacionId: undefined,
     documentacionUrl: absoluteApiUrl(t?.documentacionUrl),
     documentacionNombreArchivo: t?.documentacionNombreArchivo,
     documentacionMimeType: t?.documentacionMimeType,
-    documentacionSizeBytes: t?.documentacionSizeBytes ? Number(t.documentacionSizeBytes) : undefined,
+    documentacionSizeBytes: undefined,
     asistenciaConfirmada: Boolean(t?.asistenciaConfirmada),
     asistenciaConfirmadaEn: t?.asistenciaConfirmadaEn,
     recordatorioTresHorasEnviado: Boolean(t?.recordatorioTresHorasEnviado),
@@ -153,9 +222,14 @@ export function uniqueAppointmentSlots(slots: AppointmentSlot[]) {
 const normalizeSlot = (slot: any): AppointmentSlot => {
   const fechaHora = slot?.fechaHora ?? slot?.fechaHoraIso ?? slot?.fechaHoraInicio ?? slot?.fecha_hora;
   const derived = splitFechaHora(fechaHora);
+  let hora = derived.hora;
+  if (slot?.hora) {
+    hora = String(slot.hora).slice(0, 5);
+  }
+
   return {
     fecha: slot?.fecha ?? derived.fecha,
-    hora: slot?.hora ? String(slot.hora).slice(0, 5) : derived.hora,
+    hora,
     fechaHora: buildFechaHora(slot?.fecha ?? derived.fecha, slot?.hora ?? derived.hora, fechaHora),
     disponible: slot?.disponible ?? true,
   };
@@ -203,7 +277,10 @@ export const appointmentService = {
   getMyAppointments: async (pacienteId?: string | null) => {
     const cacheKey = `appointments:${pacienteId ?? 'me'}`;
     try {
-      const endpoint = pacienteId ? `/api/turnos/paciente/${pacienteId}` : '/api/turnos/paciente/me';
+      let endpoint = '/api/turnos/paciente/me';
+      if (pacienteId) {
+        endpoint = `/api/turnos/paciente/${pacienteId}`;
+      }
       const response = await api.get<any[]>(endpoint);
       const data = response.data.map(normalizeTurno);
       await setCachedJson(cacheKey, data);
@@ -260,14 +337,18 @@ export const appointmentService = {
     observaciones?: string;
     documentacion?: PickedMedia | null;
   }) => {
-    const payload = {
+    const payload: Record<string, unknown> = {
       pacienteId: ensureNumber(data.pacienteId, 'pacienteId'),
       profesionalId: ensureNumber(data.profesionalId, 'profesionalId'),
-      profesionalInstitucionId: data.profesionalInstitucionId ? Number(data.profesionalInstitucionId) : undefined,
-      especialidadId: data.especialidadId ? Number(data.especialidadId) : undefined,
       fechaHora: ensureFechaHora(buildFechaHora(data.fecha, data.hora, data.fechaHora)),
       observaciones: data.observaciones || data.motivoConsulta || undefined,
     };
+    if (data.profesionalInstitucionId) {
+      payload.profesionalInstitucionId = Number(data.profesionalInstitucionId);
+    }
+    if (data.especialidadId) {
+      payload.especialidadId = Number(data.especialidadId);
+    }
 
     const response = await api.post<any>('/api/turnos/solicitar', payload);
     const created = normalizeTurno(response.data);
@@ -317,16 +398,21 @@ export const appointmentService = {
     hora?: string;
     fechaHora?: string;
   }) => {
-    const payload = {
+    const fechaHora = ensureFechaHora(buildFechaHora(data.fecha, data.hora, data.fechaHora));
+    const payload: Record<string, unknown> = {
       profesionalId: ensureNumber(data.profesionalId, 'profesionalId'),
-      profesionalInstitucionId: data.profesionalInstitucionId ? Number(data.profesionalInstitucionId) : undefined,
-      especialidadId: data.especialidadId ? Number(data.especialidadId) : undefined,
-      fechaHora: ensureFechaHora(buildFechaHora(data.fecha, data.hora, data.fechaHora)),
+      fechaHora,
     };
+    if (data.profesionalInstitucionId) {
+      payload.profesionalInstitucionId = Number(data.profesionalInstitucionId);
+    }
+    if (data.especialidadId) {
+      payload.especialidadId = Number(data.especialidadId);
+    }
 
     await api.put<any>(`/api/turnos/${id}/reprogramar`, payload);
     const verified = await fetchVerifiedTurno(id);
-    const expectedFechaHora = payload.fechaHora.slice(0, 16);
+    const expectedFechaHora = fechaHora.slice(0, 16);
 
     if (String(verified.fechaHora ?? '').slice(0, 16) !== expectedFechaHora) {
       throw new Error('No pudimos verificar la nueva fecha del turno.');

@@ -30,40 +30,59 @@ export type UserProfile = {
 
 type UnknownRecord = Record<string, unknown>;
 
+const toRecord = (value: unknown): UnknownRecord => {
+  if (typeof value === 'object' && value !== null) {
+    return value as UnknownRecord;
+  }
+  return {};
+};
+
+const toStringValue = (input: unknown) => {
+  if (input === undefined || input === null) return '';
+  return String(input);
+};
+
+const toPositiveNumber = (value: unknown): number | undefined => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return undefined;
+  return parsed;
+};
+
 const normalizeProfile = (p: unknown): UserProfile => {
-  const profile = typeof p === 'object' && p !== null ? (p as UnknownRecord) : {};
-  const usuario = typeof profile.usuario === 'object' && profile.usuario !== null ? (profile.usuario as UnknownRecord) : {};
-  const obraSocial = typeof profile.obraSocial === 'object' && profile.obraSocial !== null ? (profile.obraSocial as UnknownRecord) : profile.obraSocial;
-  const obraSocialRecord = typeof obraSocial === 'object' && obraSocial !== null ? (obraSocial as UnknownRecord) : {};
+  const profile = toRecord(p);
+  const usuario = toRecord(profile.usuario);
+  const obraSocialRecord = toRecord(profile.obraSocial);
 
-  const value = (input: unknown) => input === undefined || input === null ? '' : String(input);
-
-  const pacienteId = profile.pacienteId ? Number(profile.pacienteId) : profile.id ? Number(profile.id) : undefined;
-  const obraSocialId = profile.obraSocialId ? Number(profile.obraSocialId) : obraSocialRecord.id ? Number(obraSocialRecord.id) : undefined;
+  const pacienteId = toPositiveNumber(profile.pacienteId ?? profile.id);
+  const obraSocialId = toPositiveNumber(profile.obraSocialId ?? obraSocialRecord.id);
+  const obraSocialNombre = profile.obraSocialNombre ?? profile.obraSocial ?? obraSocialRecord.nombre;
+  const numeroCarnet = profile.numeroCarnet ?? profile.numeroAfiliado ?? profile.numCarnet;
+  const companyName = profile.hospitalClinicaCabecera ?? profile.institucionCabecera;
+  const doctorName = profile.doctorCabecera ?? profile.medicoCabecera;
 
   return {
     id: Number(profile.pacienteId ?? profile.id),
     pacienteId,
     usuarioId: Number(profile.usuarioId ?? usuario.id),
-    nombre: value(profile.nombre ?? usuario.nombre),
-    apellido: value(profile.apellido ?? usuario.apellido),
-    dni: value(profile.dni ?? usuario.dni),
-    email: value(profile.email ?? usuario.email),
-    telefono: value(profile.telefono) || undefined,
+    nombre: toStringValue(profile.nombre ?? usuario.nombre),
+    apellido: toStringValue(profile.apellido ?? usuario.apellido),
+    dni: toStringValue(profile.dni ?? usuario.dni),
+    email: toStringValue(profile.email ?? usuario.email),
+    telefono: toStringValue(profile.telefono) || undefined,
     obraSocialId,
-    obraSocial: value(profile.obraSocialNombre ?? profile.obraSocial ?? obraSocialRecord.nombre) || undefined,
-    obraSocialNombre: value(profile.obraSocialNombre ?? profile.obraSocial ?? obraSocialRecord.nombre) || undefined,
-    numeroAfiliado: value(profile.numeroCarnet ?? profile.numeroAfiliado ?? profile.numCarnet) || undefined,
-    numeroCarnet: value(profile.numeroCarnet ?? profile.numeroAfiliado ?? profile.numCarnet) || undefined,
-    numeroHistoriaClinica: value(profile.numeroHistoriaClinica) || undefined,
-    institucionCabecera: value(profile.hospitalClinicaCabecera ?? profile.institucionCabecera) || undefined,
-    hospitalClinicaCabecera: value(profile.hospitalClinicaCabecera ?? profile.institucionCabecera) || undefined,
-    medicoCabecera: value(profile.doctorCabecera ?? profile.medicoCabecera) || undefined,
-    doctorCabecera: value(profile.doctorCabecera ?? profile.medicoCabecera) || undefined,
-    fotoPerfilUrl: absoluteApiUrl(value(profile.fotoPerfilUrl) || ''),
-    carnetObraSocialUrl: absoluteApiUrl(value(profile.carnetObraSocialUrl) || ''),
-    fotoPerfilSizeBytes: profile.fotoPerfilSizeBytes ? Number(profile.fotoPerfilSizeBytes) : undefined,
-    carnetObraSocialSizeBytes: profile.carnetObraSocialSizeBytes ? Number(profile.carnetObraSocialSizeBytes) : undefined,
+    obraSocial: toStringValue(obraSocialNombre) || undefined,
+    obraSocialNombre: toStringValue(obraSocialNombre) || undefined,
+    numeroAfiliado: toStringValue(numeroCarnet) || undefined,
+    numeroCarnet: toStringValue(numeroCarnet) || undefined,
+    numeroHistoriaClinica: toStringValue(profile.numeroHistoriaClinica) || undefined,
+    institucionCabecera: toStringValue(companyName) || undefined,
+    hospitalClinicaCabecera: toStringValue(companyName) || undefined,
+    medicoCabecera: toStringValue(doctorName) || undefined,
+    doctorCabecera: toStringValue(doctorName) || undefined,
+    fotoPerfilUrl: absoluteApiUrl(toStringValue(profile.fotoPerfilUrl) || ''),
+    carnetObraSocialUrl: absoluteApiUrl(toStringValue(profile.carnetObraSocialUrl) || ''),
+    fotoPerfilSizeBytes: toPositiveNumber(profile.fotoPerfilSizeBytes),
+    carnetObraSocialSizeBytes: toPositiveNumber(profile.carnetObraSocialSizeBytes),
   };
 };
 
@@ -96,7 +115,10 @@ export const userService = {
   getProfile: async (usuarioId?: string | null) => {
     const cacheKey = `profile:${usuarioId ?? 'me'}`;
     try {
-      const endpoint = usuarioId ? `/api/pacientes/perfil/${usuarioId}` : '/api/pacientes/perfil/me';
+      let endpoint = '/api/pacientes/perfil/me';
+      if (usuarioId) {
+        endpoint = `/api/pacientes/perfil/${usuarioId}`;
+      }
       const response = await api.get<unknown>(endpoint);
       const data = normalizeProfile(response.data);
       await setCachedJson(cacheKey, data);
@@ -112,7 +134,10 @@ export const userService = {
   },
 
   updateProfile: async (usuarioIdOrData: string | Partial<UserProfile>, maybeData?: Partial<UserProfile>) => {
-    const usuarioId = typeof usuarioIdOrData === 'string' ? usuarioIdOrData : undefined;
+    let usuarioId: string | undefined;
+    if (typeof usuarioIdOrData === 'string') {
+      usuarioId = usuarioIdOrData;
+    }
     const data = (maybeData ?? usuarioIdOrData) as Partial<UserProfile>;
     const cacheKey = `profile:${usuarioId ?? 'me'}`;
 
@@ -120,7 +145,10 @@ export const userService = {
       ?? await getCachedJson<UserProfile>('profile:last')
       ?? await userService.getProfile(usuarioId);
 
-    const endpoint = usuarioId ? `/api/pacientes/perfil/${usuarioId}` : '/api/pacientes/perfil/me';
+    let endpoint = '/api/pacientes/perfil/me';
+    if (usuarioId) {
+      endpoint = `/api/pacientes/perfil/${usuarioId}`;
+    }
     const response = await api.put<unknown>(endpoint, buildProfilePayload(current, data));
     const profile = normalizeProfile(response.data);
     await setCachedJson(cacheKey, profile);
