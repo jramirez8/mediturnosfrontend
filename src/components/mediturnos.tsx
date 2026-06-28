@@ -9,14 +9,14 @@ import { translateLiteral, useTranslation } from '../i18n/languageStore';
 import { useAuthStore } from '../auth/authStore';
 import { routeForRole } from '../auth/roles';
 import { isConnectivityMessage } from '../utils/errors';
-type ScreenProps = {
+type ScreenProps = Readonly<{
     children: React.ReactNode;
     scroll?: boolean;
     padded?: boolean;
     bottomSpace?: boolean;
     style?: StyleProp<ViewStyle>;
     scrollRef?: React.RefObject<ScrollView | null>;
-};
+}>;
 function useStyles() {
     const theme = useMtTheme();
     const styles = React.useMemo(() => createStyles(theme), [theme.mode]);
@@ -55,12 +55,12 @@ export function MtScreen({ children, scroll = false, padded = true, bottomSpace 
       {navigation}
     </SafeAreaView>);
 }
-export function MtHeader({ eyebrow, title, subtitle, right }: {
+export function MtHeader({ eyebrow, title, subtitle, right }: Readonly<{
     eyebrow?: string;
     title: string;
     subtitle?: string;
     right?: React.ReactNode;
-}) {
+}>) {
     const { styles } = useStyles();
     const { language } = useTranslation();
     return (<View style={styles.header}>
@@ -72,21 +72,21 @@ export function MtHeader({ eyebrow, title, subtitle, right }: {
       {right !== undefined ? right : null}
     </View>);
 }
-export function MtCard({ children, style }: {
+export function MtCard({ children, style }: Readonly<{
     children: React.ReactNode;
     style?: StyleProp<ViewStyle>;
-}) {
+}>) {
     const { styles } = useStyles();
     return <View style={[styles.card, style]}>{children}</View>;
 }
-export function MtButton({ title, onPress, variant = 'primary', loading = false, disabled = false, style, }: {
+export function MtButton({ title, onPress, variant = 'primary', loading = false, disabled = false, style, }: Readonly<{
     title: string;
     onPress?: () => void;
     variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
     loading?: boolean;
     disabled?: boolean;
     style?: StyleProp<ViewStyle>;
-}) {
+}>) {
     const { theme, styles } = useStyles();
     const { language } = useTranslation();
     const buttonStyle = [
@@ -103,9 +103,9 @@ export function MtButton({ title, onPress, variant = 'primary', loading = false,
       {loading ? <ActivityIndicator color={variant === 'primary' ? '#FFFFFF' : theme.colors.primary}/> : <Text style={textStyle} numberOfLines={2} adjustsFontSizeToFit>{translateLiteral(title, language)}</Text>}
     </Pressable>);
 }
-export function MtInput({ label, style, ...props }: TextInputProps & {
+export function MtInput({ label, style, ...props }: TextInputProps & Readonly<{
     label: string;
-}) {
+}>) {
     const { theme, styles } = useStyles();
     const { language } = useTranslation();
     return (<View style={{ gap: 8 }}>
@@ -121,12 +121,12 @@ function getToneColor(theme: MediturnosTheme, tone: 'primary' | 'success' | 'war
     return theme.colors.primary;
 }
 
-export function MtPill({ label, tone = 'primary', selected = false, onPress }: {
+export function MtPill({ label, tone = 'primary', selected = false, onPress }: Readonly<{
     label: string;
     tone?: 'primary' | 'success' | 'warning' | 'danger' | 'muted';
     selected?: boolean;
     onPress?: () => void;
-}) {
+}>) {
     const { theme, styles } = useStyles();
     const { language } = useTranslation();
     const toneColor = getToneColor(theme, tone);
@@ -134,12 +134,12 @@ export function MtPill({ label, tone = 'primary', selected = false, onPress }: {
       <Text style={[styles.pillText, { color: selected ? '#FFFFFF' : toneColor }]} numberOfLines={1} adjustsFontSizeToFit>{translateLiteral(label, language)}</Text>
     </Pressable>);
 }
-export function MtEmptyState({ title, subtitle, actionTitle, onAction }: {
+export function MtEmptyState({ title, subtitle, actionTitle, onAction }: Readonly<{
     title: string;
     subtitle?: string;
     actionTitle?: string;
     onAction?: () => void;
-}) {
+}>) {
     const { styles } = useStyles();
     const { language } = useTranslation();
     return (<MtCard style={styles.emptyCard}>
@@ -151,9 +151,9 @@ export function MtEmptyState({ title, subtitle, actionTitle, onAction }: {
       {!!actionTitle && <MtButton title={actionTitle} onPress={onAction} style={{ marginTop: 14 }}/>}
     </MtCard>);
 }
-export function MtLoading({ text = 'Cargando...' }: {
+export function MtLoading({ text = 'Cargando...' }: Readonly<{
     text?: string;
-}) {
+}>) {
     const { theme, styles } = useStyles();
     const { language } = useTranslation();
     return (<View style={styles.loadingWrap}>
@@ -186,7 +186,7 @@ function noticeBackground(type: NoticeType, dark: boolean) {
     };
     return backgrounds[type][dark ? 1 : 0];
 }
-type NoticeProps = {
+type NoticeProps = Readonly<{
     type?: NoticeType;
     title?: string;
     message: string;
@@ -194,14 +194,14 @@ type NoticeProps = {
     onAction?: () => void;
     style?: StyleProp<ViewStyle>;
     popup?: boolean;
-};
-function NoticePopup({ visible, title, message, color, onClose }: {
+}>;
+function NoticePopup({ visible, title, message, color, onClose }: Readonly<{
     visible: boolean;
     title?: string;
     message: string;
     color: string;
     onClose: () => void;
-}) {
+}>) {
     const { theme, styles } = useStyles();
     const { language } = useTranslation();
     return (<Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -238,11 +238,11 @@ export function MtNotice({ type = 'info', title, message, actionTitle, onAction,
     }
     return <InlineNotice type={type} title={title} message={message} actionTitle={actionTitle} onAction={onAction} style={style}/>;
 }
-export function MtStat({ label, value, tone = 'primary' }: {
+export function MtStat({ label, value, tone = 'primary' }: Readonly<{
     label: string;
     value: string | number;
     tone?: 'primary' | 'success' | 'warning' | 'danger';
-}) {
+}>) {
     const { theme, styles } = useStyles();
     const { language } = useTranslation();
     const color = getToneColor(theme, tone);
@@ -251,9 +251,9 @@ export function MtStat({ label, value, tone = 'primary' }: {
       <Text style={styles.statLabel}>{translateLiteral(label, language)}</Text>
     </View>);
 }
-export function MtBottomNav({ active }: {
+export function MtBottomNav({ active }: Readonly<{
     active: 'home' | 'perfil' | 'turnos' | 'historia' | 'solicitar' | 'profesionales';
-}) {
+}>) {
     return <AppBottomNav role="paciente" active={active}/>;
 }
 MtBottomNav.displayName = 'MediturnosBottomNav';

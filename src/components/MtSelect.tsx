@@ -13,14 +13,14 @@ export function MtSelect({
   options,
   onChange,
   disabled,
-}: {
+}: Readonly<{
   label: string;
   value: string;
   placeholder: string;
   options: MtSelectOption[];
   onChange: (value: string) => void;
   disabled?: boolean;
-}) {
+}>) {
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
   const { language } = useTranslation();

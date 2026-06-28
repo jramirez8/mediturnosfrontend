@@ -1,10 +1,10 @@
 import React from 'react';
 import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
-import { MtButton, MtCard, MtNotice, MtPill } from '../mediturnos';
+import { MtNotice, MtPill } from '../mediturnos';
 import { useMtTheme } from '../../theme/themeStore';
 import { translateLiteral, useTranslation } from '../../i18n/languageStore';
 
-export function AdminNotice({ type = 'info', title, message, onRetry }: { type?: 'info' | 'success' | 'danger' | 'warning'; title: string; message?: string; onRetry?: () => void }) {
+export function AdminNotice({ type = 'info', title, message, onRetry }: Readonly<{ type?: 'info' | 'success' | 'danger' | 'warning'; title: string; message?: string; onRetry?: () => void }>) {
   const { t } = useTranslation();
   return (
     <MtNotice
@@ -18,7 +18,7 @@ export function AdminNotice({ type = 'info', title, message, onRetry }: { type?:
   );
 }
 
-export function AdminTabs<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string; tone?: 'primary' | 'success' | 'warning' | 'danger' | 'muted' }[]; onChange: (value: T) => void }) {
+export function AdminTabs<T extends string>({ value, options, onChange }: Readonly<{ value: T; options: { value: T; label: string; tone?: 'primary' | 'success' | 'warning' | 'danger' | 'muted' }[]; onChange: (value: T) => void }>) {
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
       {options.map((option) => (
@@ -28,7 +28,7 @@ export function AdminTabs<T extends string>({ value, options, onChange }: { valu
   );
 }
 
-export function AdminKV({ label, value }: { label: string; value?: string | number | null }) {
+export function AdminKV({ label, value }: Readonly<{ label: string; value?: string | number | null }>) {
   const theme = useMtTheme();
   const { language } = useTranslation();
   const missingValueText = () => {
@@ -45,11 +45,11 @@ export function AdminKV({ label, value }: { label: string; value?: string | numb
   );
 }
 
-export function AdminActionRow({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+export function AdminActionRow({ children, style }: Readonly<{ children: React.ReactNode; style?: StyleProp<ViewStyle> }>) {
   return <View style={[{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 14 }, style]}>{children}</View>;
 }
 
-export function AdminMiniButton({ label, onPress, tone = 'primary', disabled }: { label: string; onPress?: () => void; tone?: 'primary' | 'danger' | 'success' | 'warning' | 'muted'; disabled?: boolean }) {
+export function AdminMiniButton({ label, onPress, tone = 'primary', disabled }: Readonly<{ label: string; onPress?: () => void; tone?: 'primary' | 'danger' | 'success' | 'warning' | 'muted'; disabled?: boolean }>) {
   const theme = useMtTheme();
   const { language } = useTranslation();
   const colors = {
@@ -85,7 +85,7 @@ export function AdminMiniButton({ label, onPress, tone = 'primary', disabled }: 
   );
 }
 
-export function AdminTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+export function AdminTitle({ title, subtitle }: Readonly<{ title: string; subtitle?: string }>) {
   const theme = useMtTheme();
   const { language } = useTranslation();
   return (

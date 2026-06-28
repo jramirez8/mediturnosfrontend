@@ -5,11 +5,11 @@ import { StyleSheet, Text, View } from "react-native";
  * Marca minimalista SIN imagen blanca.
  * Usar en empty states, loaders, cards y cualquier fondo oscuro/claro.
  */
-type Props = {
+type Props = Readonly<{
   dark?: boolean;
   size?: number;
   compact?: boolean;
-};
+}>;
 
 export default function BrandMark({ dark = false, size = 64, compact = false }: Props) {
   return (

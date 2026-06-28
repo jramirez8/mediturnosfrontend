@@ -3,12 +3,12 @@ import { Pressable, StyleSheet, Text } from "react-native";
 
 type Variant = "primary" | "secondary" | "danger";
 
-type Props = {
+type Props = Readonly<{
   title: string;
   onPress?: () => void;
   variant?: Variant;
   arrow?: boolean;
-};
+}>;
 
 export default function MedButton({ title, onPress, variant = "primary", arrow = false }: Props) {
   return (

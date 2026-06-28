@@ -1,10 +1,10 @@
 import React from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-type BrandLogoBadgeProps = {
+type BrandLogoBadgeProps = Readonly<{
   dark?: boolean;
   size?: number;
-};
+}>;
 
 export default function BrandLogoBadge({ dark = false, size = 58 }: BrandLogoBadgeProps) {
   return (

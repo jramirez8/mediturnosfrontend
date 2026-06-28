@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
-import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtNotice, MtPill, MtScreen } from '../../components/mediturnos';
+import { MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtNotice, MtPill, MtScreen } from '../../components/mediturnos';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { TurnoCard } from '../../components/TurnoCard';
 import { secretariaService } from '../../api/staffService';

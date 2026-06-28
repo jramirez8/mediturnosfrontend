@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { router } from 'expo-router';
 import { userService, UserProfile } from '../../api/userService';
 import { useAuthStore } from '../../auth/authStore';
 import { catalogService, CatalogItem } from '../../api/catalogService';

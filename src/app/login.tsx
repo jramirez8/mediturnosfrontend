@@ -23,7 +23,7 @@ const palette = {
     successBg: '#F3EEFF',
 };
 type FocusedField = 'identifier' | 'password' | 'twoFactor' | null;
-type LoginCardProps = {
+type LoginCardProps = Readonly<{
     identifier: string;
     setIdentifier: (value: string) => void;
     password: string;
@@ -44,8 +44,14 @@ type LoginCardProps = {
     submit: () => void;
     biometricLogin: () => void;
     resetTwoFactor: () => void;
-};
-function LoginFields(props: LoginCardProps) {
+}>;
+type LoginFieldsProps = Pick<LoginCardProps, 'identifier' | 'setIdentifier' | 'focused' | 'setFocused' | 'twoFactorUserId' | 'password' | 'setPassword' | 'showPassword' | 'setShowPassword' | 'twoFactorCode' | 'setTwoFactorCode'>;
+type PasswordFieldProps = Pick<LoginCardProps, 'password' | 'setPassword' | 'showPassword' | 'setShowPassword' | 'focused' | 'setFocused'>;
+type TwoFactorFieldProps = Pick<LoginCardProps, 'twoFactorCode' | 'setTwoFactorCode' | 'focused' | 'setFocused'>;
+type LoginMessagesProps = Pick<LoginCardProps, 'errorMessage' | 'invalidCredentials' | 'infoMessage' | 'twoFactorDestination' | 'identifier'>;
+type LoginActionsProps = Pick<LoginCardProps, 'biometricEmail' | 'twoFactorUserId' | 'loading' | 'submit' | 'resetTwoFactor' | 'biometricLogin'>;
+
+function LoginFields(props: LoginFieldsProps) {
     const { t } = useTranslation();
     return <View style={styles.formBlock}>
     <Text style={styles.label}>{t('login.email')}</Text>
@@ -53,18 +59,18 @@ function LoginFields(props: LoginCardProps) {
     {props.twoFactorUserId ? <TwoFactorField {...props}/> : <PasswordField {...props}/>}
   </View>;
 }
-function PasswordField(props: LoginCardProps) {
+function PasswordField(props: PasswordFieldProps) {
     const { t } = useTranslation();
     return <><Text style={styles.label}>{t('login.password')}</Text><View style={[styles.inputShell, props.focused === 'password' && styles.inputShellFocused]}>
     <TextInput value={props.password} onChangeText={props.setPassword} onFocus={() => props.setFocused('password')} onBlur={() => props.setFocused(null)} secureTextEntry={!props.showPassword} placeholder={t('login.password')} placeholderTextColor={palette.softMuted} underlineColorAndroid="transparent" selectionColor={palette.purple} style={styles.input}/>
     <Pressable hitSlop={10} onPress={() => props.setShowPassword((value) => !value)} style={styles.eyeButton}><Ionicons name={props.showPassword ? 'eye-off-outline' : 'eye-outline'} size={24} color={palette.purpleDeep}/></Pressable>
   </View></>;
 }
-function TwoFactorField(props: LoginCardProps) {
+function TwoFactorField(props: TwoFactorFieldProps) {
     const { t } = useTranslation();
     return <><Text style={styles.label}>{t('login.verificationCode')}</Text><View style={[styles.inputShell, props.focused === 'twoFactor' && styles.inputShellFocused]}><TextInput value={props.twoFactorCode} onChangeText={props.setTwoFactorCode} onFocus={() => props.setFocused('twoFactor')} onBlur={() => props.setFocused(null)} keyboardType="number-pad" placeholder="123456" placeholderTextColor={palette.softMuted} underlineColorAndroid="transparent" selectionColor={palette.purple} style={styles.input}/></View></>;
 }
-function LoginMessages(props: LoginCardProps) {
+function LoginMessages(props: LoginMessagesProps) {
     const { t } = useTranslation();
     const needsVerification = Boolean(props.errorMessage && /verific/i.test(props.errorMessage));
     let displayedError = props.errorMessage;
@@ -76,7 +82,7 @@ function LoginMessages(props: LoginCardProps) {
     {props.errorMessage ? <View style={[styles.messageBox, styles.errorBox]}><Text style={[styles.messageTitle, styles.errorTitle]}>{t('login.signInErrorTitle')}</Text><Text style={styles.messageText}>{displayedError}</Text>{needsVerification ? <Pressable style={styles.verifyAccountButton} onPress={() => router.push({ pathname: '/registro/verificar', params: { email: props.identifier.trim() } })}><Text style={styles.verifyAccountText}>Ingresar código de verificación</Text></Pressable> : null}</View> : null}
   </>;
 }
-function LoginActions(props: LoginCardProps) {
+function LoginActions(props: LoginActionsProps) {
     const { t } = useTranslation();
     const twoFactor = Boolean(props.twoFactorUserId);
     return <>

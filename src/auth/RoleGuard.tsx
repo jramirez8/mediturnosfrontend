@@ -4,7 +4,7 @@ import { Redirect, Stack } from 'expo-router';
 import { useAuthStore } from './authStore';
 import { AppRole, isAllowedRole } from './roles';
 
-export function RoleGuard({ allowed }: { allowed: AppRole[] }) {
+export function RoleGuard({ allowed }: Readonly<{ allowed: AppRole[] }>) {
   const token = useAuthStore((state) => state.token);
   const role = useAuthStore((state) => state.role);
   const hydrated = useAuthStore((state) => state.hydrated);

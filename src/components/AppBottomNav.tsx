@@ -52,7 +52,7 @@ function translateSafe(t: (key: string) => string, item: NavItem) {
   return translated && translated !== item.labelKey ? translated : item.fallback;
 }
 
-export function AppBottomNav({ role, active }: { role: AppNavRole; active: string }) {
+export function AppBottomNav({ role, active }: Readonly<{ role: AppNavRole; active: string }>) {
   const theme = useMtTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();

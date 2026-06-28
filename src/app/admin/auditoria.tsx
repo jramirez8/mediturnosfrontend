@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { MtButton, MtCard, MtHeader, MtInput, MtLoading, MtScreen } from '../../components/mediturnos';
 import { RoleBottomNav } from '../../components/RoleBottomNav';
 import { auditService, AuditLog } from '../../api/auditService';

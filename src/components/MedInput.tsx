@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-type Props = {
+type Props = Readonly<{
   label: string;
   value: string;
   onChangeText: (text: string) => void;
@@ -11,7 +11,7 @@ type Props = {
   secureVisible?: boolean;
   keyboardType?: "default" | "email-address" | "numeric" | "number-pad";
   icon?: React.ReactNode;
-};
+}>;
 
 export default function MedInput({
   label,

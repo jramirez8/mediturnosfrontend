@@ -10,12 +10,12 @@ export function TurnoCard({
   primaryAction,
   secondaryAction,
   dangerAction,
-}: {
+}: Readonly<{
   turno: TurnoResponse;
   primaryAction?: { title: string; onPress: () => void };
   secondaryAction?: { title: string; onPress: () => void };
   dangerAction?: { title: string; onPress: () => void };
-}) {
+}>) {
   const theme = useMtTheme();
   const paciente = turno.pacienteNombre || 'Paciente sin nombre';
   const profesional = turno.profesionalNombre || 'Profesional sin nombre';

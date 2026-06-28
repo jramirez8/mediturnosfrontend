@@ -1,10 +1,10 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-type EmptyStateMarkProps = {
+type EmptyStateMarkProps = Readonly<{
   dark?: boolean;
   size?: number;
-};
+}>;
 
 export default function EmptyStateMark({ dark = false, size = 72 }: EmptyStateMarkProps) {
   return (

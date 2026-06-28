@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MtButton, MtCard, MtEmptyState, MtHeader, MtInput, MtLoading, MtNotice, MtScreen } from '../../components/mediturnos';
 import { MtSelect } from '../../components/MtSelect';

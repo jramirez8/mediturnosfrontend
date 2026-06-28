@@ -2,7 +2,6 @@ import { Alert, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import {
-  MAX_DOCUMENT_BYTES,
   SUPPORTED_DOCUMENT_MIME_TYPES,
   validateDocumentCandidate,
 } from './documentValidation';

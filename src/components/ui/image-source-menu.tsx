@@ -9,12 +9,12 @@ import {
 } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 
-interface ImageSourceMenuProps {
+type ImageSourceMenuProps = Readonly<{
   visible: boolean;
   onClose: () => void;
   onSelectGallery: () => void;
   onSelectCamera: () => void;
-}
+}>;
 
 export function ImageSourceMenu({ visible, onClose, onSelectGallery, onSelectCamera }: ImageSourceMenuProps) {
   return (
