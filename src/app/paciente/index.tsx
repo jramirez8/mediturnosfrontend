@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../auth/authStore';
@@ -17,7 +17,7 @@ type DashboardError = {
   appointments?: string;
 };
 
-function QuickCard({ title, subtitle, icon, color, onPress, featured, styles }: { title: string; subtitle: string; icon: string; color: string; onPress: () => void; featured?: boolean; styles: ReturnType<typeof createStyles> }) {
+function QuickCard({ title, subtitle, icon, color, onPress, featured, styles }: Readonly<{ title: string; subtitle: string; icon: string; color: string; onPress: () => void; featured?: boolean; styles: ReturnType<typeof createStyles> }>) {
   return (
     <Pressable style={[styles.quickCard, featured && styles.quickCardFeatured]} onPress={onPress}>
       <View style={[styles.quickIcon, { backgroundColor: `${color}1A` }]}>
@@ -76,7 +76,7 @@ export default function PacienteHomeScreen() {
         return;
       }
 
-      // Turnos despuÃ©s: si falla, NO debe romper la pantalla ni tapar logout.
+      // Turnos después: si falla, NO debe romper la pantalla ni tapar logout.
       try {
         const appointmentsData = await appointmentService.getMyAppointments(pacienteId);
         if (!alive) return;
@@ -148,7 +148,7 @@ export default function PacienteHomeScreen() {
       <MtScreen scroll>
         <MtHeader
           eyebrow={t('patient.eyebrow')}
-          title={`${t('patient.hello')}, ${fullName} ðŸ‘‹`}
+          title={`${t('patient.hello')}, ${fullName} 👋`}
           subtitle={t('patient.subtitle')}
           right={
             <Pressable style={styles.avatar} onPress={() => router.push('/paciente/perfil')}>
@@ -177,12 +177,12 @@ export default function PacienteHomeScreen() {
               <Text style={styles.cardLabel}>{t('patient.nextAppointment')}</Text>
               <Text style={styles.nextTitle}>{nextAppointment ? nextAppointment.especialidad : t('patient.noNext')}</Text>
             </View>
-            <Text style={styles.cardIcon}>ðŸ“…</Text>
+            <Text style={styles.cardIcon}>📅</Text>
           </View>
           {nextAppointment ? (
             <>
               <Text style={styles.nextLine}>{nextAppointment.profesionalNombre}</Text>
-              <Text style={styles.nextLine}>{nextAppointment.fecha} Â· {nextAppointment.hora} hs</Text>
+              <Text style={styles.nextLine}>{nextAppointment.fecha} · {nextAppointment.hora} hs</Text>
               <Text style={styles.nextLine}>{nextAppointment.institucionNombre}</Text>
               <MtButton title="Ver detalle" onPress={() => router.push({ pathname: '/paciente/turno-detalle', params: { id: nextAppointment.id } })} style={{ marginTop: 16 }} />
             </>
@@ -196,11 +196,11 @@ export default function PacienteHomeScreen() {
 
         <Text style={styles.sectionTitle}>{t('patient.quick')}</Text>
         <View style={styles.grid}>
-          <QuickCard title={t('patient.quickRequest')} subtitle={t('patient.quickRequestSub')} icon="ï¼‹" color={theme.colors.primary} onPress={() => router.push('/paciente/solicitar')} featured styles={styles} />
-          <QuickCard title={t('patient.quickAppointments')} subtitle={t('patient.quickAppointmentsSub')} icon="ðŸ“†" color={theme.colors.secondary} onPress={() => router.push('/paciente/turnos')} styles={styles} />
-          <QuickCard title={t('patient.quickProfessionals')} subtitle={t('patient.quickProfessionalsSub')} icon="ðŸ©º" color={theme.colors.warning} onPress={() => router.push('/paciente/profesionales')} styles={styles} />
-          <QuickCard title={t('patient.quickHistory')} subtitle={t('patient.quickHistorySub')} icon="ðŸ“‹" color={theme.colors.success} onPress={() => router.push('/paciente/historia')} styles={styles} />
-          <QuickCard title={t('common.settings')} subtitle={t('patient.quickSettingsSub')} icon="âš™ï¸" color={theme.colors.purple} onPress={() => router.push('/paciente/settings')} styles={styles} />
+          <QuickCard title={t('patient.quickRequest')} subtitle={t('patient.quickRequestSub')} icon="＋" color={theme.colors.primary} onPress={() => router.push('/paciente/solicitar')} featured styles={styles} />
+          <QuickCard title={t('patient.quickAppointments')} subtitle={t('patient.quickAppointmentsSub')} icon="📆" color={theme.colors.secondary} onPress={() => router.push('/paciente/turnos')} styles={styles} />
+          <QuickCard title={t('patient.quickProfessionals')} subtitle={t('patient.quickProfessionalsSub')} icon="🩺" color={theme.colors.warning} onPress={() => router.push('/paciente/profesionales')} styles={styles} />
+          <QuickCard title={t('patient.quickHistory')} subtitle={t('patient.quickHistorySub')} icon="📋" color={theme.colors.success} onPress={() => router.push('/paciente/historia')} styles={styles} />
+          <QuickCard title={t('common.settings')} subtitle={t('patient.quickSettingsSub')} icon="⚙️" color={theme.colors.purple} onPress={() => router.push('/paciente/settings')} styles={styles} />
         </View>
       </MtScreen>
       <MtBottomNav active="home" />
@@ -210,7 +210,7 @@ export default function PacienteHomeScreen() {
 }
 
 
-export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
+export function ErrorBoundary({ error, retry }: Readonly<{ error: Error; retry: () => void }>) {
   const logout = useAuthStore((state) => state.logout);
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);

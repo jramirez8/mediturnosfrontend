@@ -86,10 +86,10 @@ function userSubmitTitle(saving: boolean, editing: boolean) {
         return 'Guardar cambios';
     return 'Crear usuario';
 }
-function AdminAccessFields({ form, setForm }: {
+function AdminAccessFields({ form, setForm }: Readonly<{
     form: UsuarioForm;
     setForm: React.Dispatch<React.SetStateAction<UsuarioForm>>;
-}) {
+}>) {
     return <View style={{ gap: 12 }}>
     <MtInput label="Email" value={form.email} onChangeText={(email) => setForm((current) => ({ ...current, email }))} autoCapitalize="none" keyboardType="email-address"/>
     <MtInput label={form.id ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'} value={form.password} onChangeText={(password) => setForm((current) => ({ ...current, password }))} placeholder={form.id ? 'Dejar vacío para no cambiar' : 'Mínimo 8 caracteres'} secureTextEntry/>
@@ -97,11 +97,11 @@ function AdminAccessFields({ form, setForm }: {
     <AdminTabs value={form.emailVerificado ? 'SI' : 'NO'} onChange={(value) => setForm((current) => ({ ...current, emailVerificado: value === 'SI' }))} options={[{ value: 'SI', label: 'Email verificado', tone: 'success' }, { value: 'NO', label: 'Email sin verificar', tone: 'warning' }]}/>
   </View>;
 }
-function PatientCreateFields({ form, setForm, obras }: {
+function PatientCreateFields({ form, setForm, obras }: Readonly<{
     form: PacienteForm;
     setForm: React.Dispatch<React.SetStateAction<PacienteForm>>;
     obras: AdminCatalogItem[];
-}) {
+}>) {
     return <View style={{ gap: 12 }}>
     <MtInput label="Email" value={form.email} onChangeText={(email) => setForm((current) => ({ ...current, email }))} autoCapitalize="none" keyboardType="email-address"/>
     <MtInput label="Contraseña inicial" value={form.password} onChangeText={(password) => setForm((current) => ({ ...current, password }))} secureTextEntry placeholder="Mínimo 8 caracteres"/>
@@ -116,7 +116,7 @@ function PatientCreateFields({ form, setForm, obras }: {
     <AdminTabs value={form.emailVerificado ? 'SI' : 'NO'} onChange={(value) => setForm((current) => ({ ...current, emailVerificado: value === 'SI' }))} options={[{ value: 'SI', label: 'Email verificado', tone: 'success' }, { value: 'NO', label: 'Debe verificar', tone: 'warning' }]}/>
   </View>;
 }
-function UserFormCard({ adminForm, setAdminForm, pacienteForm, setPacienteForm, kind, setKind, obras, saving, submit, theme }: {
+function UserFormCard({ adminForm, setAdminForm, pacienteForm, setPacienteForm, kind, setKind, obras, saving, submit, theme }: Readonly<{
     adminForm: UsuarioForm;
     setAdminForm: React.Dispatch<React.SetStateAction<UsuarioForm>>;
     pacienteForm: PacienteForm;
@@ -127,15 +127,15 @@ function UserFormCard({ adminForm, setAdminForm, pacienteForm, setPacienteForm, 
     saving: boolean;
     submit: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     const editing = Boolean(adminForm.id);
     const showAdminFields = editing || kind === 'ADMIN';
     return <MtCard style={{ marginBottom: 14, borderColor: theme.colors.primary }}>
     <AdminTitle title={editing ? 'Editar usuario' : 'Crear usuario'} subtitle={editing ? 'Editá acceso, estado y verificación.' : 'Elegí si querés crear administrador o paciente.'}/>
-    {!editing ? <AdminTabs value={kind} onChange={setKind} options={[{ value: 'ADMIN', label: 'Administrador', tone: 'danger' }, { value: 'PATIENT', label: 'Paciente', tone: 'success' }]}/> : null}
+    {editing ? null : <AdminTabs value={kind} onChange={setKind} options={[{ value: 'ADMIN', label: 'Administrador', tone: 'danger' }, { value: 'PATIENT', label: 'Paciente', tone: 'success' }]}/>}
     {showAdminFields ? <AdminAccessFields form={adminForm} setForm={setAdminForm}/> : <PatientCreateFields form={pacienteForm} setForm={setPacienteForm} obras={obras}/>}
     <MtButton title={userSubmitTitle(saving, editing)} onPress={submit} disabled={saving} loading={saving} style={{ marginTop: 12 }}/>
-    {!editing ? <Text style={{ color: theme.colors.muted, fontWeight: '700', marginTop: 10 }}>Médicos y secretarías se crean desde Admin → Personal para no generar usuarios huérfanos.</Text> : null}
+    {editing ? null : <Text style={{ color: theme.colors.muted, fontWeight: '700', marginTop: 10 }}>Médicos y secretarías se crean desde Admin → Personal para no generar usuarios huérfanos.</Text>}
   </MtCard>;
 }
 function roleTone(role: ReturnType<typeof normalizeRole>) {
@@ -147,14 +147,14 @@ function roleTone(role: ReturnType<typeof normalizeRole>) {
         return 'warning';
     return 'success';
 }
-function UserCard({ user, working, edit, resend, setActive, theme }: {
+function UserCard({ user, working, edit, resend, setActive, theme }: Readonly<{
     user: AdminUsuario;
     working: boolean;
     edit: () => void;
     resend: () => void;
     setActive: (active: boolean) => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     const role = normalizeRole(user.rol);
     const enabled = user.activo !== false;
     return <MtCard style={{ marginBottom: 12, opacity: enabled ? 1 : 0.75 }}>

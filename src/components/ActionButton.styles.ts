@@ -53,7 +53,7 @@ export const baseActionButtonStyle = {
   justifyContent: "center" as const,
   paddingHorizontal: 18,
   shadowColor: "#2D145F",
-  shadowOpacity: 0.10,
+  shadowOpacity: 0.1,
   shadowRadius: 10,
   shadowOffset: { width: 0, height: 4 },
   elevation: 3,

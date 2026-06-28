@@ -20,8 +20,8 @@ export default function BrandMark({ dark = false, size = 64, compact = false }: 
           width: size,
           height: size,
           borderRadius: size * 0.28,
-          backgroundColor: dark ? "rgba(199,180,255,0.14)" : "rgba(126,58,242,0.10)",
-          borderColor: dark ? "rgba(199,180,255,0.20)" : "rgba(126,58,242,0.18)",
+          backgroundColor: dark ? "rgba(199,180,255,0.14)" : "rgba(126,58,242,0.1)",
+          borderColor: dark ? "rgba(199,180,255,0.2)" : "rgba(126,58,242,0.18)",
         },
       ]}
     >
@@ -41,7 +41,7 @@ export default function BrandMark({ dark = false, size = 64, compact = false }: 
           style={[
             styles.plus,
             {
-              fontSize: size * 0.20,
+              fontSize: size * 0.2,
               color: dark ? "#E5D9FF" : "#9B5CF6",
             },
           ]}
@@ -75,3 +75,4 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
 });
+

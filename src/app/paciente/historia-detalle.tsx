@@ -136,7 +136,7 @@ export default function HistoriaDetalleScreen() {
   );
 }
 
-function DetailItem({ label, value, styles }: { label: string; value: string; styles: ReturnType<typeof createStyles> }) {
+function DetailItem({ label, value, styles }: Readonly<{ label: string; value: string; styles: ReturnType<typeof createStyles> }>) {
   return <MtCard style={styles.detailItem}><Text style={styles.detailLabel}>{label}</Text><Text style={styles.detailValue}>{value}</Text></MtCard>;
 }
 
@@ -148,7 +148,7 @@ function createStyles(theme: MediturnosTheme) {
     eyebrow: { color: theme.colors.primary, fontSize: 12, fontWeight: '900', letterSpacing: 2.4, marginBottom: 3 },
     title: { color: theme.colors.ink, backgroundColor: 'transparent', fontSize: 29, lineHeight: 34, fontWeight: '900', letterSpacing: -0.4 },
     doctorCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: theme.colors.primary, borderRadius: 26, padding: 18 },
-    avatarContainer: { width: 62, height: 62, backgroundColor: 'rgba(255,255,255,0.20)', borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    avatarContainer: { width: 62, height: 62, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
     avatarText: { color: '#FFFFFF', fontSize: 21, fontWeight: '900' },
     doctorInfo: { flex: 1, minWidth: 0 },
     doctorName: { fontSize: 21, lineHeight: 26, fontWeight: '900', color: '#FFFFFF' },
@@ -166,3 +166,4 @@ function createStyles(theme: MediturnosTheme) {
     errorText: { color: theme.colors.muted, textAlign: 'center', lineHeight: 20, marginBottom: 6 },
   });
 }
+

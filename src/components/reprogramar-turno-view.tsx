@@ -10,7 +10,7 @@ type Notice = {
     title: string;
     message: string;
 };
-type Props = {
+type Props = Readonly<{
     eyebrow: string;
     backTitle: string;
     backPath: string;
@@ -34,26 +34,26 @@ type Props = {
     onToggleTimes: () => void;
     onConfirm: () => void;
     onChooseAnother: () => void;
-};
-function NoticeBox({ notice }: {
+}>;
+function NoticeBox({ notice }: Readonly<{
     notice: Notice;
-}) { return <MtNotice type={notice.type === 'error' ? 'danger' : 'success'} title={notice.title} message={notice.message} style={{ marginBottom: 14 }}/>; }
-function DropdownBox({ label, value, open, disabled, onToggle, styles }: {
+}>) { return <MtNotice type={notice.type === 'error' ? 'danger' : 'success'} title={notice.title} message={notice.message} style={{ marginBottom: 14 }}/>; }
+function DropdownBox({ label, value, open, disabled, onToggle, styles }: Readonly<{
     label: string;
     value: string;
     open: boolean;
     disabled?: boolean;
     onToggle: () => void;
     styles: ReturnType<typeof createStyles>;
-}) { return <Pressable disabled={disabled} style={[styles.dropdownButton, disabled && { opacity: 0.55 }]} onPress={onToggle}><View style={{ flex: 1 }}><Text style={styles.dropdownLabel}>{label}</Text><Text style={styles.dropdownValue}>{value}</Text></View><Text style={styles.dropdownChevron}>{open ? '▲' : '▼'}</Text></Pressable>; }
-function SlotDropdowns(props: Props & {
+}>) { return <Pressable disabled={disabled} style={[styles.dropdownButton, disabled && { opacity: 0.55 }]} onPress={onToggle}><View style={{ flex: 1 }}><Text style={styles.dropdownLabel}>{label}</Text><Text style={styles.dropdownValue}>{value}</Text></View><Text style={styles.dropdownChevron}>{open ? '▲' : '▼'}</Text></Pressable>; }
+function SlotDropdowns(props: Readonly<Props & {
     styles: ReturnType<typeof createStyles>;
-}) {
+}>) {
     return <View style={props.styles.dropdownArea}><DropdownBox label="Fecha" value={props.selectedDate || 'Elegir fecha'} open={props.showDates} onToggle={props.onToggleDates} styles={props.styles}/>{props.showDates ? <ScrollView style={props.styles.dropdownList} nestedScrollEnabled>{props.availableDates.map((date) => <Pressable key={date} style={props.styles.optionItem} onPress={() => props.onSelectDate(date)}><Text style={props.styles.optionText}>{date}</Text></Pressable>)}</ScrollView> : null}<DropdownBox label="Horario" value={props.selectedSlot ? `${props.selectedSlot.hora} hs` : 'Elegir horario'} open={props.showTimes} disabled={!props.selectedDate} onToggle={props.onToggleTimes} styles={props.styles}/>{props.showTimes ? <ScrollView style={props.styles.dropdownList} nestedScrollEnabled>{props.slotsForDate.map((slot) => <Pressable key={`${slot.fecha}-${slot.hora}`} style={props.styles.optionItem} onPress={() => props.onSelectSlot(slot)}><Text style={props.styles.optionText}>{slot.hora} hs</Text></Pressable>)}</ScrollView> : null}</View>;
 }
-function SelectionContent(props: Props & {
+function SelectionContent(props: Readonly<Props & {
     styles: ReturnType<typeof createStyles>;
-}) {
+}>) {
     if (props.loadingSlots)
         return <Text style={props.styles.muted}>Buscando horarios disponibles...</Text>;
     if (!props.availableSlots.length)
@@ -62,12 +62,12 @@ function SelectionContent(props: Props & {
         return <View style={props.styles.successActions}><MtButton title={props.backTitle} onPress={() => router.replace(props.backPath)}/><MtButton title="Elegir otro horario" variant="ghost" onPress={props.onChooseAnother}/></View>;
     return <SlotDropdowns {...props}/>;
 }
-function LoadedContent(props: Props & {
+function LoadedContent(props: Readonly<Props & {
     styles: ReturnType<typeof createStyles>;
-}) {
-    if (!props.turno)
+}>) {
+    if (props.turno === null)
         return <MtCard style={props.styles.section}><Text style={props.styles.muted}>No se encontró el turno.</Text><MtButton title={props.backTitle} onPress={() => router.replace(props.backPath)} style={{ marginTop: 14 }}/></MtCard>;
-    return <><MtCard style={props.styles.doctorCard}><Text style={props.styles.doctorName}>{props.turno.profesionalNombre || 'Profesional'}</Text><Text style={props.styles.specialty}>{props.turno.especialidad}</Text><Text style={props.styles.currentDate}>Actual: {props.turno.fecha} · {props.turno.hora} hs</Text></MtCard><Text style={props.styles.sectionTitle}>Nueva fecha y horario</Text><MtCard style={props.styles.section}><SelectionContent {...props}/></MtCard>{!props.updatedTurno ? <View style={props.styles.actionButtons}><MtButton title="Confirmar nueva fecha" loading={props.rescheduling} disabled={!props.selectedSlot || props.rescheduling} onPress={props.onConfirm}/><MtButton title="Cancelar" variant="ghost" onPress={() => router.back()}/></View> : null}</>;
+    return <><MtCard style={props.styles.doctorCard}><Text style={props.styles.doctorName}>{props.turno.profesionalNombre || 'Profesional'}</Text><Text style={props.styles.specialty}>{props.turno.especialidad}</Text><Text style={props.styles.currentDate}>Actual: {props.turno.fecha} · {props.turno.hora} hs</Text></MtCard><Text style={props.styles.sectionTitle}>Nueva fecha y horario</Text><MtCard style={props.styles.section}><SelectionContent {...props}/></MtCard>{props.updatedTurno ? null : <View style={props.styles.actionButtons}><MtButton title="Confirmar nueva fecha" loading={props.rescheduling} disabled={props.selectedSlot === null || props.rescheduling} onPress={props.onConfirm}/><MtButton title="Cancelar" variant="ghost" onPress={() => router.back()}/></View>}</>;
 }
 export function ReprogramarTurnoView(props: Props) {
     const theme = useMtTheme();

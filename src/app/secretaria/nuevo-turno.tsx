@@ -8,12 +8,18 @@ import { appointmentService, AppointmentSlot } from '../../api/appointmentServic
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 
+type SecretariaPaciente = Record<string, unknown> & {
+  id?: number | string;
+  nombre?: string;
+  apellido?: string;
+};
+
 export default function SecretariaNuevoTurnoScreen() {
   const theme = useMtTheme();
   const scrollRef = useRef<ScrollView | null>(null);
   const scrollToTop = () => setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 80);
   const [dni, setDni] = useState('');
-  const [paciente, setPaciente] = useState<any | null>(null);
+  const [paciente, setPaciente] = useState<SecretariaPaciente | null>(null);
   const [profesionales, setProfesionales] = useState<Professional[]>([]);
   const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
   const [slots, setSlots] = useState<AppointmentSlot[]>([]);
@@ -53,11 +59,12 @@ export default function SecretariaNuevoTurnoScreen() {
   };
 
   const create = async () => {
-    if (!paciente?.id || !selectedProfessional || !selectedDate || !selectedHour) return;
+    const pacienteId = Number(paciente?.id);
+    if (!pacienteId || !selectedProfessional || !selectedDate || !selectedHour) return;
     setSaving(true); setError(null); setMessage(null);
     try {
       const created = await secretariaService.crearTurno({
-        pacienteId: paciente.id,
+        pacienteId,
         profesionalId: selectedProfessional.id,
         profesionalInstitucionId: selectedProfessional.profesionalInstitucionId,
         especialidadId: selectedProfessional.especialidadId,

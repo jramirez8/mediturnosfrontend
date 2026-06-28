@@ -397,7 +397,7 @@ export default function MedicoDisponibilidadScreen() {
   );
 }
 
-function CalendarDay({ cell, selected, styles, onPress }: { cell: CalendarCell; selected: boolean; styles: ReturnType<typeof createStyles>; onPress: () => void }) {
+function CalendarDay({ cell, selected, styles, onPress }: Readonly<{ cell: CalendarCell; selected: boolean; styles: ReturnType<typeof createStyles>; onPress: () => void }>) {
   return (
     <Pressable
       onPress={onPress}
@@ -426,11 +426,11 @@ function CalendarDay({ cell, selected, styles, onPress }: { cell: CalendarCell; 
   );
 }
 
-function LegendDot({ color, text, styles }: { color: string; text: string; styles: ReturnType<typeof createStyles> }) {
+function LegendDot({ color, text, styles }: Readonly<{ color: string; text: string; styles: ReturnType<typeof createStyles> }>) {
   return <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: color }]} /><Text style={styles.legendText}>{text}</Text></View>;
 }
 
-function Field({ label, value, setValue, styles }: { label: string; value: string; setValue: (v: string) => void; styles: ReturnType<typeof createStyles> }) {
+function Field({ label, value, setValue, styles }: Readonly<{ label: string; value: string; setValue: (v: string) => void; styles: ReturnType<typeof createStyles> }>) {
   return <View style={{ flex: 1 }}><Text style={styles.fieldLabel}>{label}</Text><TextInput value={value} onChangeText={setValue} style={styles.input} placeholderTextColor="#8B7AA8" /></View>;
 }
 

@@ -8,7 +8,7 @@ import { humanRole, routeForRole } from '../auth/roles';
 import { ThemeMode, useThemeStore, useMtTheme } from '../theme/themeStore';
 import { useTranslation } from '../i18n/languageStore';
 
-function SettingsOption({ label, selected, onPress, styles }: { label: string; selected: boolean; onPress: () => void; styles: ReturnType<typeof createStyles> }) {
+function SettingsOption({ label, selected, onPress, styles }: Readonly<{ label: string; selected: boolean; onPress: () => void; styles: ReturnType<typeof createStyles> }>) {
   return (
     <Pressable onPress={onPress} style={[styles.option, selected && styles.optionSelected]}>
       <Text style={[styles.optionText, selected && styles.optionTextSelected]}>{label}</Text>

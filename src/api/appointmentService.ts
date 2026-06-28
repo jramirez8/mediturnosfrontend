@@ -94,7 +94,10 @@ function ensureFechaHora(value: string) {
 }
 
 function normalizeEstado(value: unknown) {
-  return String(value ?? '').trim().toUpperCase();
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value).trim().toUpperCase();
+  }
+  return '';
 }
 
 function institutionNameFrom(t: any) {

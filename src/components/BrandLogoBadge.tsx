@@ -15,7 +15,7 @@ export default function BrandLogoBadge({ dark = false, size = 58 }: BrandLogoBad
           width: size,
           height: size,
           borderRadius: size * 0.3,
-          backgroundColor: dark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.72)",
+          backgroundColor: dark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.72)",
           borderColor: dark ? "rgba(255,255,255,0.16)" : "rgba(126,58,242,0.14)",
         },
       ]}
@@ -36,3 +36,4 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
 });
+

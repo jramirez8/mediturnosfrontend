@@ -251,7 +251,7 @@ export default function ClinicalHistoryScreen() {
   );
 }
 
-function EmptyCard({ icon, title, subtitle, styles }: { icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string; styles: ReturnType<typeof createStyles> }) {
+function EmptyCard({ icon, title, subtitle, styles }: Readonly<{ icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string; styles: ReturnType<typeof createStyles> }>) {
   return (
     <MtCard style={styles.emptyCard}>
       <View style={styles.emptySymbol}>

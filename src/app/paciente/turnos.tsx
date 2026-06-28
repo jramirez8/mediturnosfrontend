@@ -156,7 +156,7 @@ export default function MisTurnosScreen() {
   );
 }
 
-function NoticeBox({ notice }: { notice: Notice }) {
+function NoticeBox({ notice }: Readonly<{ notice: Notice }>) {
   return <MtNotice type={notice.type === 'error' ? 'danger' : notice.type} title={notice.title} message={notice.message} style={{ marginBottom: 14 }} />;
 }
 

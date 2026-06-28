@@ -39,6 +39,7 @@ const toRecord = (value: unknown): UnknownRecord => {
 
 const toStringValue = (input: unknown) => {
   if (input === undefined || input === null) return '';
+  if (typeof input === 'object' || typeof input === 'function') return '';
   return String(input);
 };
 

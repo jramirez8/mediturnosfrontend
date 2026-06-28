@@ -67,7 +67,7 @@ export function MtHeader({ eyebrow, title, subtitle, right }: Readonly<{
       <View style={{ flex: 1 }}>
         {!!eyebrow && <Text style={styles.eyebrow}>{translateLiteral(eyebrow, language)}</Text>}
         <Text style={styles.headerTitle}>{translateLiteral(title, language)}</Text>
-        {!!subtitle && <Text style={styles.headerSubtitle}>{translateLiteral(subtitle, language)}</Text>}
+        {Boolean(subtitle) && <Text style={styles.headerSubtitle}>{translateLiteral(subtitle, language)}</Text>}
       </View>
       {right !== undefined ? right : null}
     </View>);
@@ -147,7 +147,7 @@ export function MtEmptyState({ title, subtitle, actionTitle, onAction }: Readonl
         <Text style={styles.emptyMarkText}>M+</Text>
       </View>
       <Text style={styles.emptyTitle}>{translateLiteral(title, language)}</Text>
-      {!!subtitle && <Text style={styles.emptySubtitle}>{translateLiteral(subtitle, language)}</Text>}
+      {Boolean(subtitle) && <Text style={styles.emptySubtitle}>{translateLiteral(subtitle, language)}</Text>}
       {!!actionTitle && <MtButton title={actionTitle} onPress={onAction} style={{ marginTop: 14 }}/>}
     </MtCard>);
 }
@@ -266,9 +266,9 @@ export function textStyle(extra?: StyleProp<TextStyle>) {
 }
 function stylePalette(theme: MediturnosTheme) {
     if (theme.mode === 'dark') {
-        return { topWash: 'rgba(124,58,237,0.16)', topOrb: 'rgba(168,85,247,0.16)', topCurve: 'rgba(196,181,253,0.06)', bottomCurve: 'rgba(76,29,149,0.24)', bottomCurveTwo: 'rgba(124,58,237,0.16)', secondaryBg: 'rgba(255,255,255,0.08)', secondaryBorder: 'rgba(255,255,255,0.16)', secondaryShadow: 0.08, dangerBg: 'rgba(248,113,113,0.14)', ghostBg: 'rgba(255,255,255,0.075)', ghostBorder: theme.colors.border, ghostShadow: 0, inputBg: 'rgba(255,255,255,0.045)', pillBg: 'rgba(255,255,255,0.045)', logoBg: 'rgba(216,200,255,0.14)', logoBorder: 'rgba(216,200,255,0.20)', logoText: '#D9C8FF', navBg: 'rgba(31,20,52,0.96)', navIconBg: 'rgba(255,255,255,0.04)' };
+        return { topWash: 'rgba(124,58,237,0.16)', topOrb: 'rgba(168,85,247,0.16)', topCurve: 'rgba(196,181,253,0.06)', bottomCurve: 'rgba(76,29,149,0.24)', bottomCurveTwo: 'rgba(124,58,237,0.16)', secondaryBg: 'rgba(255,255,255,0.08)', secondaryBorder: 'rgba(255,255,255,0.16)', secondaryShadow: 0.08, dangerBg: 'rgba(248,113,113,0.14)', ghostBg: 'rgba(255,255,255,0.075)', ghostBorder: theme.colors.border, ghostShadow: 0, inputBg: 'rgba(255,255,255,0.045)', pillBg: 'rgba(255,255,255,0.045)', logoBg: 'rgba(216,200,255,0.14)', logoBorder: 'rgba(216,200,255,0.2)', logoText: '#D9C8FF', navBg: 'rgba(31,20,52,0.96)', navIconBg: 'rgba(255,255,255,0.04)' };
     }
-    return { topWash: '#F4EEFF', topOrb: 'rgba(221,214,254,0.58)', topCurve: 'rgba(255,255,255,0.55)', bottomCurve: '#EFE7FF', bottomCurveTwo: 'rgba(244,238,255,0.82)', secondaryBg: '#F3ECFF', secondaryBorder: 'rgba(124,58,237,0.24)', secondaryShadow: 0.10, dangerBg: '#FFF1F2', ghostBg: '#EDE7FF', ghostBorder: 'rgba(124,58,237,0.28)', ghostShadow: 0.10, inputBg: '#F3ECFF', pillBg: 'rgba(255,255,255,0.75)', logoBg: 'rgba(124,58,237,0.10)', logoBorder: 'rgba(124,58,237,0.18)', logoText: theme.colors.primary, navBg: 'rgba(255,255,255,0.94)', navIconBg: '#FFFFFF' };
+    return { topWash: '#F4EEFF', topOrb: 'rgba(221,214,254,0.58)', topCurve: 'rgba(255,255,255,0.55)', bottomCurve: '#EFE7FF', bottomCurveTwo: 'rgba(244,238,255,0.82)', secondaryBg: '#F3ECFF', secondaryBorder: 'rgba(124,58,237,0.24)', secondaryShadow: 0.1, dangerBg: '#FFF1F2', ghostBg: '#EDE7FF', ghostBorder: 'rgba(124,58,237,0.28)', ghostShadow: 0.1, inputBg: '#F3ECFF', pillBg: 'rgba(255,255,255,0.75)', logoBg: 'rgba(124,58,237,0.1)', logoBorder: 'rgba(124,58,237,0.18)', logoText: theme.colors.primary, navBg: 'rgba(255,255,255,0.94)', navIconBg: '#FFFFFF' };
 }
 function createStyles(theme: MediturnosTheme) {
     const palette = stylePalette(theme);
@@ -276,7 +276,7 @@ function createStyles(theme: MediturnosTheme) {
         safe: { flex: 1, backgroundColor: theme.colors.bg, overflow: 'hidden' },
         fill: { flex: 1 },
         screenPadding: { paddingHorizontal: 20, paddingTop: 18 },
-        decorRoot: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
+        decorRoot: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, overflow: 'hidden' },
         topWash: { position: 'absolute', top: -150, left: -80, width: 520, height: 320, borderRadius: 260, backgroundColor: palette.topWash, transform: [{ rotate: '-10deg' }] },
         topOrb: { position: 'absolute', top: -95, right: -115, width: 270, height: 270, borderRadius: 135, backgroundColor: palette.topOrb },
         topCurve: { position: 'absolute', top: 78, right: -110, width: 360, height: 120, borderRadius: 120, backgroundColor: palette.topCurve, transform: [{ rotate: '-12deg' }] },
@@ -327,4 +327,5 @@ function createStyles(theme: MediturnosTheme) {
         navFabText: { color: '#FFFFFF', fontSize: 34, lineHeight: 36, fontWeight: '300' },
     });
 }
+
 

@@ -41,7 +41,7 @@ function personnelFormButtonTitle(open: boolean, tab: Tab) {
 type ProfessionalForm = typeof profesionalEmpty;
 type SecretaryForm = typeof secretariaEmpty;
 type PatientForm = typeof pacienteEmpty;
-function ProfessionalFormCard({ form, setForm, especialidades, instituciones, saving, save, theme }: {
+function ProfessionalFormCard({ form, setForm, especialidades, instituciones, saving, save, theme }: Readonly<{
     form: ProfessionalForm;
     setForm: React.Dispatch<React.SetStateAction<ProfessionalForm>>;
     especialidades: AdminCatalogItem[];
@@ -49,7 +49,7 @@ function ProfessionalFormCard({ form, setForm, especialidades, instituciones, sa
     saving: boolean;
     save: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     return <MtCard style={{ marginBottom: 14, borderColor: theme.colors.primary }}><AdminTitle title={form.id ? 'Editar médico' : 'Crear médico'} subtitle="Crea el usuario médico y sus datos profesionales."/><View style={{ gap: 12 }}>
     <MtInput label="Email" value={form.email} onChangeText={(email) => setForm((current) => ({ ...current, email }))} autoCapitalize="none" keyboardType="email-address"/>
     <MtInput label={form.id ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'} value={form.password} onChangeText={(password) => setForm((current) => ({ ...current, password }))} secureTextEntry placeholder={form.id ? 'No cambiar' : quickPassword('Medico')}/>
@@ -64,14 +64,14 @@ function ProfessionalFormCard({ form, setForm, especialidades, instituciones, sa
     <MtButton title={saving ? 'Guardando...' : 'Guardar médico'} onPress={save} loading={saving} disabled={saving}/>
   </View></MtCard>;
 }
-function SecretaryFormCard({ form, setForm, instituciones, saving, save, theme }: {
+function SecretaryFormCard({ form, setForm, instituciones, saving, save, theme }: Readonly<{
     form: SecretaryForm;
     setForm: React.Dispatch<React.SetStateAction<SecretaryForm>>;
     instituciones: AdminCatalogItem[];
     saving: boolean;
     save: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     return <MtCard style={{ marginBottom: 14, borderColor: theme.colors.warning }}><AdminTitle title={form.id ? 'Editar secretaría' : 'Crear secretaría'} subtitle="Crea usuario SECRETARY y lo vincula con una institución."/><View style={{ gap: 12 }}>
     <MtInput label="Email" value={form.email} onChangeText={(email) => setForm((current) => ({ ...current, email }))} autoCapitalize="none" keyboardType="email-address"/>
     <MtInput label={form.id ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'} value={form.password} onChangeText={(password) => setForm((current) => ({ ...current, password }))} secureTextEntry placeholder={form.id ? 'No cambiar' : quickPassword('Secretaria')}/>
@@ -82,7 +82,7 @@ function SecretaryFormCard({ form, setForm, instituciones, saving, save, theme }
     <MtButton title={saving ? 'Guardando...' : 'Guardar secretaría'} onPress={save} loading={saving} disabled={saving}/>
   </View></MtCard>;
 }
-function PatientFormCard({ form, setForm, obras, instituciones, profesionales, saving, save, theme }: {
+function PatientFormCard({ form, setForm, obras, instituciones, profesionales, saving, save, theme }: Readonly<{
     form: PatientForm;
     setForm: React.Dispatch<React.SetStateAction<PatientForm>>;
     obras: AdminCatalogItem[];
@@ -91,7 +91,7 @@ function PatientFormCard({ form, setForm, obras, instituciones, profesionales, s
     saving: boolean;
     save: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     return <MtCard style={{ marginBottom: 14, borderColor: theme.colors.success }}><AdminTitle title={form.id ? 'Editar paciente' : 'Crear paciente'} subtitle="Alta administrativa de paciente con usuario PATIENT asociado."/><View style={{ gap: 12 }}>
     <MtInput label="Email" value={form.email} onChangeText={(email) => setForm((current) => ({ ...current, email }))} autoCapitalize="none" keyboardType="email-address"/>
     <MtInput label={form.id ? 'Nueva contraseña (opcional)' : 'Contraseña inicial'} value={form.password} onChangeText={(password) => setForm((current) => ({ ...current, password }))} secureTextEntry placeholder={form.id ? 'No cambiar' : quickPassword('Paciente')}/>
@@ -108,46 +108,46 @@ function PatientFormCard({ form, setForm, obras, instituciones, profesionales, s
     <MtButton title={saving ? 'Guardando...' : 'Guardar paciente'} onPress={save} loading={saving} disabled={saving}/>
   </View></MtCard>;
 }
-function ProfessionalCard({ item, working, edit, changeActive, theme }: {
+function ProfessionalCard({ item, working, edit, changeActive, theme }: Readonly<{
     item: AdminProfesional;
     working: boolean;
     edit: () => void;
     changeActive: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     const inactive = item.activo === false;
     return <MtCard style={{ marginBottom: 12, opacity: inactive ? 0.7 : 1 }}><Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 16 }}>{item.apellido}, {item.nombre}</Text>
     <AdminKV label="Email" value={item.email}/><AdminKV label="DNI" value={item.dni}/><AdminKV label="Matrícula" value={item.matricula}/><AdminKV label="Teléfono" value={item.telefono}/><AdminKV label="Especialidades" value={item.especialidades?.join(', ')}/><AdminKV label="Instituciones" value={item.instituciones?.join(', ')}/>
     <MtPill label={inactive ? 'INACTIVO' : 'ACTIVO'} tone={inactive ? 'danger' : 'success'} selected/><AdminActionRow><AdminMiniButton label="Editar" onPress={edit}/><AdminMiniButton label={inactive ? 'Activar' : 'Desactivar'} tone={inactive ? 'success' : 'danger'} disabled={working} onPress={changeActive}/></AdminActionRow>
   </MtCard>;
 }
-function SecretaryCard({ item, working, edit, changeActive, theme }: {
+function SecretaryCard({ item, working, edit, changeActive, theme }: Readonly<{
     item: AdminSecretaria;
     working: boolean;
     edit: () => void;
     changeActive: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     const inactive = item.activa === false;
     return <MtCard style={{ marginBottom: 12, opacity: inactive ? 0.7 : 1 }}><Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 16 }}>{item.apellido}, {item.nombre}</Text>
     <AdminKV label="Email" value={item.email}/><AdminKV label="DNI" value={item.dni}/><AdminKV label="Teléfono" value={item.telefono}/><AdminKV label="Institución" value={item.institucion}/>
     <MtPill label={inactive ? 'INACTIVA' : 'ACTIVA'} tone={inactive ? 'danger' : 'success'} selected/><AdminActionRow><AdminMiniButton label="Editar" onPress={edit}/><AdminMiniButton label={inactive ? 'Activar' : 'Desactivar'} tone={inactive ? 'success' : 'danger'} disabled={working} onPress={changeActive}/></AdminActionRow>
   </MtCard>;
 }
-function PatientCard({ item, working, edit, changeActive, theme }: {
+function PatientCard({ item, working, edit, changeActive, theme }: Readonly<{
     item: AdminPaciente;
     working: boolean;
     edit: () => void;
     changeActive: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     const inactive = item.activo === false;
     return <MtCard style={{ marginBottom: 12, opacity: inactive ? 0.7 : 1 }}><Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 16 }}>{item.apellido}, {item.nombre}</Text>
     <AdminKV label="Email" value={item.email}/><AdminKV label="DNI" value={item.dni}/><AdminKV label="Teléfono" value={item.telefono}/><AdminKV label="Obra social" value={item.obraSocial}/><AdminKV label="Historia clínica" value={item.numeroHistoriaClinica}/>
     <MtPill label={inactive ? 'INACTIVO' : 'ACTIVO'} tone={inactive ? 'danger' : 'success'} selected/><AdminActionRow><AdminMiniButton label="Editar" onPress={edit}/><AdminMiniButton label={inactive ? 'Activar' : 'Desactivar'} tone={inactive ? 'success' : 'danger'} disabled={working} onPress={changeActive}/></AdminActionRow>
   </MtCard>;
 }
-function PersonnelFormArea(props: {
+function PersonnelFormArea(props: Readonly<{
     open: boolean;
     tab: Tab;
     profForm: ProfessionalForm;
@@ -165,7 +165,7 @@ function PersonnelFormArea(props: {
     saveSecretary: () => void;
     savePatient: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     if (!props.open)
         return null;
     if (props.tab === 'MEDICOS')
@@ -174,7 +174,7 @@ function PersonnelFormArea(props: {
         return <SecretaryFormCard form={props.secForm} setForm={props.setSecForm} instituciones={props.instituciones} saving={props.saving} save={props.saveSecretary} theme={props.theme}/>;
     return <PatientFormCard form={props.pacForm} setForm={props.setPacForm} obras={props.obras} instituciones={props.instituciones} profesionales={props.profesionales} saving={props.saving} save={props.savePatient} theme={props.theme}/>;
 }
-function PersonnelListArea(props: {
+function PersonnelListArea(props: Readonly<{
     tab: Tab;
     professionals: AdminProfesional[];
     secretaries: AdminSecretaria[];
@@ -185,7 +185,7 @@ function PersonnelListArea(props: {
     editPatient: (item: AdminPaciente) => void;
     changeActive: (kind: Tab, id: number, active: boolean) => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     if (props.tab === 'MEDICOS')
         return props.professionals.length ? <>{props.professionals.map((item) => <ProfessionalCard key={item.id} item={item} working={props.working === `MEDICOS-${item.id}`} edit={() => props.editProfessional(item)} changeActive={() => props.changeActive('MEDICOS', item.id, item.activo === false)} theme={props.theme}/>)}</> : <MtEmptyState title="Sin médicos" subtitle="No hay profesionales para mostrar."/>;
     if (props.tab === 'SECRETARIAS')

@@ -53,14 +53,14 @@ function daysInMonth(year: string, month: string) {
   return new Date(y, m, 0).getDate();
 }
 
-function SelectField({ label, value, placeholder, options, onChange, disabled }: {
+function SelectField({ label, value, placeholder, options, onChange, disabled }: Readonly<{
   label: string;
   value: string;
   placeholder: string;
   options: Option[];
   onChange: (value: string) => void;
   disabled?: boolean;
-}) {
+}>) {
   const [open, setOpen] = useState(false);
   const selected = options.find((item) => item.value === value);
 

@@ -15,7 +15,7 @@ export default function EmptyStateMark({ dark = false, size = 72 }: EmptyStateMa
           width: size,
           height: size,
           borderRadius: size * 0.34,
-          backgroundColor: dark ? "rgba(199,180,255,0.16)" : "rgba(126,58,242,0.10)",
+          backgroundColor: dark ? "rgba(199,180,255,0.16)" : "rgba(126,58,242,0.1)",
           borderColor: dark ? "rgba(199,180,255,0.22)" : "rgba(126,58,242,0.16)",
         },
       ]}
@@ -47,3 +47,4 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
 });
+

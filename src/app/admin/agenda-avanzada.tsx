@@ -254,7 +254,7 @@ export default function AgendaAvanzadaAdmin() {
   );
 }
 
-function Field({ label, value, setValue, styles, placeholder, numeric }: { label: string; value: string; setValue: (v: string) => void; styles: ReturnType<typeof createStyles>; placeholder?: string; numeric?: boolean }) {
+function Field({ label, value, setValue, styles, placeholder, numeric }: Readonly<{ label: string; value: string; setValue: (v: string) => void; styles: ReturnType<typeof createStyles>; placeholder?: string; numeric?: boolean }>) {
   return <View style={{ flex: 1 }}><Text style={styles.fieldLabel}>{label}</Text><TextInput value={value} onChangeText={setValue} placeholder={placeholder} placeholderTextColor="#8B7AA8" keyboardType={numeric ? 'numeric' : 'default'} style={styles.input} /></View>;
 }
 

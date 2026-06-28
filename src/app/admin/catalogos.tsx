@@ -50,14 +50,14 @@ function deactivateCatalog(kind: Kind, id: number) {
     const actions = { ESPECIALIDADES: adminService.desactivarEspecialidad, OBRAS: adminService.desactivarObraSocial, INSTITUCIONES: adminService.desactivarInstitucion };
     return actions[kind](id);
 }
-function CatalogForm({ kind, form, setForm, saving, save, theme }: {
+function CatalogForm({ kind, form, setForm, saving, save, theme }: Readonly<{
     kind: Kind;
     form: Form;
     setForm: React.Dispatch<React.SetStateAction<Form>>;
     saving: boolean;
     save: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     return (<MtCard style={{ marginBottom: 14, borderColor: theme.colors.primary }}>
       <AdminTitle title={form.id ? 'Editar elemento' : 'Nuevo elemento'} subtitle="Los cambios se guardan y luego se recarga la lista."/>
       <View style={{ gap: 12 }}>
@@ -69,10 +69,10 @@ function CatalogForm({ kind, form, setForm, saving, save, theme }: {
       </View>
     </MtCard>);
 }
-function InstitutionFields({ form, setForm }: {
+function InstitutionFields({ form, setForm }: Readonly<{
     form: Form;
     setForm: React.Dispatch<React.SetStateAction<Form>>;
-}) {
+}>) {
     return <>
     <MtSelect label="Tipo" value={form.tipo} placeholder="Tipo de institución" options={tipoOptions} onChange={(tipo) => setForm((current) => ({ ...current, tipo }))}/>
     <MtInput label="Dirección" value={form.direccion} onChangeText={(direccion) => setForm((current) => ({ ...current, direccion }))}/>
@@ -80,14 +80,14 @@ function InstitutionFields({ form, setForm }: {
     <MtInput label="WhatsApp" value={form.whatsapp} onChangeText={(whatsapp) => setForm((current) => ({ ...current, whatsapp }))} keyboardType="phone-pad"/>
   </>;
 }
-function CatalogItemCard({ item, kind, working, edit, deactivate, theme }: {
+function CatalogItemCard({ item, kind, working, edit, deactivate, theme }: Readonly<{
     item: AdminCatalogItem;
     kind: Kind;
     working: boolean;
     edit: () => void;
     deactivate: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     const enabled = active(item);
     return <MtCard style={{ marginBottom: 12, opacity: enabled ? 1 : 0.7 }}>
     <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 16 }}>{item.nombre}</Text>
@@ -116,8 +116,8 @@ export default function AdminCatalogosScreen() {
             const [especialidades, obras, instituciones] = await Promise.all([adminService.especialidades(), adminService.obrasSociales(), adminService.instituciones()]);
             setCollections({ ESPECIALIDADES: especialidades, OBRAS: obras, INSTITUCIONES: instituciones });
         }
-        catch (caught: unknown) {
-            setError(readableError(caught, 'No pudimos cargar catálogos.'));
+        catch (error_: unknown) {
+            setError(readableError(error_, 'No pudimos cargar catálogos.'));
         }
         finally {
             setLoading(false);
@@ -145,8 +145,8 @@ export default function AdminCatalogosScreen() {
             closeForm();
             await load();
         }
-        catch (caught: unknown) {
-            setError(readableError(caught, 'No pudimos guardar el catálogo.'));
+        catch (error_: unknown) {
+            setError(readableError(error_, 'No pudimos guardar el catálogo.'));
         }
         finally {
             setSaving(false);
@@ -161,8 +161,8 @@ export default function AdminCatalogosScreen() {
             setMessage('Elemento desactivado correctamente.');
             await load();
         }
-        catch (caught: unknown) {
-            setError(readableError(caught, 'No pudimos desactivar el elemento.'));
+        catch (error_: unknown) {
+            setError(readableError(error_, 'No pudimos desactivar el elemento.'));
         }
         finally {
             setWorkingId(null);

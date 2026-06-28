@@ -22,14 +22,14 @@ function isToday(date?: string | null) {
 function withAdminLoading(loading: boolean, text: string, content: React.ReactNode) {
     return loading ? <MtLoading text={text}/> : content;
 }
-function ActionCard({ title, subtitle, icon, path, danger, theme }: {
+function ActionCard({ title, subtitle, icon, path, danger, theme }: Readonly<{
     title: string;
     subtitle: string;
     icon: string;
     path: string;
     danger?: boolean;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     return (<Pressable onPress={() => router.push(path)} style={{ width: '48%' }}>
       <MtCard style={{ minHeight: 138, borderColor: danger ? theme.colors.danger : theme.colors.border }}>
         <Text style={{ fontSize: 28 }}>{icon}</Text>
@@ -48,22 +48,22 @@ type StatItem = {
     value: number;
     tone?: 'primary' | 'success' | 'warning' | 'danger';
 };
-function DiagnosticPanel({ open, diagnostic, run, toggle, theme }: {
+function DiagnosticPanel({ open, diagnostic, run, toggle, theme }: Readonly<{
     open: boolean;
     diagnostic: Record<string, string> | null;
     run: () => void;
     toggle: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     return <><Pressable onPress={toggle} style={{ alignSelf: 'flex-end', marginTop: 8, opacity: 0.55 }}><Text style={{ color: theme.colors.muted, fontWeight: '800', fontSize: 12 }}>Estado del sistema</Text></Pressable>
     {open ? <View style={{ marginTop: 10 }}><MtButton title="Probar sistema" onPress={run} variant="ghost"/>{diagnostic ? <View style={{ marginTop: 8, gap: 6 }}>{Object.entries(diagnostic).map(([key, value]) => <DiagnosticLine key={key} label={key} value={value} theme={theme}/>)}</View> : null}</View> : null}
   </>;
 }
-function DiagnosticLine({ label, value, theme }: {
+function DiagnosticLine({ label, value, theme }: Readonly<{
     label: string;
     value: string;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     const text = String(value);
     let color = theme.colors.muted;
     if (text.includes('OK')) {
@@ -73,31 +73,31 @@ function DiagnosticLine({ label, value, theme }: {
     }
     return <Text style={{ color, fontWeight: '800', fontSize: 12 }}>{label}: {text}</Text>;
 }
-function ChecklistCard({ items, diagnosticOpen, diagnostic, runDiagnostic, toggleDiagnostic, theme }: {
+function ChecklistCard({ items, diagnosticOpen, diagnostic, runDiagnostic, toggleDiagnostic, theme }: Readonly<{
     items: ChecklistItem[];
     diagnosticOpen: boolean;
     diagnostic: Record<string, string> | null;
     runDiagnostic: () => void;
     toggleDiagnostic: () => void;
     theme: ReturnType<typeof useMtTheme>;
-}) { return <MtCard style={{ marginBottom: 14 }}><AdminTitle title="Configuración inicial" subtitle="Checklist rápido para dejar la app lista después de limpiar la base."/>{items.map((item) => <Pressable key={item.label} onPress={() => router.push(item.path)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}><Text style={{ color: theme.colors.ink, fontWeight: '900' }}>{item.ok ? '✅' : '❌'} {item.label}</Text><Text style={{ color: theme.colors.primary, fontWeight: '900' }}>Ir</Text></Pressable>)}<DiagnosticPanel open={diagnosticOpen} diagnostic={diagnostic} run={runDiagnostic} toggle={toggleDiagnostic} theme={theme}/></MtCard>; }
-function StatsGrid({ stats }: {
+}>) { return <MtCard style={{ marginBottom: 14 }}><AdminTitle title="Configuración inicial" subtitle="Checklist rápido para dejar la app lista después de limpiar la base."/>{items.map((item) => <Pressable key={item.label} onPress={() => router.push(item.path)} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 }}><Text style={{ color: theme.colors.ink, fontWeight: '900' }}>{item.ok ? '✅' : '❌'} {item.label}</Text><Text style={{ color: theme.colors.primary, fontWeight: '900' }}>Ir</Text></Pressable>)}<DiagnosticPanel open={diagnosticOpen} diagnostic={diagnostic} run={runDiagnostic} toggle={toggleDiagnostic} theme={theme}/></MtCard>; }
+function StatsGrid({ stats }: Readonly<{
     stats: StatItem[];
-}) { return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>{stats.map((stat) => <MtStat key={stat.label} label={stat.label} value={stat.value} tone={stat.tone}/>)}</View>; }
-function AdminActions({ language, t, theme }: {
+}>) { return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>{stats.map((stat) => <MtStat key={stat.label} label={stat.label} value={stat.value} tone={stat.tone}/>)}</View>; }
+function AdminActions({ language, t, theme }: Readonly<{
     language: string;
     t: (key: string) => string;
     theme: ReturnType<typeof useMtTheme>;
-}) {
+}>) {
     return <MtCard style={{ marginBottom: 14 }}><AdminTitle title={t('admin.actions')} subtitle={t('admin.actionsSub')}/><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
   <ActionCard icon="👥" title={t('nav.users')} subtitle={language === 'en' ? 'Create, edit, activate/deactivate and change roles.' : 'Crear, editar, activar/desactivar y cambiar rol.'} path="/admin/usuarios" theme={theme}/><ActionCard icon="🩺" title={language === 'en' ? 'Staff' : 'Personal'} subtitle={language === 'en' ? 'Doctors, secretaries and patients from one operational view.' : 'Médicos, secretarías y pacientes desde una vista operativa.'} path="/admin/profesionales" theme={theme}/><ActionCard icon="▤" title={t('nav.catalogs')} subtitle={language === 'en' ? 'Specialties, health insurance and institutions.' : 'Especialidades, obras sociales e instituciones.'} path="/admin/catalogos" theme={theme}/><ActionCard icon="📊" title={t('nav.reports')} subtitle={language === 'en' ? 'Indicators by status, specialty and professional.' : 'Indicadores por estado, especialidad y profesional.'} path="/admin/reportes" theme={theme}/><ActionCard icon="🗓️" title={language === 'en' ? 'Availability' : 'Disponibilidad'} subtitle={language === 'en' ? 'Working hours, slot duration and blocked dates.' : 'Horarios de atención, duración y bloqueos.'} path="/admin/agenda-avanzada" theme={theme}/><ActionCard icon="🧾" title={language === 'en' ? 'Audit' : 'Auditoría'} subtitle={language === 'en' ? 'Track relevant system actions.' : 'Seguimiento de acciones importantes.'} path="/admin/auditoria" theme={theme}/>
     </View></MtCard>;
 }
-function AppointmentStatus({ estado, t, theme }: {
+function AppointmentStatus({ estado, t, theme }: Readonly<{
     estado: Record<string, number>;
     t: (key: string) => string;
     theme: ReturnType<typeof useMtTheme>;
-}) { const keys = ['CONFIRMADO', 'CANCELADO', 'ATENDIDO', 'AUSENTE', ...(estado.REPROGRAMADO ? ['REPROGRAMADO'] : [])]; return <MtCard style={{ marginBottom: 14 }}><AdminTitle title={t('admin.appointmentStatus')} subtitle={t('admin.appointmentStatusSub')}/><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{keys.map((key) => <View key={key} style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: 14, paddingVertical: 10, paddingHorizontal: 12 }}><Text style={{ color: theme.colors.ink, fontWeight: '900' }}>{estado[key] ?? 0}</Text><Text style={{ color: theme.colors.muted, fontWeight: '700', fontSize: 11 }}>{key}</Text></View>)}</View></MtCard>; }
+}>) { const keys = ['CONFIRMADO', 'CANCELADO', 'ATENDIDO', 'AUSENTE', ...(estado.REPROGRAMADO ? ['REPROGRAMADO'] : [])]; return <MtCard style={{ marginBottom: 14 }}><AdminTitle title={t('admin.appointmentStatus')} subtitle={t('admin.appointmentStatusSub')}/><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{keys.map((key) => <View key={key} style={{ borderWidth: 1, borderColor: theme.colors.border, borderRadius: 14, paddingVertical: 10, paddingHorizontal: 12 }}><Text style={{ color: theme.colors.ink, fontWeight: '900' }}>{estado[key] ?? 0}</Text><Text style={{ color: theme.colors.muted, fontWeight: '700', fontSize: 11 }}>{key}</Text></View>)}</View></MtCard>; }
 export default function AdminDashboard() {
     const nombre = useAuthStore((s) => s.nombreCompleto);
     const [summary, setSummary] = useState<AdminSummary>({});

@@ -46,7 +46,7 @@ export async function pickFromGallery(): Promise<PickedMedia | null> {
   if (!permission.granted) throw new Error('Necesitamos permiso para abrir la galería.');
 
   const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    mediaTypes: ['images'],
     quality: 0.8,
     allowsEditing: false,
   });
@@ -59,7 +59,7 @@ export async function pickFromCamera(): Promise<PickedMedia | null> {
   if (!permission.granted) throw new Error('Necesitamos permiso para usar la cámara.');
 
   const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    mediaTypes: ['images'],
     quality: 0.8,
     allowsEditing: false,
   });
@@ -82,7 +82,7 @@ export function chooseDocumentSource(onPicked: (media: PickedMedia) => void, onE
       const picked = await picker();
       if (picked) onPicked(picked);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error ?? 'No pudimos adjuntar el archivo.');
+      const message = error instanceof Error ? error.message : 'No pudimos adjuntar el archivo.';
       onError(message);
     }
   };

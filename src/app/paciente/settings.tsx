@@ -78,7 +78,7 @@ export default function SettingsScreen() {
   );
 }
 
-function LanguageButton({ label, selected, onPress, styles }: { label: string; selected: boolean; onPress: () => void; styles: ReturnType<typeof createStyles> }) {
+function LanguageButton({ label, selected, onPress, styles }: Readonly<{ label: string; selected: boolean; onPress: () => void; styles: ReturnType<typeof createStyles> }>) {
   return (
     <Pressable onPress={onPress} style={[styles.languageButton, selected && styles.languageButtonSelected]}>
       <Text style={[styles.languageButtonText, selected && styles.languageButtonTextSelected]}>{label}</Text>

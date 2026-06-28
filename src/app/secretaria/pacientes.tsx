@@ -12,10 +12,22 @@ import { documentService, PacienteDocumento } from '../../api/documentService';
 import { documentTypes } from '../../constants/documentTypes';
 
 type Notice = { type: 'success' | 'danger' | 'warning' | 'info'; title: string; message: string };
+type SecretariaPaciente = Record<string, unknown> & {
+  id?: number | string;
+  pacienteId?: number | string;
+  nombre?: string;
+  apellido?: string;
+  dni?: string;
+  telefono?: string;
+  email?: string;
+  usuario?: { email?: string };
+  obraSocial?: { nombre?: string };
+  obraSocialNombre?: string;
+};
 
 export default function SecretariaPacientesScreen() {
   const [dni, setDni] = useState('');
-  const [paciente, setPaciente] = useState<any | null>(null);
+  const [paciente, setPaciente] = useState<SecretariaPaciente | null>(null);
   const [docs, setDocs] = useState<PacienteDocumento[]>([]);
   const [documentType, setDocumentType] = useState('Otros');
   const [includeArchived, setIncludeArchived] = useState(false);
@@ -124,7 +136,7 @@ export default function SecretariaPacientesScreen() {
                 </View>
                 <Ionicons name="open-outline" size={18} color={theme.colors.muted} />
               </Pressable>
-              {!doc.archivado ? <Pressable onPress={() => archiveDoc(doc)} hitSlop={8}><Ionicons name="archive-outline" size={20} color={theme.colors.danger} /></Pressable> : null}
+              {doc.archivado ? null : <Pressable onPress={() => archiveDoc(doc)} hitSlop={8}><Ionicons name="archive-outline" size={20} color={theme.colors.danger} /></Pressable>}
             </View>
           ))}
         </MtCard>

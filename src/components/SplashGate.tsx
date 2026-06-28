@@ -2,10 +2,10 @@ import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-type SplashGateProps = PropsWithChildren<{
+type SplashGateProps = Readonly<PropsWithChildren<{
   minimumMs?: number;
   dark?: boolean;
-}>;
+}>>;
 
 export default function SplashGate({ children, minimumMs = 1100, dark = true }: SplashGateProps) {
   const [showSplash, setShowSplash] = useState(true);

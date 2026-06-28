@@ -132,7 +132,7 @@ export default function AppointmentDetailScreen() {
 
         {!!notice && <MtNotice type={notice.type} title={notice.title} message={notice.message} style={{ marginBottom: 12 }} />}
 
-        {!turno ? (
+        {turno === null ? (
           <MtCard style={styles.emptyCard}>
             <Ionicons name="calendar-outline" size={42} color={theme.colors.primary} />
             <Text style={styles.emptyTitle}>No pudimos cargar este turno</Text>
@@ -182,7 +182,7 @@ export default function AppointmentDetailScreen() {
   );
 }
 
-function InfoCard({ icon, label, value, styles }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string; styles: ReturnType<typeof createStyles> }) {
+function InfoCard({ icon, label, value, styles }: Readonly<{ icon: keyof typeof Ionicons.glyphMap; label: string; value: string; styles: ReturnType<typeof createStyles> }>) {
   return (
     <MtCard style={styles.infoCard}>
       <View style={styles.infoIcon}>

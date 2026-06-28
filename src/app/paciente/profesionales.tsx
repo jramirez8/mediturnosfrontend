@@ -87,7 +87,7 @@ export default function ProfesionalesScreen() {
   );
 }
 
-function ProfessionalCard({ item, styles, theme, language }: { item: Professional; styles: ReturnType<typeof createStyles>; theme: MediturnosTheme; language: AppLanguage }) {
+function ProfessionalCard({ item, styles, theme, language }: Readonly<{ item: Professional; styles: ReturnType<typeof createStyles>; theme: MediturnosTheme; language: AppLanguage }>) {
   const initials = `${item.nombre?.[0] ?? ''}${item.apellido?.[0] ?? ''}`.toUpperCase() || 'Dr';
   return (
     <MtCard style={styles.card}>

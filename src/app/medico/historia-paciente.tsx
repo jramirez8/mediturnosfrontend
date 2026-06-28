@@ -13,7 +13,7 @@ import { readableError } from '../../utils/errors';
 
 type Notice = { type: 'success' | 'danger' | 'warning' | 'info'; title: string; message: string };
 
-function HistoryResults({ loading, items, searched }: { loading: boolean; items: TurnoResponse[]; searched: boolean }) {
+function HistoryResults({ loading, items, searched }: Readonly<{ loading: boolean; items: TurnoResponse[]; searched: boolean }>) {
   if (loading) return <MtLoading text="Buscando..." />;
   if (items.length) return <>{items.map((turno) => <TurnoCard key={turno.id} turno={turno} />)}</>;
   if (searched) return <MtEmptyState title="Sin historia cargada" subtitle="No hay atenciones registradas para ese DNI bajo tu perfil profesional." />;
@@ -96,7 +96,7 @@ export default function HistoriaPacienteMedicoScreen() {
               </View>
               <Ionicons name="open-outline" size={18} color={theme.colors.muted} />
             </Pressable>
-            {!doc.archivado ? <Pressable onPress={() => archiveDoc(doc)} hitSlop={8}><Ionicons name="archive-outline" size={20} color={theme.colors.danger} /></Pressable> : null}
+            {doc.archivado ? null : <Pressable onPress={() => archiveDoc(doc)} hitSlop={8}><Ionicons name="archive-outline" size={20} color={theme.colors.danger} /></Pressable>}
           </View>
         )) : <Text style={{ color: theme.colors.muted, fontWeight: '700' }}>No hay documentos cargados.</Text>}
       </MtCard> : null}

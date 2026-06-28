@@ -34,7 +34,7 @@ function topEntries(map: Record<string, number>, limit = 8) {
 
 
 function csvEscape(value: unknown) {
-  const text = String(value ?? '').replace(/"/g, '""');
+  const text = typeof value === 'object' || typeof value === 'function' || value === undefined || value === null ? '' : String(value).replaceAll('"', '""');
   return `"${text}"`;
 }
 
@@ -44,7 +44,7 @@ function buildCsv(turnos: TurnoResponse[]) {
   return [headers, ...rows].map((row) => row.map(csvEscape).join(',')).join('\n');
 }
 
-function ReportBar({ label, value, total, theme }: { label: string; value: number; total: number; theme: ReturnType<typeof useMtTheme> }) {
+function ReportBar({ label, value, total, theme }: Readonly<{ label: string; value: number; total: number; theme: ReturnType<typeof useMtTheme> }>) {
   const pct = total ? Math.max(5, Math.round((value / total) * 100)) : 0;
   return (
     <View style={{ marginBottom: 12 }}>
@@ -166,7 +166,7 @@ export default function AdminReportesScreen() {
       <MtCard style={{ marginBottom: 14 }}>
         <AdminTitle title="Turnos por estado" />
         {topEntries(byStatus, 12).map(([label, value]) => <ReportBar key={label} label={label} value={value} total={filtered.length} theme={theme} />)}
-        {!Object.keys(byStatus).length ? <Text style={{ color: theme.colors.muted }}>Sin datos para el filtro.</Text> : null}
+        {Object.keys(byStatus).length === 0 ? <Text style={{ color: theme.colors.muted }}>Sin datos para el filtro.</Text> : null}
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>
@@ -192,7 +192,7 @@ export default function AdminReportesScreen() {
             <Text style={{ color: theme.colors.primary, fontWeight: '900', marginTop: 3 }}>{(values.total / values.count).toFixed(1)}/5 · {values.count} valoración(es)</Text>
           </View>
         ))}
-        {!feedback.length ? <Text style={{ color: theme.colors.muted }}>Todavía no hay valoraciones.</Text> : null}
+        {feedback.length === 0 ? <Text style={{ color: theme.colors.muted }}>Todavía no hay valoraciones.</Text> : null}
       </MtCard>
 
       <MtCard style={{ marginBottom: 14 }}>

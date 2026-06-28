@@ -26,7 +26,7 @@ export function todayLocalIso() {
 
 export function parseIsoDateLocal(iso?: string | null) {
   const clean = String(iso ?? '').slice(0, 10);
-  const [y, m, d] = clean.split('-').map((part) => Number(part));
+  const [y, m, d] = clean.split('-').map(Number);
   if (!y || !m || !d) return new Date();
   return new Date(y, m - 1, d);
 }
@@ -54,7 +54,7 @@ export function isoFromDateTime(value?: string | null) {
 
 export function normalizeTimeInput(value?: string | null) {
   const raw = String(value ?? '').trim().replace('.', ':');
-  const match = raw.match(/^(\d{1,2})(?::?(\d{0,2}))?/);
+  const match = /^(\d{1,2})(?::?(\d{1,2}))?$/.exec(raw);
   if (!match) return '';
   const hours = Number(match[1]);
   const minutes = Number(match[2] || '0');
@@ -92,7 +92,7 @@ export function countSlotsInRange(from?: string | null, to?: string | null, minu
 
 export function formatLocalDate(value?: string | null) {
   const iso = isoFromDateTime(value);
-  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!match) return '';
 
   const [, year, month, day] = match;
