@@ -32,8 +32,7 @@ export default function FeedbackScreen() {
   };
 
   return (
-    <>
-      <MtScreen>
+      <MtScreen scroll>
       <MtHeader eyebrow="EXPERIENCIA" title="Calificar atención" subtitle="Tu opinión ayuda a mejorar la atención del centro médico." />
       <MtCard style={{ gap: 16 }}>
         <Text style={styles.label}>Puntuación</Text>
@@ -49,9 +48,8 @@ export default function FeedbackScreen() {
         <MtButton title="Guardar calificación" onPress={save} loading={saving} disabled={saving || !!message} />
         <MtButton title="Volver a mis turnos" variant="ghost" onPress={() => router.replace('/paciente/turnos')} />
       </MtCard>
+        <MtBottomNav active="turnos" />
       </MtScreen>
-      <MtBottomNav active="turnos" />
-    </>
   );
 }
 

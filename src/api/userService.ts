@@ -39,8 +39,9 @@ const toRecord = (value: unknown): UnknownRecord => {
 
 const toStringValue = (input: unknown) => {
   if (input === undefined || input === null) return '';
-  if (typeof input === 'object' || typeof input === 'function') return '';
-  return String(input);
+  if (typeof input === 'string') return input;
+  if (typeof input === 'number' || typeof input === 'boolean' || typeof input === 'bigint') return input.toString();
+  return '';
 };
 
 const toPositiveNumber = (value: unknown): number | undefined => {

@@ -118,7 +118,6 @@ export default function AppointmentDetailScreen() {
   if (loading) return <MtLoading text="Cargando detalle del turno..." />;
 
   return (
-    <>
       <MtScreen scroll scrollRef={scrollRef} style={styles.screen}>
         <View style={styles.headerRow}>
           <Pressable style={styles.backButton} onPress={goBack}>
@@ -176,9 +175,8 @@ export default function AppointmentDetailScreen() {
             </View>
           </>
         )}
+        <MtBottomNav active="turnos" />
       </MtScreen>
-      <MtBottomNav active="turnos" />
-    </>
   );
 }
 

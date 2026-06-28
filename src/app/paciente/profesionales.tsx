@@ -50,7 +50,6 @@ export default function ProfesionalesScreen() {
   if (loading) return <MtLoading text={t('common.loading')} />;
 
   return (
-    <>
       <MtScreen scroll={false}>
         <MtHeader eyebrow={language === 'en' ? 'DIRECTORY' : 'CARTILLA'} title={t('professionals.title')} subtitle={t('professionals.subtitle')} />
 
@@ -81,9 +80,8 @@ export default function ProfesionalesScreen() {
           ListEmptyComponent={<MtEmptyState title={language === 'en' ? 'No professionals found' : 'No encontramos profesionales'} subtitle={language === 'en' ? 'Try changing the filter or search.' : 'Probá cambiar el filtro o la búsqueda.'} />}
           renderItem={({ item }) => <ProfessionalCard item={item} styles={styles} theme={theme} language={language} />}
         />
+        <MtBottomNav active="solicitar" />
       </MtScreen>
-      <MtBottomNav active="solicitar" />
-    </>
   );
 }
 

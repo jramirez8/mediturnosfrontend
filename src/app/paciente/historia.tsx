@@ -118,7 +118,6 @@ export default function ClinicalHistoryScreen() {
   if (loading) return <MtLoading text="Cargando historia clínica..." />;
 
   return (
-    <>
       <MtScreen scroll scrollRef={scrollRef}>
         <MtHeader
           eyebrow="HISTORIA CLÍNICA"
@@ -245,9 +244,8 @@ export default function ClinicalHistoryScreen() {
             </View>
           </Pressable>
         </Modal>
+        <MtBottomNav active="historia" />
       </MtScreen>
-      <MtBottomNav active="historia" />
-    </>
   );
 }
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useMtTheme } from '../theme/themeStore';
 import { MediturnosTheme } from '../constants/mediturnosTheme';
 import { translateLiteral, useTranslation } from '../i18n/languageStore';
@@ -30,31 +30,39 @@ export function MtSelect({
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>{translateLiteral(label, language)}</Text>
-      <Pressable disabled={disabled} onPress={() => setOpen((current) => !current)} style={[styles.button, disabled && { opacity: 0.55 }]}> 
-        <Text style={[styles.value, !selected && styles.placeholder]}>{selected?.label ? translateLiteral(selected.label, language) : translateLiteral(placeholder, language)}</Text>
+      <Pressable disabled={disabled} onPress={() => setOpen(true)} style={[styles.button, disabled && { opacity: 0.55 }]}>
+        <Text style={[styles.value, !selected && styles.placeholder]} numberOfLines={1}>
+          {selected?.label ? translateLiteral(selected.label, language) : translateLiteral(placeholder, language)}
+        </Text>
         <View style={styles.chevronBubble}>
-          <Text style={styles.chevron}>{open ? '⌃' : '⌄'}</Text>
+          <Text style={styles.chevron}>⌄</Text>
         </View>
       </Pressable>
-      {open ? (
-        <ScrollView style={styles.options} nestedScrollEnabled>
-          {options.map((option) => {
-            const active = option.value === value;
-            return (
-              <Pressable
-                key={`${label}-${option.value}`}
-                style={[styles.option, active && styles.optionActive]}
-                onPress={() => {
-                  onChange(option.value);
-                  setOpen(false);
-                }}
-              >
-                <Text style={[styles.optionText, active && styles.optionTextActive]}>{translateLiteral(option.label, language)}</Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      ) : null}
+
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
+          <Pressable style={styles.modalCard} onPress={(event) => event.stopPropagation()}>
+            <Text style={styles.modalTitle}>{translateLiteral(label, language)}</Text>
+            <ScrollView style={styles.options} nestedScrollEnabled>
+              {options.map((option) => {
+                const active = option.value === value;
+                return (
+                  <Pressable
+                    key={`${label}-${option.value}`}
+                    style={[styles.option, active && styles.optionActive]}
+                    onPress={() => {
+                      onChange(option.value);
+                      setOpen(false);
+                    }}
+                  >
+                    <Text style={[styles.optionText, active && styles.optionTextActive]}>{translateLiteral(option.label, language)}</Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -80,20 +88,24 @@ function createStyles(theme: MediturnosTheme) {
     placeholder: { color: theme.colors.soft, fontWeight: '700' },
     chevronBubble: { width: 28, height: 28, borderRadius: 14, backgroundColor: theme.colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
     chevron: { color: theme.colors.primary, fontWeight: '900', fontSize: 18, lineHeight: 18 },
-    options: {
-      maxHeight: 260,
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(15, 10, 28, 0.42)',
+      justifyContent: 'center',
+      padding: 22,
+    },
+    modalCard: {
+      width: '100%',
+      maxHeight: '78%',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      borderRadius: 18,
+      borderRadius: 22,
       backgroundColor: isDark ? '#1F1434' : '#FFFFFF',
       overflow: 'hidden',
-      zIndex: 20,
-      elevation: isDark ? 0 : 2,
-      shadowColor: theme.colors.primary,
-      shadowOpacity: isDark ? 0 : 0.08,
-      shadowRadius: isDark ? 0 : 10,
     },
-    option: { paddingHorizontal: 14, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: theme.colors.border, backgroundColor: isDark ? '#1F1434' : '#FFFFFF' },
+    modalTitle: { color: theme.colors.ink, fontWeight: '900', fontSize: 17, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 },
+    options: { maxHeight: 320, backgroundColor: isDark ? '#1F1434' : '#FFFFFF' },
+    option: { paddingHorizontal: 14, paddingVertical: 14, borderTopWidth: 1, borderTopColor: theme.colors.border, backgroundColor: isDark ? '#1F1434' : '#FFFFFF' },
     optionActive: { backgroundColor: theme.colors.primaryLight },
     optionText: { color: theme.colors.ink, fontWeight: '900', fontSize: 15 },
     optionTextActive: { color: theme.mode === 'dark' ? '#FFFFFF' : theme.colors.primaryDark, fontWeight: '900' },

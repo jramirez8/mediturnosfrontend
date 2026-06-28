@@ -34,7 +34,7 @@ function topEntries(map: Record<string, number>, limit = 8) {
 
 
 function csvEscape(value: unknown) {
-  const text = typeof value === 'object' || typeof value === 'function' || value === undefined || value === null ? '' : String(value).replaceAll('"', '""');
+  const text = typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint' ? value.toString().replaceAll('"', '""') : '';
   return `"${text}"`;
 }
 

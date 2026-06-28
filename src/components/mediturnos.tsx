@@ -1,6 +1,6 @@
 import React from 'react';
 import { router } from 'expo-router';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, } from 'react-native';
+import { ActivityIndicator, findNodeHandle, GestureResponderEvent, Keyboard, Modal, Pressable, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppBottomNav } from './AppBottomNav';
 import { MediturnosTheme } from '../constants/mediturnosTheme';
@@ -46,10 +46,18 @@ export function MtScreen({ children, scroll = false, padded = true, bottomSpace 
     const navigation = childArray.filter(isBottomNav);
     const content = childArray.filter((child) => !isBottomNav(child));
     const hasNavigation = navigation.length > 0;
-    const contentStyle = [padded && styles.screenPadding, bottomSpace && { paddingBottom: hasNavigation ? 116 : 28 }, style];
-    return (<SafeAreaView style={styles.safe} edges={['top']}>
+    const contentStyle = [scroll && styles.scrollContent, padded && styles.screenPadding, bottomSpace && { paddingBottom: hasNavigation ? 116 : 28 }, style];
+    const dismissKeyboardOutsideInput = React.useCallback((event: GestureResponderEvent) => {
+        const focusedInput = TextInput.State.currentlyFocusedInput?.();
+        const focusedHandle = findNodeHandle(focusedInput as unknown as React.Component | null);
+        if (focusedHandle && String(focusedHandle) !== String(event.nativeEvent.target)) {
+            Keyboard.dismiss();
+        }
+        return false;
+    }, []);
+    return (<SafeAreaView style={styles.safe} edges={['top']} onStartShouldSetResponderCapture={dismissKeyboardOutsideInput}>
       <DecorativeBackground />
-      {scroll ? (<ScrollView ref={scrollRef} style={styles.fill} contentContainerStyle={contentStyle} showsVerticalScrollIndicator={false} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled">
+      {scroll ? (<ScrollView ref={scrollRef} style={styles.fill} contentContainerStyle={contentStyle} showsVerticalScrollIndicator={false} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled" onScrollBeginDrag={Keyboard.dismiss}>
           {content}
         </ScrollView>) : (<View style={[styles.fill, contentStyle]}>{content}</View>)}
       {navigation}
@@ -65,7 +73,7 @@ export function MtHeader({ eyebrow, title, subtitle, right }: Readonly<{
     const { language } = useTranslation();
     return (<View style={styles.header}>
       <View style={{ flex: 1 }}>
-        {!!eyebrow && <Text style={styles.eyebrow}>{translateLiteral(eyebrow, language)}</Text>}
+        {Boolean(eyebrow) && <Text style={styles.eyebrow}>{translateLiteral(eyebrow, language)}</Text>}
         <Text style={styles.headerTitle}>{translateLiteral(title, language)}</Text>
         {Boolean(subtitle) && <Text style={styles.headerSubtitle}>{translateLiteral(subtitle, language)}</Text>}
       </View>
@@ -273,8 +281,9 @@ function stylePalette(theme: MediturnosTheme) {
 function createStyles(theme: MediturnosTheme) {
     const palette = stylePalette(theme);
     return StyleSheet.create({
-        safe: { flex: 1, backgroundColor: theme.colors.bg, overflow: 'hidden' },
+        safe: { flex: 1, position: 'relative', backgroundColor: theme.colors.bg, overflow: 'hidden' },
         fill: { flex: 1 },
+        scrollContent: { flexGrow: 1 },
         screenPadding: { paddingHorizontal: 20, paddingTop: 18 },
         decorRoot: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, overflow: 'hidden' },
         topWash: { position: 'absolute', top: -150, left: -80, width: 520, height: 320, borderRadius: 260, backgroundColor: palette.topWash, transform: [{ rotate: '-10deg' }] },

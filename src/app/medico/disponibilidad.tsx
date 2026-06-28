@@ -71,12 +71,6 @@ function slotsByDate(slots: AppointmentSlot[]) {
   }, {});
 }
 
-function chunkRows<T>(items: T[], size: number) {
-  const rows: T[][] = [];
-  for (let i = 0; i < items.length; i += size) rows.push(items.slice(i, i + size));
-  return rows;
-}
-
 function calendarStatus(inMonth: boolean, past: boolean, blocked: boolean, slotCount: number, attends: boolean): DayStatus {
   if (!inMonth) return 'outside';
   if (past) return 'past';
@@ -210,7 +204,6 @@ export default function MedicoDisponibilidadScreen() {
   useEffect(() => { load(); }, [load]);
 
   const calendarCells = useMemo(() => buildCalendarCells(monthCursor, horarios, bloqueos, slotsVisibles), [monthCursor, horarios, bloqueos, slotsVisibles]);
-  const calendarRows = useMemo(() => chunkRows(calendarCells, 7), [calendarCells]);
   const selectedCell = useMemo(() => calendarCells.find((c) => c.iso === selectedDate), [calendarCells, selectedDate]);
   const selectedDateWeekday = selectedCell?.weekdayApi ?? JS_DAY_TO_API[new Date(`${selectedDate}T00:00:00`).getDay()];
   const selectedDaySchedules = useMemo(() => horarios.filter((h) => normalizeApiDay(h.diaSemana) === selectedDateWeekday && h.activo !== false), [horarios, selectedDateWeekday]);
@@ -332,13 +325,8 @@ export default function MedicoDisponibilidadScreen() {
         </View>
 
         <View style={styles.weekRow}>{WEEKDAYS.map((d) => <Text key={d} style={styles.weekDay}>{d}</Text>)}</View>
-        <View style={styles.calendarGrid}>{calendarRows.map((row) => (
-          <View key={row.map((cell) => cell.key).join('|')} style={styles.calendarRow}>{row.map((cell) => {
-            const selected = cell.iso === selectedDate;
-            return (
-              <CalendarDay key={cell.key} cell={cell} selected={selected} styles={styles} onPress={() => cell.inMonth && setSelectedDate(cell.iso)} />
-            );
-          })}</View>
+        <View style={styles.calendarGrid}>{calendarCells.map((cell) => (
+          <CalendarDay key={cell.key} cell={cell} selected={cell.iso === selectedDate} styles={styles} onPress={() => cell.inMonth && setSelectedDate(cell.iso)} />
         ))}</View>
 
         <View style={styles.legendGrid}>
@@ -454,22 +442,21 @@ function createStyles(theme: MediturnosTheme) {
     monthButtonText: { color: theme.colors.primary, fontSize: 26, fontWeight: '900', marginTop: -2 },
     monthTitle: { color: theme.colors.ink, fontWeight: '900', fontSize: 20, textAlign: 'center' },
     monthSubtitle: { color: theme.colors.muted, fontWeight: '800', fontSize: 11, marginTop: 2, textAlign: 'center' },
-    weekRow: { flexDirection: 'row', gap: 6, marginTop: 4 },
-    weekDay: { flex: 1, textAlign: 'center', color: theme.colors.muted, fontWeight: '900', fontSize: 12 },
-    calendarGrid: { gap: 6 },
-    calendarRow: { flexDirection: 'row', gap: 6 },
-    dayCell: { flex: 1, minHeight: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surfaceMuted, borderWidth: 1.5, borderColor: theme.colors.border, position: 'relative' },
-    dayOut: { opacity: 0.14, backgroundColor: theme.colors.surface, borderColor: 'transparent' },
-    dayPast: { opacity: 0.46, backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
+    weekRow: { flexDirection: 'row', marginTop: 4, marginBottom: 7 },
+    weekDay: { flex: 1, textAlign: 'center', color: theme.colors.muted, fontWeight: '900', fontSize: 11 },
+    calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 4 },
+    dayCell: { width: '13.05%', aspectRatio: 1, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surfaceMuted, borderWidth: 1, borderColor: theme.colors.border, position: 'relative' },
+    dayOut: { opacity: 0.45, backgroundColor: theme.colors.surface, borderColor: 'transparent' },
+    dayPast: { opacity: 0.55, backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border },
     dayWithSlots: { backgroundColor: theme.mode === 'dark' ? 'rgba(74,222,128,0.16)' : '#ECFDF3', borderColor: theme.colors.success },
     dayWeeklyNoSlots: { backgroundColor: theme.mode === 'dark' ? 'rgba(251,191,36,0.14)' : '#FFF7ED', borderColor: theme.colors.warning },
     dayBlocked: { backgroundColor: theme.mode === 'dark' ? 'rgba(248,113,113,0.15)' : '#FEF2F2', borderColor: theme.colors.danger },
-    daySelected: { borderWidth: 3, borderColor: theme.colors.primary, transform: [{ scale: 1.02 }] },
+    daySelected: { borderWidth: 3, borderColor: theme.colors.primaryDark, backgroundColor: theme.colors.primary },
     dayText: { color: theme.colors.soft, fontWeight: '900', fontSize: 15 },
     dayWithSlotsText: { color: theme.colors.success },
     dayWeeklyNoSlotsText: { color: theme.colors.warning },
     dayBlockedText: { color: theme.colors.danger },
-    daySelectedText: { color: theme.colors.ink },
+    daySelectedText: { color: theme.mode === 'dark' ? '#06201D' : '#FFFFFF' },
     dayMeta: { position: 'absolute', right: 6, bottom: 4, color: theme.colors.muted, fontWeight: '900', fontSize: 10 },
     legendGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
     legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5, minWidth: '44%' },

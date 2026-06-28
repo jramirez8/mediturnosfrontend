@@ -109,7 +109,6 @@ export default function MisTurnosScreen() {
   if (loading) return <MtLoading text="Buscando tus turnos..." />;
 
   return (
-    <>
       <MtScreen scroll={false}>
         <MtHeader eyebrow="AGENDA" title="Mis turnos" subtitle="Consultá próximos turnos, historial y acciones rápidas." />
 
@@ -150,9 +149,8 @@ export default function MisTurnosScreen() {
             />
           )}
         />
+        <MtBottomNav active="turnos" />
       </MtScreen>
-      <MtBottomNav active="turnos" />
-    </>
   );
 }
 
@@ -171,7 +169,7 @@ function AppointmentCard({
   onAddCalendar,
   onFeedback,
   styles,
-}: {
+}: Readonly<{
   item: TurnoResponse;
   confirmingCancel: boolean;
   canceling: boolean;
@@ -182,7 +180,7 @@ function AppointmentCard({
   onAddCalendar: () => void;
   onFeedback: () => void;
   styles: ReturnType<typeof createStyles>;
-}) {
+}>) {
   const estado = String(item.estado).toUpperCase();
   const isFinal = FINAL_STATES.has(estado);
   let tone: 'success' | 'warning' | 'danger' | 'muted' = 'muted';

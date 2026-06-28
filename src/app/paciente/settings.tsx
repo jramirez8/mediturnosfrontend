@@ -21,7 +21,6 @@ export default function SettingsScreen() {
   };
 
   return (
-    <>
       <MtScreen scroll>
         <MtHeader eyebrow="CONFIG" title={t('settings.title')} subtitle={t('settings.subtitle')} />
 
@@ -72,9 +71,8 @@ export default function SettingsScreen() {
           <MtButton title={t('common.logout')} variant="danger" onPress={handleLogout} />
           <MtButton title={t('settings.backToProfile')} variant="ghost" onPress={() => router.push('/paciente/perfil')} style={{ marginTop: 10 }} />
         </MtCard>
+        <MtBottomNav active="perfil" />
       </MtScreen>
-      <MtBottomNav active="perfil" />
-    </>
   );
 }
 

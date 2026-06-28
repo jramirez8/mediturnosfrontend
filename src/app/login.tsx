@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: 26,
         shadowColor: palette.purple,
-        shadowOpacity: 0.30,
+        shadowOpacity: 0.3,
         shadowRadius: 16,
         shadowOffset: { width: 0, height: 9 },
         elevation: 7,
