@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../auth/authStore';
 import { appointmentService, TurnoResponse } from '../../api/appointmentService';
@@ -17,11 +18,11 @@ type DashboardError = {
   appointments?: string;
 };
 
-function QuickCard({ title, subtitle, icon, color, onPress, featured, styles }: Readonly<{ title: string; subtitle: string; icon: string; color: string; onPress: () => void; featured?: boolean; styles: ReturnType<typeof createStyles> }>) {
+function QuickCard({ title, subtitle, icon, color, onPress, featured, styles }: Readonly<{ title: string; subtitle: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void; featured?: boolean; styles: ReturnType<typeof createStyles> }>) {
   return (
     <Pressable style={[styles.quickCard, featured && styles.quickCardFeatured]} onPress={onPress}>
       <View style={[styles.quickIcon, { backgroundColor: `${color}1A` }]}>
-        <Text style={[styles.quickIconText, { color }]}>{icon}</Text>
+        <Ionicons name={icon} size={24} color={color} />
       </View>
       <Text style={styles.quickTitle}>{title}</Text>
       <Text style={styles.quickSubtitle}>{subtitle}</Text>
@@ -196,14 +197,14 @@ export default function PacienteHomeScreen() {
 
         <Text style={styles.sectionTitle}>{t('patient.quick')}</Text>
         <View style={styles.grid}>
-          <QuickCard title={t('patient.quickRequest')} subtitle={t('patient.quickRequestSub')} icon="＋" color={theme.colors.primary} onPress={() => router.push('/paciente/solicitar')} featured styles={styles} />
-          <QuickCard title={t('patient.quickAppointments')} subtitle={t('patient.quickAppointmentsSub')} icon="📆" color={theme.colors.secondary} onPress={() => router.push('/paciente/turnos')} styles={styles} />
-          <QuickCard title={t('patient.quickProfessionals')} subtitle={t('patient.quickProfessionalsSub')} icon="🩺" color={theme.colors.warning} onPress={() => router.push('/paciente/profesionales')} styles={styles} />
-          <QuickCard title={t('patient.quickHistory')} subtitle={t('patient.quickHistorySub')} icon="📋" color={theme.colors.success} onPress={() => router.push('/paciente/historia')} styles={styles} />
-          <QuickCard title={t('common.settings')} subtitle={t('patient.quickSettingsSub')} icon="⚙️" color={theme.colors.purple} onPress={() => router.push('/paciente/settings')} styles={styles} />
+          <QuickCard title={t('patient.quickRequest')} subtitle={t('patient.quickRequestSub')} icon="add" color={theme.colors.primary} onPress={() => router.push('/paciente/solicitar')} featured styles={styles} />
+          <QuickCard title={t('patient.quickAppointments')} subtitle={t('patient.quickAppointmentsSub')} icon="calendar-outline" color={theme.colors.secondary} onPress={() => router.push('/paciente/turnos')} styles={styles} />
+          <QuickCard title={t('patient.quickProfessionals')} subtitle={t('patient.quickProfessionalsSub')} icon="medkit-outline" color={theme.colors.warning} onPress={() => router.push('/paciente/profesionales')} styles={styles} />
+          <QuickCard title={t('patient.quickHistory')} subtitle={t('patient.quickHistorySub')} icon="document-text-outline" color={theme.colors.success} onPress={() => router.push('/paciente/historia')} styles={styles} />
+          <QuickCard title={t('common.settings')} subtitle={t('patient.quickSettingsSub')} icon="settings-outline" color={theme.colors.purple} onPress={() => router.push('/paciente/settings')} styles={styles} />
         </View>
+        <MtBottomNav active="home" />
       </MtScreen>
-      <MtBottomNav active="home" />
     </>
   );
 

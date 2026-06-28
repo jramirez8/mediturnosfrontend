@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useMtTheme } from '../theme/themeStore';
 import { MediturnosTheme } from '../constants/mediturnosTheme';
 import { translateLiteral, useTranslation } from '../i18n/languageStore';
@@ -35,7 +36,7 @@ export function MtSelect({
           {selected?.label ? translateLiteral(selected.label, language) : translateLiteral(placeholder, language)}
         </Text>
         <View style={styles.chevronBubble}>
-          <Text style={styles.chevron}>⌄</Text>
+          <Ionicons name="chevron-down" size={18} color={theme.colors.primary} />
         </View>
       </Pressable>
 
@@ -87,7 +88,6 @@ function createStyles(theme: MediturnosTheme) {
     value: { flex: 1, color: theme.colors.ink, fontWeight: '800', fontSize: 15 },
     placeholder: { color: theme.colors.soft, fontWeight: '700' },
     chevronBubble: { width: 28, height: 28, borderRadius: 14, backgroundColor: theme.colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
-    chevron: { color: theme.colors.primary, fontWeight: '900', fontSize: 18, lineHeight: 18 },
     backdrop: {
       flex: 1,
       backgroundColor: 'rgba(15, 10, 28, 0.42)',

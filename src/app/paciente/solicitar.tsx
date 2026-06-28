@@ -135,7 +135,7 @@ function selectedTimeLabel(slot: AppointmentSlot | null, language: string) {
         return `${slot.hora} hs`;
     if (language === 'en')
         return 'Choose an available time';
-    return 'Eleg� un horario disponible';
+    return 'Elegí un horario disponible';
 }
 function CalendarAvailability({ monthCursor, months, weekdays, cells, selectedDate, selectDate, moveMonth, selectedSlot, showTimes, toggleTimes, slotsForDate, selectSlot, styles }: Readonly<{
     monthCursor: Date;
@@ -225,7 +225,7 @@ function getAttachButtonTitle(documentation: PickedMedia | null, language: strin
     if (documentation) {
         return language === 'en' ? 'Change document' : 'Cambiar documentación';
     }
-    return language === 'en' ? '📎 Attach document' : '📎 Adjuntar documentación';
+    return language === 'en' ? 'Attach document' : 'Adjuntar documentación';
 }
 
 function AttachmentSection({ documentation, pick, styles, language }: Readonly<{
@@ -236,7 +236,7 @@ function AttachmentSection({ documentation, pick, styles, language }: Readonly<{
 }>) {
     const { t } = useTranslation();
     const buttonTitle = getAttachButtonTitle(documentation, language);
-    return <><Text style={styles.step}>{t('appointment.attachStep')}</Text><MtCard style={styles.block}><Text style={styles.attachIntro}>📎 {t('appointment.attachOptional')}</Text><MtButton title={buttonTitle} variant="secondary" onPress={pick} style={{ marginTop: 12 }}/>{documentation ? <Text style={styles.attachmentName}>{language === 'en' ? 'Selected file:' : 'Archivo seleccionado:'} {documentation.fileName ?? 'imagen'}</Text> : null}</MtCard></>;
+    return <><Text style={styles.step}>{t('appointment.attachStep')}</Text><MtCard style={styles.block}><Text style={styles.attachIntro}>{t('appointment.attachOptional')}</Text><MtButton title={buttonTitle} variant="secondary" onPress={pick} style={{ marginTop: 12 }}/>{documentation ? <Text style={styles.attachmentName}>{language === 'en' ? 'Selected file:' : 'Archivo seleccionado:'} {documentation.fileName ?? 'imagen'}</Text> : null}</MtCard></>;
 }
 function SummaryActions({ created, sending, confirm, reset, language, styles }: Readonly<{
     created: TurnoResponse | null;
@@ -449,14 +449,15 @@ export default function SolicitarTurnoScreen() {
         return <MtLoading text={t('common.loading')}/>;
     const selectSlot = (slot: AppointmentSlot) => { setSelectedSlot(slot); setShowTimes(false); setNotice(null); };
     const calendar = <CalendarAvailability monthCursor={monthCursor} months={months} weekdays={weekdays} cells={calendarCells} selectedDate={selectedDate} selectDate={handleSelectDate} moveMonth={moveMonth} selectedSlot={selectedSlot} showTimes={showTimes} toggleTimes={() => setShowTimes((current) => !current)} slotsForDate={slotsForDate} selectSlot={selectSlot} styles={styles}/>;
-    return <><MtScreen scroll><MtHeader eyebrow={language === 'en' ? 'NEW APPOINTMENT' : 'NUEVO TURNO'} title={t('appointment.requestTitle')} subtitle={t('appointment.requestSubtitle')}/>
+    return <MtScreen scroll><MtHeader eyebrow={language === 'en' ? 'NEW APPOINTMENT' : 'NUEVO TURNO'} title={t('appointment.requestTitle')} subtitle={t('appointment.requestSubtitle')}/>
     {notice ? <NoticeBox notice={notice}/> : null}
     <ProfessionalSection selected={selectedProfessional} query={query} setQuery={setQuery} professionals={filteredProfessionals} onSelect={handleSelectProfessional} styles={styles} theme={theme} language={language}/>
     <AvailabilitySection selected={selectedProfessional} loading={slotsLoading} slots={slots} sending={sending} joinWaitlist={handleJoinWaitlist} calendar={calendar} styles={styles} language={language}/>
     <ReasonSection motivo={motivo} setMotivo={setMotivo} observaciones={observaciones} setObservaciones={setObservaciones} styles={styles} theme={theme} language={language}/>
     <AttachmentSection documentation={documentation} pick={pickDocumentation} styles={styles} language={language}/>
     <SummarySection professional={selectedProfessional} slot={selectedSlot} documentation={documentation} created={createdTurno} sending={sending} confirm={handleConfirm} reset={resetForm} styles={styles} language={language}/>
-  </MtScreen><MtBottomNav active="solicitar"/></>;
+      <MtBottomNav active="solicitar"/>
+  </MtScreen>;
 }
 function NoticeBox({ notice }: Readonly<{
     notice: Notice;

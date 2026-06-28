@@ -374,7 +374,7 @@ export default function MedicoDisponibilidadScreen() {
         {!bloqueos.length && <Text style={styles.muted}>No hay bloqueos.</Text>}
       </MtCard>
 
-      <MtCard style={{ gap: 10, marginBottom: 90 }}>
+      <MtCard style={{ gap: 10, marginBottom: 14 }}>
         <Text style={styles.title}>Cupos que verá el paciente</Text>
         {slotsVisibles.slice(0, 8).map((s) => <Text key={`${s.fecha}-${s.hora}`} style={styles.muted}>• {formatDate(s.fecha)} a las {formatTime(s.hora)}</Text>)}
         {!slotsVisibles.length && <Text style={styles.muted}>No hay cupos visibles todavía. Cargá horarios semanales o revisá bloqueos.</Text>}

@@ -121,6 +121,7 @@ export default function MisTurnosScreen() {
         </View>
 
         <FlatList
+          style={styles.listSurface}
           data={filtered}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.list}
@@ -246,7 +247,8 @@ function AppointmentCard({
 function createStyles(theme: MediturnosTheme) {
   return StyleSheet.create({
     tabs: { flexDirection: 'row', marginBottom: 12 },
-    list: { gap: 14, paddingBottom: 120 },
+    listSurface: { flex: 1 },
+    list: { gap: 14, paddingBottom: 24 },
     card: { gap: 12 },
     cardHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
     cardTextBlock: { flex: 1, flexShrink: 1, minWidth: 0, width: 0 },

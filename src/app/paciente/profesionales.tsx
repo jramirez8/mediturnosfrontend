@@ -74,6 +74,7 @@ export default function ProfesionalesScreen() {
         />
 
         <FlatList
+          style={styles.listSurface}
           data={filtered}
           keyExtractor={(item) => String(item.profesionalInstitucionId ?? item.id)}
           contentContainerStyle={styles.list}
@@ -126,7 +127,8 @@ function createStyles(theme: MediturnosTheme) {
     specialtyChipSelected: { borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryLight },
     specialtyChipText: { color: theme.colors.ink, fontWeight: '900', fontSize: 12 },
     specialtyChipTextSelected: { color: theme.mode === 'dark' ? '#06201D' : theme.colors.primaryDark },
-    list: { gap: 14, paddingBottom: 120, paddingTop: 8 },
+    listSurface: { flex: 1 },
+    list: { gap: 14, paddingBottom: 24, paddingTop: 8 },
     card: { gap: 14 },
     row: { flexDirection: 'row', gap: 14 },
     avatar: { width: 54, height: 54, borderRadius: 19, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' },
