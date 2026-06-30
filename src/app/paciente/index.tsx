@@ -18,6 +18,29 @@ type DashboardError = {
   appointments?: string;
 };
 
+function wasChangedByDoctor(turno: TurnoResponse) {
+  const estado = String(turno.estado).toUpperCase();
+  if (estado !== 'CANCELADO' && estado !== 'REPROGRAMADO') return false;
+
+  const actorFields = [
+    turno.canceladoPor,
+    turno.canceladoPorRol,
+    turno.reprogramadoPor,
+    turno.reprogramadoPorRol,
+    turno.modificadoPor,
+    turno.modificadoPorRol,
+    turno.actorRol,
+    turno.usuarioRol,
+    turno.origenCambioEstado,
+    turno.ultimoCambioRol,
+  ];
+
+  return actorFields.some((field) => {
+    const value = String(field ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+    return value.includes('MEDICO') || value.includes('PROFESIONAL') || value.includes('PROFESSIONAL') || value.includes('DOCTOR');
+  });
+}
+
 function QuickCard({ title, subtitle, icon, color, onPress, featured, styles }: Readonly<{ title: string; subtitle: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void; featured?: boolean; styles: ReturnType<typeof createStyles> }>) {
   return (
     <Pressable style={[styles.quickCard, featured && styles.quickCardFeatured]} onPress={onPress}>
@@ -105,6 +128,7 @@ export default function PacienteHomeScreen() {
 
   const upcomingCount = appointments.filter((turno) => !['CANCELADO', 'FINALIZADO'].includes(String(turno.estado).toUpperCase())).length;
   const doneCount = appointments.filter((turno) => String(turno.estado).toUpperCase() === 'FINALIZADO').length;
+  const doctorChangedCount = appointments.filter(wasChangedByDoctor).length;
 
   const handleLogout = async () => {
     setLoading(false);
@@ -169,7 +193,7 @@ export default function PacienteHomeScreen() {
         <View style={styles.statsRow}>
           <MtStat label={t('patient.nextAppointment')} value={upcomingCount} />
           <MtStat label="Atenciones" value={doneCount} tone="success" />
-          <MtStat label="HC" value={profile?.numeroHistoriaClinica ?? `#${profile?.pacienteId ?? profile?.id}`} tone="warning" />
+          <MtStat label="Por médico" value={doctorChangedCount} tone="warning" />
         </View>
 
         <MtCard style={styles.nextCard}>

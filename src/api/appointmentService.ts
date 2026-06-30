@@ -49,6 +49,16 @@ export type TurnoResponse = {
   asistenciaConfirmada?: boolean;
   asistenciaConfirmadaEn?: string;
   recordatorioTresHorasEnviado?: boolean;
+  canceladoPor?: string;
+  canceladoPorRol?: string;
+  reprogramadoPor?: string;
+  reprogramadoPorRol?: string;
+  modificadoPor?: string;
+  modificadoPorRol?: string;
+  actorRol?: string;
+  usuarioRol?: string;
+  origenCambioEstado?: string;
+  ultimoCambioRol?: string;
 };
 
 function splitFechaHora(raw?: string | null) {
@@ -220,6 +230,16 @@ const normalizeTurno = (t: any): TurnoResponse => { // NOSONAR - accepts several
     asistenciaConfirmada: Boolean(t?.asistenciaConfirmada),
     asistenciaConfirmadaEn: t?.asistenciaConfirmadaEn,
     recordatorioTresHorasEnviado: Boolean(t?.recordatorioTresHorasEnviado),
+    canceladoPor: t?.canceladoPor,
+    canceladoPorRol: t?.canceladoPorRol,
+    reprogramadoPor: t?.reprogramadoPor,
+    reprogramadoPorRol: t?.reprogramadoPorRol,
+    modificadoPor: t?.modificadoPor ?? t?.actualizadoPor,
+    modificadoPorRol: t?.modificadoPorRol ?? t?.actualizadoPorRol,
+    actorRol: t?.actorRol,
+    usuarioRol: t?.usuarioRol,
+    origenCambioEstado: t?.origenCambioEstado ?? t?.origenCambio,
+    ultimoCambioRol: t?.ultimoCambioRol,
   };
 };
 
