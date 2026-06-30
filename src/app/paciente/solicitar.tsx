@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+﻿import React, { useEffect, useMemo, useState } from 'react';
+import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { appointmentService, AppointmentSlot, TurnoResponse } from '../../api/appointmentService';
 import { professionalService, Professional } from '../../api/professionalService';
@@ -17,6 +17,11 @@ type Notice = {
     title: string;
     message: string;
 };
+type ResultDialog = {
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+} | null;
 type CalendarCell = {
     key: string;
     dayLabel: string;
@@ -24,7 +29,7 @@ type CalendarCell = {
     inMonth: boolean;
     available: boolean;
 };
-const WEEKDAYS_ES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const WEEKDAYS_ES = ['Lun', 'Mar', 'MiÃ©', 'Jue', 'Vie', 'SÃ¡b', 'Dom'];
 const WEEKDAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTHS_ES = MONTH_NAMES;
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -61,7 +66,7 @@ function makeParamProfessional(params: Record<string, any>): Professional | null
         nombre: String(nombrePart ?? '').trim() || 'Profesional',
         apellido: String(apellidoPart ?? '').trim() || 'seleccionado',
         especialidad: String(params.specialty ?? params.especialidad ?? 'Especialidad'),
-        institucion: String(params.institution ?? params.institucion ?? 'Institución'),
+        institucion: String(params.institution ?? params.institucion ?? 'InstituciÃ³n'),
     };
 }
 type RequestContext = {
@@ -82,7 +87,7 @@ function requestCopy(language: string) {
             identifyTitle: 'We could not identify you', identifyMessage: 'Sign out and sign in again with a patient account.', professionalTitle: 'Professional required', professionalMessage: 'Choose a professional to continue.', timeTitle: 'Time required', timeMessage: 'Choose an available date and time.', reasonTitle: 'Reason required', reasonMessage: 'Reason for visit and notes are required to confirm the appointment.', missingTitle: 'Missing information', waitlistMissing: 'Choose a professional before joining the waitlist.', waitlistSuccessTitle: 'Added to waitlist', waitlistSuccess: 'We will notify you by email when a compatible slot opens.', waitlistErrorTitle: 'Waitlist failed', retry: 'Try again later.'
         };
     return {
-        identifyTitle: 'No pudimos identificarte', identifyMessage: 'Cerrá sesión y volvé a iniciar sesión con una cuenta de paciente.', professionalTitle: 'Falta profesional', professionalMessage: 'Elegí un profesional para continuar.', timeTitle: 'Falta horario', timeMessage: 'Elegí una fecha y un horario disponible.', reasonTitle: 'Falta motivo', reasonMessage: 'Motivo de consulta y observaciones son obligatorios para confirmar el turno.', missingTitle: 'Faltan datos', waitlistMissing: 'Elegí un profesional antes de anotarte en lista de espera.', waitlistSuccessTitle: 'Te anotamos en lista de espera', waitlistSuccess: 'Te vamos a avisar por email cuando se libere un horario compatible.', waitlistErrorTitle: 'No pudimos anotarte', retry: 'Intentá nuevamente más tarde.'
+        identifyTitle: 'No pudimos identificarte', identifyMessage: 'CerrÃ¡ sesiÃ³n y volvÃ© a iniciar sesiÃ³n con una cuenta de paciente.', professionalTitle: 'Falta profesional', professionalMessage: 'ElegÃ­ un profesional para continuar.', timeTitle: 'Falta horario', timeMessage: 'ElegÃ­ una fecha y un horario disponible.', reasonTitle: 'Falta motivo', reasonMessage: 'Motivo de consulta y observaciones son obligatorios para confirmar el turno.', missingTitle: 'Faltan datos', waitlistMissing: 'ElegÃ­ un profesional antes de anotarte en lista de espera.', waitlistSuccessTitle: 'Te anotamos en lista de espera', waitlistSuccess: 'Te vamos a avisar por email cuando se libere un horario compatible.', waitlistErrorTitle: 'No pudimos anotarte', retry: 'IntentÃ¡ nuevamente mÃ¡s tarde.'
     };
 }
 function requestValidation(values: {
@@ -117,7 +122,7 @@ function ProfessionalSection({ selected, query, setQuery, professionals, onSelec
 }>) {
     const { t } = useTranslation();
     return <><Text style={styles.step}>{t('appointment.professionalStep')}</Text><MtCard style={styles.block}>
-    {selected ? <View style={styles.selectedBox}><Text style={styles.selectedEyebrow}>{language === 'en' ? 'SELECTED PROFESSIONAL' : 'PROFESIONAL SELECCIONADO'}</Text><Text style={styles.selectedName}>{selected.apellido}, {selected.nombre}</Text><Text style={styles.selectedMeta}>{selected.especialidad} · {selected.institucion}</Text><Text style={styles.selectedHint}>{language === 'en' ? 'This professional was selected from the directory. You can keep it or choose another one.' : 'Este profesional vino seleccionado desde cartilla. Podés mantenerlo o cambiarlo.'}</Text></View> : null}
+    {selected ? <View style={styles.selectedBox}><Text style={styles.selectedEyebrow}>{language === 'en' ? 'SELECTED PROFESSIONAL' : 'PROFESIONAL SELECCIONADO'}</Text><Text style={styles.selectedName}>{selected.apellido}, {selected.nombre}</Text><Text style={styles.selectedMeta}>{selected.especialidad} Â· {selected.institucion}</Text><Text style={styles.selectedHint}>{language === 'en' ? 'This professional was selected from the directory. You can keep it or choose another one.' : 'Este profesional vino seleccionado desde cartilla. PodÃ©s mantenerlo o cambiarlo.'}</Text></View> : null}
     <TextInput value={query} onChangeText={setQuery} placeholder={t('professionals.searchPlaceholder')} placeholderTextColor={theme.colors.soft} style={styles.search}/>
     <FlatList data={professionals} keyExtractor={(item) => String(item.profesionalInstitucionId ?? item.id)} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.proList} ListEmptyComponent={<Text style={styles.muted}>{language === 'en' ? 'No professionals match this filter.' : 'No hay profesionales para ese filtro.'}</Text>} renderItem={({ item }) => <ProfessionalOption item={item} selected={selected} onSelect={onSelect} styles={styles} language={language}/>}/>
   </MtCard></>;
@@ -137,7 +142,7 @@ function selectedTimeLabel(slot: AppointmentSlot | null, language: string) {
         return `${slot.hora} hs`;
     if (language === 'en')
         return 'Choose an available time';
-    return 'Elegí un horario disponible';
+    return 'ElegÃ­ un horario disponible';
 }
 function CalendarAvailability({ monthCursor, months, weekdays, cells, selectedDate, selectDate, moveMonth, selectedSlot, showTimes, toggleTimes, slotsForDate, selectSlot, styles }: Readonly<{
     monthCursor: Date;
@@ -156,9 +161,9 @@ function CalendarAvailability({ monthCursor, months, weekdays, cells, selectedDa
 }>) {
     const { t, language } = useTranslation();
     const selectedTimeText = selectedTimeLabel(selectedSlot, language);
-    return <View><View style={styles.calendarTop}><Pressable onPress={() => moveMonth(-1)} style={styles.monthButton}><Text style={styles.monthButtonText}>‹</Text></Pressable><Text style={styles.monthTitle}>{months[monthCursor.getMonth()]} {monthCursor.getFullYear()}</Text><Pressable onPress={() => moveMonth(1)} style={styles.monthButton}><Text style={styles.monthButtonText}>›</Text></Pressable></View>
+    return <View><View style={styles.calendarTop}><Pressable onPress={() => moveMonth(-1)} style={styles.monthButton}><Text style={styles.monthButtonText}>â€¹</Text></Pressable><Text style={styles.monthTitle}>{months[monthCursor.getMonth()]} {monthCursor.getFullYear()}</Text><Pressable onPress={() => moveMonth(1)} style={styles.monthButton}><Text style={styles.monthButtonText}>â€º</Text></Pressable></View>
     <View style={styles.weekRow}>{weekdays.map((day) => <Text key={day} style={styles.weekDay}>{day}</Text>)}</View><View style={styles.calendarGrid}>{cells.map((cell) => <CalendarDay key={cell.key} cell={cell} selected={cell.iso === selectedDate} onSelect={selectDate} styles={styles}/>)}</View>
-    <Pressable style={[styles.timeSelector, !selectedDate && { opacity: 0.55 }]} disabled={!selectedDate} onPress={toggleTimes}><View style={{ flex: 1 }}><Text style={styles.dropdownLabel}>{t('appointment.timeStep')}</Text><Text style={styles.dropdownValue}>{selectedTimeText}</Text></View><Text style={styles.dropdownChevron}>{showTimes ? '▲' : '▼'}</Text></Pressable>
+    <Pressable style={[styles.timeSelector, !selectedDate && { opacity: 0.55 }]} disabled={!selectedDate} onPress={toggleTimes}><View style={{ flex: 1 }}><Text style={styles.dropdownLabel}>{t('appointment.timeStep')}</Text><Text style={styles.dropdownValue}>{selectedTimeText}</Text></View><Text style={styles.dropdownChevron}>{showTimes ? 'â–²' : 'â–¼'}</Text></Pressable>
     {showTimes ? <View style={styles.timeGrid}>{slotsForDate.map((slot) => <TimeOption key={`${slot.fecha}-${slot.hora}`} slot={slot} selected={selectedSlot} onSelect={selectSlot} styles={styles}/>)}</View> : null}
   </View>;
 }
@@ -191,7 +196,7 @@ function AvailabilityContent(props: Readonly<{
 }>) {
     const { t } = useTranslation();
     if (!props.selected)
-        return <Text style={props.styles.muted}>{props.language === 'en' ? 'Select a professional first.' : 'Primero seleccioná un profesional.'}</Text>;
+        return <Text style={props.styles.muted}>{props.language === 'en' ? 'Select a professional first.' : 'Primero seleccionÃ¡ un profesional.'}</Text>;
     if (props.loading)
         return <Text style={props.styles.muted}>{t('common.loading')}</Text>;
     if (props.slots.length)
@@ -221,13 +226,13 @@ function ReasonSection({ motivo, setMotivo, observaciones, setObservaciones, sty
     language: string;
 }>) {
     const { t } = useTranslation();
-    return <><Text style={styles.step}>{t('appointment.reasonStep')}</Text><MtCard style={styles.block}><Text style={styles.label}>{t('appointment.reason')} *</Text><TextInput value={motivo} onChangeText={setMotivo} placeholder={language === 'en' ? 'Example: checkup, pain, test...' : 'Ej: control general, dolor, estudio...'} placeholderTextColor={theme.colors.soft} style={styles.input}/><Text style={[styles.label, { marginTop: 14 }]}>{t('appointment.observations')} *</Text><TextInput value={observaciones} onChangeText={setObservaciones} placeholder={language === 'en' ? 'Additional information for the professional' : 'Información adicional para el profesional'} placeholderTextColor={theme.colors.soft} multiline textAlignVertical="top" style={[styles.input, styles.textArea]}/></MtCard></>;
+    return <><Text style={styles.step}>{t('appointment.reasonStep')}</Text><MtCard style={styles.block}><Text style={styles.label}>{t('appointment.reason')} *</Text><TextInput value={motivo} onChangeText={setMotivo} placeholder={language === 'en' ? 'Example: checkup, pain, test...' : 'Ej: control general, dolor, estudio...'} placeholderTextColor={theme.colors.soft} style={styles.input}/><Text style={[styles.label, { marginTop: 14 }]}>{t('appointment.observations')} *</Text><TextInput value={observaciones} onChangeText={setObservaciones} placeholder={language === 'en' ? 'Additional information for the professional' : 'InformaciÃ³n adicional para el profesional'} placeholderTextColor={theme.colors.soft} multiline textAlignVertical="top" style={[styles.input, styles.textArea]}/></MtCard></>;
 }
 function getAttachButtonTitle(documentation: PickedMedia | null, language: string) {
     if (documentation) {
-        return language === 'en' ? 'Change document' : 'Cambiar documentación';
+        return language === 'en' ? 'Change document' : 'Cambiar documentaciÃ³n';
     }
-    return language === 'en' ? 'Attach document' : 'Adjuntar documentación';
+    return language === 'en' ? 'Attach document' : 'Adjuntar documentaciÃ³n';
 }
 
 function AttachmentSection({ documentation, pick, styles, language }: Readonly<{
@@ -282,7 +287,7 @@ function SummarySection({ professional, slot, documentation, created, sending, c
     const english = language === 'en';
     const professionalText = summaryProfessionalText(professional, english);
     const documentationText = summaryDocumentationText(documentation, english);
-    return <MtCard style={styles.summary}><Text style={styles.summaryTitle}>{english ? 'Summary' : 'Resumen'}</Text><Text style={styles.summaryLine}>{english ? 'Professional:' : 'Profesional:'} {professionalText}</Text><Text style={styles.summaryLine}>{english ? 'Specialty:' : 'Especialidad:'} {professional?.especialidad ?? '-'}</Text><Text style={styles.summaryLine}>{english ? 'Time:' : 'Horario:'} {slot ? `${slot.fecha} ${slot.hora}` : '-'}</Text><Text style={styles.summaryLine}>{english ? 'Documentation:' : 'Documentación:'} {documentationText}</Text><SummaryActions created={created} sending={sending} confirm={confirm} reset={reset} language={language} styles={styles}/></MtCard>;
+    return <MtCard style={styles.summary}><Text style={styles.summaryTitle}>{english ? 'Summary' : 'Resumen'}</Text><Text style={styles.summaryLine}>{english ? 'Professional:' : 'Profesional:'} {professionalText}</Text><Text style={styles.summaryLine}>{english ? 'Specialty:' : 'Especialidad:'} {professional?.especialidad ?? '-'}</Text><Text style={styles.summaryLine}>{english ? 'Time:' : 'Horario:'} {slot ? `${slot.fecha} ${slot.hora}` : '-'}</Text><Text style={styles.summaryLine}>{english ? 'Documentation:' : 'DocumentaciÃ³n:'} {documentationText}</Text><SummaryActions created={created} sending={sending} confirm={confirm} reset={reset} language={language} styles={styles}/></MtCard>;
 }
 export default function SolicitarTurnoScreen() {
     const params = useLocalSearchParams();
@@ -306,6 +311,7 @@ export default function SolicitarTurnoScreen() {
     const [query, setQuery] = useState('');
     const [notice, setNotice] = useState<Notice | null>(null);
     const [createdTurno, setCreatedTurno] = useState<TurnoResponse | null>(null);
+    const [resultDialog, setResultDialog] = useState<ResultDialog>(null);
     useEffect(() => {
         loadProfessionals();
     }, []);
@@ -392,7 +398,7 @@ export default function SolicitarTurnoScreen() {
         chooseDocumentSource((media) => {
             setDocumentation(media);
             setNotice(null);
-        }, (message) => setNotice({ type: 'error', title: language === 'en' ? 'We could not attach the document' : 'No pudimos adjuntar documentación', message }));
+        }, (message) => setNotice({ type: 'error', title: language === 'en' ? 'We could not attach the document' : 'No pudimos adjuntar documentaciÃ³n', message }));
     };
     const handleConfirm = async () => {
         setNotice(null);
@@ -405,20 +411,13 @@ export default function SolicitarTurnoScreen() {
         const { professional, slot, pacienteId: validPatientId } = validation.context;
         try {
             setSending(true);
-            const obsFinal = [observaciones.trim(), documentation?.fileName ? `Documentación seleccionada por el paciente: ${documentation.fileName}` : null].filter(Boolean).join(' | ');
+            const obsFinal = [observaciones.trim(), documentation?.fileName ? `DocumentaciÃ³n seleccionada por el paciente: ${documentation.fileName}` : null].filter(Boolean).join(' | ');
             const created = await appointmentService.requestAppointment({ pacienteId: validPatientId, profesionalId: professional.id, profesionalInstitucionId: professional.profesionalInstitucionId ?? professional.id, especialidadId: professional.especialidadId, fecha: slot.fecha, hora: slot.hora, fechaHora: slot.fechaHora, motivoConsulta: motivo.trim(), observaciones: obsFinal, documentacion: documentation });
             setCreatedTurno(created);
-            Alert.alert(
-                language === 'en' ? 'Appointment confirmed' : 'Turno confirmado',
-                language === 'en' ? `Your appointment was registered for ${created.fecha || slot.fecha} at ${created.hora || slot.hora}. #${created.id}.` : `Tu turno quedó registrado para el ${created.fecha || slot.fecha} a las ${created.hora || slot.hora} hs. N° ${created.id}.`,
-                [
-                    { text: language === 'en' ? 'Home' : 'Inicio', style: 'cancel', onPress: () => router.replace('/paciente') },
-                    { text: language === 'en' ? 'View my appointments' : 'Ver mis turnos', onPress: () => router.replace('/paciente/turnos') },
-                ]
-            );
+            setResultDialog({ type: 'success', title: language === 'en' ? 'Appointment confirmed' : 'Turno confirmado', message: language === 'en' ? `Your appointment was registered for ${created.fecha || slot.fecha} at ${created.hora || slot.hora}. #${created.id}.` : `Tu turno quedó registrado para el ${created.fecha || slot.fecha} a las ${created.hora || slot.hora} hs. N° ${created.id}.` });
         }
         catch (error: unknown) {
-            setNotice({ type: 'error', title: language === 'en' ? 'Appointment could not be requested' : 'No se pudo solicitar el turno', message: readableError(error, language === 'en' ? 'The time may no longer be available. Try another one.' : 'El horario pudo haber sido tomado. Probá otro.') });
+            setResultDialog({ type: 'error', title: language === 'en' ? 'Appointment could not be requested' : 'No se pudo solicitar el turno', message: readableError(error, language === 'en' ? 'The time may no longer be available. Try another one.' : 'El horario pudo haber sido tomado. Probá otro.') });
         }
         finally {
             setSending(false);
@@ -459,6 +458,7 @@ export default function SolicitarTurnoScreen() {
     const selectSlot = (slot: AppointmentSlot) => { setSelectedSlot(slot); setShowTimes(false); setNotice(null); };
     const calendar = <CalendarAvailability monthCursor={monthCursor} months={months} weekdays={weekdays} cells={calendarCells} selectedDate={selectedDate} selectDate={handleSelectDate} moveMonth={moveMonth} selectedSlot={selectedSlot} showTimes={showTimes} toggleTimes={() => setShowTimes((current) => !current)} slotsForDate={slotsForDate} selectSlot={selectSlot} styles={styles}/>;
     return <MtScreen scroll><MtHeader eyebrow={language === 'en' ? 'NEW APPOINTMENT' : 'NUEVO TURNO'} title={t('appointment.requestTitle')} subtitle={t('appointment.requestSubtitle')}/>
+    <AppointmentResultDialog dialog={resultDialog} onClose={() => setResultDialog(null)} onAppointments={() => router.replace('/paciente/turnos')} onHome={() => router.replace('/paciente')} styles={styles} language={language}/>
     {notice ? <NoticeBox notice={notice}/> : null}
     <ProfessionalSection selected={selectedProfessional} query={query} setQuery={setQuery} professionals={filteredProfessionals} onSelect={handleSelectProfessional} styles={styles} theme={theme} language={language}/>
     <AvailabilitySection selected={selectedProfessional} loading={slotsLoading} slots={slots} sending={sending} joinWaitlist={handleJoinWaitlist} calendar={calendar} styles={styles} language={language}/>
@@ -472,6 +472,30 @@ function NoticeBox({ notice }: Readonly<{
     notice: Notice;
 }>) {
     return <MtNotice type={notice.type === 'error' ? 'danger' : 'success'} title={notice.title} message={notice.message} style={{ marginBottom: 14 }}/>;
+}
+function AppointmentResultDialog({ dialog, onClose, onAppointments, onHome, styles, language }: Readonly<{
+    dialog: ResultDialog;
+    onClose: () => void;
+    onAppointments: () => void;
+    onHome: () => void;
+    styles: ReturnType<typeof createStyles>;
+    language: string;
+}>) {
+    if (!dialog)
+        return null;
+    const success = dialog.type === 'success';
+    return <Modal visible transparent animationType="fade" onRequestClose={success ? onAppointments : onClose}>
+      <View style={styles.dialogBackdrop}>
+        <View style={styles.dialogCard}>
+          <Text style={[styles.dialogTitle, success ? styles.dialogSuccess : styles.dialogError]}>{dialog.title}</Text>
+          <Text style={styles.dialogMessage}>{dialog.message}</Text>
+          {success ? <View style={styles.dialogActions}>
+            <MtButton title={language === 'en' ? 'View my appointments' : 'Ver mis turnos'} onPress={onAppointments}/>
+            <MtButton title={language === 'en' ? 'Home' : 'Inicio'} variant="ghost" onPress={onHome}/>
+          </View> : <MtButton title="OK" onPress={onClose} style={{ marginTop: 14 }}/>}
+        </View>
+      </View>
+    </Modal>;
 }
 function createStyles(theme: MediturnosTheme) {
     return StyleSheet.create({
@@ -530,6 +554,13 @@ function createStyles(theme: MediturnosTheme) {
         noticeMessage: { fontWeight: '700', lineHeight: 20 },
         noticeSuccessText: { color: theme.mode === 'dark' ? '#D1FAE5' : '#065F46' },
         noticeErrorText: { color: theme.mode === 'dark' ? '#FEE2E2' : '#991B1B' },
+        dialogBackdrop: { flex: 1, backgroundColor: 'rgba(15, 10, 28, 0.58)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+        dialogCard: { width: '100%', maxWidth: 430, borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 20 },
+        dialogTitle: { fontWeight: '900', fontSize: 20, marginBottom: 8 },
+        dialogSuccess: { color: theme.colors.success },
+        dialogError: { color: theme.colors.danger },
+        dialogMessage: { color: theme.colors.ink, fontWeight: '700', lineHeight: 22 },
+        dialogActions: { gap: 10, marginTop: 14 },
     });
 }
 
