@@ -28,13 +28,13 @@ export const lightMt: MediturnosTheme = {
     purple: '#8B5CF6',
     overlay: 'rgba(124, 58, 237, 0.09)',
   },
-  radius: { sm: 14, md: 20, lg: 28, xl: 36 },
+  radius: { sm: 12, md: 16, lg: 20, xl: 28 },
   spacing: { xs: 6, sm: 10, md: 16, lg: 24, xl: 32 },
   shadow: {
     shadowColor: '#7C3AED',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
     elevation: 1,
   },
 };

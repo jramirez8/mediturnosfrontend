@@ -193,7 +193,7 @@ export default function PacienteHomeScreen() {
         <View style={styles.statsRow}>
           <MtStat label={t('patient.nextAppointment')} value={upcomingCount} />
           <MtStat label="Atenciones" value={doneCount} tone="success" />
-          <MtStat label="Por médico" value={doctorChangedCount} tone="warning" />
+          <MtStat label="Cancel./reprog." value={doctorChangedCount} tone="warning" />
         </View>
 
         <MtCard style={styles.nextCard}>

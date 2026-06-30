@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../auth/authStore';
 import { useTranslation } from '../i18n/languageStore';
@@ -100,6 +100,7 @@ function LoginCard(props: LoginCardProps) {
   </View>;
 }
 export default function LoginScreen() {
+    const params = useLocalSearchParams<{ sessionExpired?: string }>();
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -113,6 +114,11 @@ export default function LoginScreen() {
     const [infoMessage, setInfoMessage] = useState<string | null>(null);
     const { login, loginWithDeviceAuth, verifyTwoFactor, loading } = useAuthStore();
     const { t } = useTranslation();
+    useEffect(() => {
+        if (params.sessionExpired === '1') {
+            Alert.alert('Vuelva a iniciar sesión', 'Tu sesión venció o no es válida.', [{ text: 'OK' }]);
+        }
+    }, [params.sessionExpired]);
     useEffect(() => {
         let alive = true;
         getBiometricInfo().then((info) => {

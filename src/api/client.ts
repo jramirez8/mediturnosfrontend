@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
-import { storage } from './storage';
+import { hardRedirectToLogin } from '../utils/session';
+import { hardClearAuthStorage, storage } from './storage';
 
 const DEFAULT_API_ORIGIN = 'https://mediturnosbackend-production.up.railway.app';
 const configuredApiOrigin = process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_API_ORIGIN;
@@ -49,6 +50,50 @@ export const api = axios.create({
   timeout: 15000,
 });
 
+let redirectingExpiredSession = false;
+
+function requestPath(url?: string) {
+  if (!url) return '';
+  try {
+    return new URL(url, API_ORIGIN).pathname.toLowerCase();
+  } catch {
+    return url.toLowerCase();
+  }
+}
+
+function isAuthenticationRequest(url?: string) {
+  const path = requestPath(url);
+  return path.includes('/api/auth/login') || path.includes('/api/auth/2fa') || path.includes('/api/auth/register') || path.includes('/api/auth/registro') || path.includes('/api/auth/verify') || path.includes('/api/auth/password');
+}
+
+function errorText(error: unknown) {
+  const responseData = (error as { response?: { data?: unknown } })?.response?.data;
+  if (!responseData) return String((error as { message?: unknown })?.message ?? '');
+  if (typeof responseData === 'string') return responseData;
+  const data = responseData as { message?: unknown; error?: unknown; detail?: unknown };
+  return [data.message, data.error, data.detail, (error as { message?: unknown })?.message]
+    .filter(Boolean)
+    .join(' ');
+}
+
+function isExpiredSessionError(error: unknown) {
+  const status = Number((error as { response?: { status?: unknown } })?.response?.status);
+  if (isAuthenticationRequest((error as { config?: { url?: string } })?.config?.url)) return false;
+
+  const text = errorText(error).toLowerCase();
+  const mentionsExpiredToken = /(token|jwt|sesi[oó]n).*(inv[aá]lid|vencid|expir)|unauthorized|no autorizado/.test(text);
+  if (mentionsExpiredToken) return true;
+
+  return status === 401;
+}
+
+async function redirectExpiredSession() {
+  if (redirectingExpiredSession) return;
+  redirectingExpiredSession = true;
+  await hardClearAuthStorage();
+  hardRedirectToLogin({ sessionExpired: '1' });
+}
+
 api.interceptors.request.use(async (config) => {
   const [token, usuarioId, role, nombreCompleto] = await Promise.all([
     storage.getItem('access_token'),
@@ -75,6 +120,9 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (isExpiredSessionError(error)) {
+      void redirectExpiredSession();
+    }
     if (error?.code === 'ECONNABORTED') {
       error.message = 'El servicio está tardando en responder. Revisá tu conexión e intentá nuevamente.';
     }

@@ -36,7 +36,7 @@ export default function RootLayout() {
     <>
       <StatusBar style="light" />
       <View style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false, animation: 'fade_from_bottom', animationDuration: 180 }} />
       </View>
     </>
   );

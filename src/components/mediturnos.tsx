@@ -9,6 +9,7 @@ import { translateLiteral, useTranslation } from '../i18n/languageStore';
 import { useAuthStore } from '../auth/authStore';
 import { routeForRole } from '../auth/roles';
 import { isConnectivityMessage } from '../utils/errors';
+import { AnimatedEntrance, AnimatedPopup } from './MicroAnimation';
 type ScreenProps = Readonly<{
     children: React.ReactNode;
     scroll?: boolean;
@@ -58,7 +59,9 @@ export function MtScreen({ children, scroll = false, padded = true, bottomSpace 
     return (<SafeAreaView style={styles.safe} edges={['top']} onStartShouldSetResponderCapture={dismissKeyboardOutsideInput}>
       <DecorativeBackground />
       {scroll ? (<ScrollView ref={scrollRef} style={styles.fill} contentContainerStyle={contentStyle} showsVerticalScrollIndicator={false} keyboardDismissMode="on-drag" keyboardShouldPersistTaps="handled" onScrollBeginDrag={Keyboard.dismiss}>
+          <AnimatedEntrance>
           {content}
+          </AnimatedEntrance>
         </ScrollView>) : (<View style={[styles.fill, contentStyle]}>{content}</View>)}
       {navigation}
     </SafeAreaView>);
@@ -214,11 +217,11 @@ function NoticePopup({ visible, title, message, color, onClose }: Readonly<{
     const { language } = useTranslation();
     return (<Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.noticeModalBackdrop}>
-        <View style={[styles.noticeModalCard, { backgroundColor: theme.colors.surface, borderColor: `${color}66` }]}>
+        <AnimatedPopup style={[styles.noticeModalCard, { backgroundColor: theme.colors.surface, borderColor: `${color}66` }]}>
           {title ? <Text style={[styles.noticeModalTitle, { color }]}>{translateLiteral(title, language)}</Text> : null}
           <Text selectable style={[styles.noticeModalMessage, { color: theme.colors.ink }]}>{translateLiteral(message, language)}</Text>
           <MtButton title="OK" onPress={onClose} style={{ marginTop: 12 }}/>
-        </View>
+        </AnimatedPopup>
       </View>
     </Modal>);
 }
@@ -300,7 +303,7 @@ function createStyles(theme: MediturnosTheme) {
         headerTitle: { color: theme.colors.ink, fontSize: 31, fontWeight: '900', lineHeight: 37, letterSpacing: -0.4 },
         headerSubtitle: { color: theme.colors.muted, fontSize: 14, lineHeight: 21, marginTop: 8, fontWeight: '600' },
         text: { color: theme.colors.ink },
-        card: { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, borderWidth: 1, borderColor: theme.colors.border, padding: 18, overflow: 'hidden', ...theme.shadow },
+        card: { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg, borderWidth: 1, borderColor: theme.colors.border, padding: 16, overflow: 'hidden', ...theme.shadow },
         button: { minHeight: 54, borderRadius: 19, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 16, elevation: 3 },
         buttonPrimary: { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary },
         buttonSecondary: { backgroundColor: palette.secondaryBg, borderWidth: 1, borderColor: palette.secondaryBorder, shadowColor: theme.colors.primary, shadowOpacity: palette.secondaryShadow },
@@ -322,7 +325,7 @@ function createStyles(theme: MediturnosTheme) {
         loadingLogoShell: { width: 78, height: 78, borderRadius: 28, backgroundColor: palette.logoBg, borderWidth: 1, borderColor: palette.logoBorder, alignItems: 'center', justifyContent: 'center', ...theme.shadow },
         loadingMarkText: { color: palette.logoText, fontSize: 27, fontWeight: '900', letterSpacing: -1 },
         loadingText: { color: theme.colors.muted, marginTop: 4, fontWeight: '800' },
-        statCard: { flex: 1, minWidth: 96, backgroundColor: theme.colors.surface, borderRadius: 22, borderWidth: 1, padding: 15, ...theme.shadow },
+        statCard: { flex: 1, minWidth: 96, backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, borderWidth: 1, padding: 15, ...theme.shadow },
         statValue: { fontSize: 25, fontWeight: '900', letterSpacing: -0.3 }, statLabel: { marginTop: 2, color: theme.colors.muted, fontSize: 12, fontWeight: '800' },
         noticeModalBackdrop: { flex: 1, backgroundColor: 'rgba(15, 10, 28, 0.58)', alignItems: 'center', justifyContent: 'center', padding: 24 },
         noticeModalCard: { width: '100%', maxWidth: 430, borderRadius: 24, borderWidth: 1, padding: 22, ...theme.shadow },

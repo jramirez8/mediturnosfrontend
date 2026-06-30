@@ -9,6 +9,7 @@ import { useAuthStore } from '../../auth/authStore';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
+import { languageCopy, useTranslation } from '../../i18n/languageStore';
 
 type DayStatus = 'outside' | 'past' | 'blocked' | 'withSlots' | 'weeklyNoSlots' | 'noSchedule';
 
@@ -154,6 +155,8 @@ export default function MedicoDisponibilidadScreen() {
   const scrollToTop = () => setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 70);
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
+  const { language } = useTranslation();
+  const copy = useCallback((es: string, en: string, pt: string) => languageCopy(language, es, en, pt), [language]);
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [horarios, setHorarios] = useState<HorarioAtencion[]>([]);
   const [bloqueos, setBloqueos] = useState<AgendaBloqueo[]>([]);
@@ -279,7 +282,7 @@ export default function MedicoDisponibilidadScreen() {
     finally { setSaving(false); }
   };
 
-  if (loading) return <MtLoading text="Cargando disponibilidad..." />;
+  if (loading) return <MtLoading text={copy('Cargando disponibilidad...', 'Loading availability...', 'Carregando disponibilidade...')} />;
 
   return (
     <MtScreen scroll scrollRef={scrollRef}>

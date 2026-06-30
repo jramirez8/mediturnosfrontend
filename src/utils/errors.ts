@@ -81,6 +81,9 @@ function backendMessage(error: unknown, fallback: string) {
         ?? stringify(apiError.message)
         ?? fallback;
 }
+function isGenericBadRequest(message: string) {
+    return /^(bad request|http\s*400|400|request failed with status code 400)$/i.test(message.trim());
+}
 export function readableError(error: unknown, fallback = 'Ocurrió un error inesperado.') {
     const apiError = asApiError(error);
     const rawMessage = stringify(apiError.message);
@@ -90,7 +93,11 @@ export function readableError(error: unknown, fallback = 'Ocurrió un error ines
         return 'No hay conexión a internet. Revisá tu conexión e intentá nuevamente.';
     if (Number(apiError.response?.status) >= 500)
         return 'El servicio no está disponible en este momento. Intentá nuevamente más tarde.';
-    return backendMessage(apiError, fallback).replace(/^HTTP\s+\d+\s*:\s*/i, '').trim() || fallback;
+    const message = backendMessage(apiError, fallback).replace(/^HTTP\s+\d+\s*:\s*/i, '').trim();
+    if (Number(apiError.response?.status) === 400 && isGenericBadRequest(message)) {
+        return fallback;
+    }
+    return message || fallback;
 }
 export function isConnectivityMessage(message?: string | null) {
     return /conexi[oó]n a internet|tardando en responder|servicio no est[aá] disponible/i.test(String(message ?? ''));

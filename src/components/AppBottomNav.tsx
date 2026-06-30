@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMtTheme } from '../theme/themeStore';
 import { useTranslation } from '../i18n/languageStore';
+import { AnimatedEntrance } from './MicroAnimation';
 
 export type AppNavRole = 'paciente' | 'medico' | 'secretaria' | 'admin';
 
@@ -62,7 +63,9 @@ export function AppBottomNav({ role, active }: Readonly<{ role: AppNavRole; acti
   const bottom = Math.max(insets.bottom, 8);
 
   return (
-    <View
+    <AnimatedEntrance
+      distance={10}
+      duration={170}
       style={[
         styles.nav,
         {
@@ -76,7 +79,11 @@ export function AppBottomNav({ role, active }: Readonly<{ role: AppNavRole; acti
       {items.map((item) => {
         const selected = item.key === active;
         return (
-          <Pressable key={`${role}-${item.key}`} style={styles.item} onPress={() => router.replace(item.path)}>
+          <Pressable
+            key={`${role}-${item.key}`}
+            style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
+            onPress={() => router.replace(item.path)}
+          >
             <View
               style={[
                 styles.iconBubble,
@@ -105,7 +112,7 @@ export function AppBottomNav({ role, active }: Readonly<{ role: AppNavRole; acti
           </Pressable>
         );
       })}
-    </View>
+    </AnimatedEntrance>
   );
 }
 
@@ -127,6 +134,7 @@ const styles = StyleSheet.create({
     zIndex: 50,
   },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 8, minWidth: 0 },
+  itemPressed: { transform: [{ translateY: 1 }], opacity: 0.76 },
   iconBubble: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   label: { fontSize: 9.5, maxWidth: 70, textAlign: 'center' },
 });

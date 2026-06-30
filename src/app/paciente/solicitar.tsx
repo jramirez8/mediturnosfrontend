@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { appointmentService, AppointmentSlot, TurnoResponse } from '../../api/appointmentService';
 import { professionalService, Professional } from '../../api/professionalService';
@@ -406,7 +406,14 @@ export default function SolicitarTurnoScreen() {
             const obsFinal = [observaciones.trim(), documentation?.fileName ? `Documentación seleccionada por el paciente: ${documentation.fileName}` : null].filter(Boolean).join(' | ');
             const created = await appointmentService.requestAppointment({ pacienteId: validPatientId, profesionalId: professional.id, profesionalInstitucionId: professional.profesionalInstitucionId ?? professional.id, especialidadId: professional.especialidadId, fecha: slot.fecha, hora: slot.hora, fechaHora: slot.fechaHora, motivoConsulta: motivo.trim(), observaciones: obsFinal, documentacion: documentation });
             setCreatedTurno(created);
-            setNotice({ type: 'success', title: language === 'en' ? 'Appointment confirmed' : 'Turno confirmado', message: language === 'en' ? `Your appointment was registered for ${created.fecha || slot.fecha} at ${created.hora || slot.hora}. #${created.id}.` : `Tu turno quedó registrado para el ${created.fecha || slot.fecha} a las ${created.hora || slot.hora} hs. N° ${created.id}.` });
+            Alert.alert(
+                language === 'en' ? 'Appointment confirmed' : 'Turno confirmado',
+                language === 'en' ? `Your appointment was registered for ${created.fecha || slot.fecha} at ${created.hora || slot.hora}. #${created.id}.` : `Tu turno quedó registrado para el ${created.fecha || slot.fecha} a las ${created.hora || slot.hora} hs. N° ${created.id}.`,
+                [
+                    { text: language === 'en' ? 'Home' : 'Inicio', style: 'cancel', onPress: () => router.replace('/paciente') },
+                    { text: language === 'en' ? 'View my appointments' : 'Ver mis turnos', onPress: () => router.replace('/paciente/turnos') },
+                ]
+            );
         }
         catch (error: unknown) {
             setNotice({ type: 'error', title: language === 'en' ? 'Appointment could not be requested' : 'No se pudo solicitar el turno', message: readableError(error, language === 'en' ? 'The time may no longer be available. Try another one.' : 'El horario pudo haber sido tomado. Probá otro.') });

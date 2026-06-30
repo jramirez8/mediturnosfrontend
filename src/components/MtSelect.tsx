@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMtTheme } from '../theme/themeStore';
 import { MediturnosTheme } from '../constants/mediturnosTheme';
 import { translateLiteral, useTranslation } from '../i18n/languageStore';
+import { AnimatedPopup } from './MicroAnimation';
 
 export type MtSelectOption = { label: string; value: string };
 
@@ -42,26 +43,28 @@ export function MtSelect({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-          <Pressable style={styles.modalCard} onPress={(event) => event.stopPropagation()}>
-            <Text style={styles.modalTitle}>{translateLiteral(label, language)}</Text>
-            <ScrollView style={styles.options} nestedScrollEnabled>
-              {options.map((option) => {
-                const active = option.value === value;
-                return (
-                  <Pressable
-                    key={`${label}-${option.value}`}
-                    style={[styles.option, active && styles.optionActive]}
-                    onPress={() => {
-                      onChange(option.value);
-                      setOpen(false);
-                    }}
-                  >
-                    <Text style={[styles.optionText, active && styles.optionTextActive]}>{translateLiteral(option.label, language)}</Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </Pressable>
+          <AnimatedPopup>
+            <Pressable style={styles.modalCard} onPress={(event) => event.stopPropagation()}>
+              <Text style={styles.modalTitle}>{translateLiteral(label, language)}</Text>
+              <ScrollView style={styles.options} nestedScrollEnabled>
+                {options.map((option) => {
+                  const active = option.value === value;
+                  return (
+                    <Pressable
+                      key={`${label}-${option.value}`}
+                      style={({ pressed }) => [styles.option, active && styles.optionActive, pressed && styles.optionPressed]}
+                      onPress={() => {
+                        onChange(option.value);
+                        setOpen(false);
+                      }}
+                    >
+                      <Text style={[styles.optionText, active && styles.optionTextActive]}>{translateLiteral(option.label, language)}</Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </Pressable>
+          </AnimatedPopup>
         </Pressable>
       </Modal>
     </View>
@@ -77,7 +80,7 @@ function createStyles(theme: MediturnosTheme) {
       minHeight: 54,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      borderRadius: 18,
+      borderRadius: 16,
       backgroundColor: isDark ? 'rgba(255,255,255,0.045)' : 'rgba(255,255,255,0.86)',
       paddingHorizontal: 14,
       paddingVertical: 12,
@@ -99,7 +102,7 @@ function createStyles(theme: MediturnosTheme) {
       maxHeight: '78%',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      borderRadius: 22,
+      borderRadius: 20,
       backgroundColor: isDark ? '#1F1434' : '#FFFFFF',
       overflow: 'hidden',
     },
@@ -107,6 +110,7 @@ function createStyles(theme: MediturnosTheme) {
     options: { maxHeight: 320, backgroundColor: isDark ? '#1F1434' : '#FFFFFF' },
     option: { paddingHorizontal: 14, paddingVertical: 14, borderTopWidth: 1, borderTopColor: theme.colors.border, backgroundColor: isDark ? '#1F1434' : '#FFFFFF' },
     optionActive: { backgroundColor: theme.colors.primaryLight },
+    optionPressed: { opacity: 0.72 },
     optionText: { color: theme.colors.ink, fontWeight: '900', fontSize: 15 },
     optionTextActive: { color: theme.mode === 'dark' ? '#FFFFFF' : theme.colors.primaryDark, fontWeight: '900' },
   });
