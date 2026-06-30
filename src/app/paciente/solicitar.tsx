@@ -33,7 +33,9 @@ function buildCalendarCells(monthCursor: Date, availableDates: Set<string>): Cal
     const mondayOffset = (first.getDay() + 6) % 7;
     const start = new Date(first);
     start.setDate(first.getDate() - mondayOffset);
-    return Array.from({ length: 35 }, (_, index) => {
+    const daysInMonth = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 0).getDate();
+    const cellsNeeded = Math.ceil((mondayOffset + daysInMonth) / 7) * 7;
+    return Array.from({ length: cellsNeeded }, (_, index) => {
         const date = new Date(start);
         date.setDate(start.getDate() + index);
         const iso = toLocalIsoDate(date);
@@ -495,8 +497,8 @@ function createStyles(theme: MediturnosTheme) {
         monthTitle: { color: theme.colors.ink, fontWeight: '900', fontSize: 17 },
         weekRow: { flexDirection: 'row', marginBottom: 7 },
         weekDay: { flex: 1, textAlign: 'center', color: theme.colors.muted, fontWeight: '900', fontSize: 11 },
-        calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
-        dayCell: { width: '13.05%', aspectRatio: 1, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primaryLight, borderWidth: 1, borderColor: theme.colors.primary },
+        calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 },
+        dayCell: { width: '14.2857%', aspectRatio: 1, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.primaryLight, borderWidth: 1, borderColor: theme.colors.primary, transform: [{ scale: 0.92 }] },
         dayCellOut: { opacity: 0.45 },
         dayCellDisabled: { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border, opacity: 0.55 },
         dayCellSelected: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primaryDark },
