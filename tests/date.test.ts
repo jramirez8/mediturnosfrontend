@@ -11,6 +11,7 @@ import {
   normalizeTimeInput,
   pad2,
   parseIsoDateLocal,
+  todayLocalIso,
   toLocalIsoDate,
   weekdayApiFromIso,
 } from '../src/utils/date';
@@ -19,6 +20,7 @@ describe('date utils', () => {
   it('formatea números y fechas locales', () => {
     expect(pad2(4)).toBe('04');
     expect(toLocalIsoDate(new Date(2026, 5, 7))).toBe('2026-06-07');
+    expect(todayLocalIso()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(formatLocalDate('2026-06-17T09:30:00')).toBe('17/06/2026');
     expect(formatLocalDateTime('2026-06-17T09:30:00')).toBe('17/06/2026 09:30');
   });

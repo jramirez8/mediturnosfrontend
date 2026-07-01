@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { debugErrorPayload, readableError } from '../src/utils/errors';
+import { debugErrorPayload, isConnectivityMessage, readableError } from '../src/utils/errors';
 
 describe('readableError', () => {
   it('prioriza el mensaje del backend', () => {
@@ -29,6 +29,13 @@ describe('readableError', () => {
     expect(readableError(null, 'No pudimos continuar')).toBe('No pudimos continuar');
   });
 
+  it('muestra timeout humano y oculta 400 genéricos', () => {
+    expect(readableError({ code: 'ECONNABORTED' })).toBe('El servicio está tardando en responder. Revisá tu conexión e intentá nuevamente.');
+    expect(readableError({ response: { status: 400, data: { message: 'Bad Request' } } }, 'Revisá los datos ingresados.'))
+      .toBe('Revisá los datos ingresados.');
+    expect(readableError({ response: { status: 400, data: { message: 'El DNI ya existe' } } }, 'Revisá los datos ingresados.'))
+      .toBe('El DNI ya existe');
+  });
 
   it('convierte valores primitivos y preferred objects', () => {
     expect(readableError({ response: { data: 404 } })).toBe('404');
@@ -44,6 +51,15 @@ describe('readableError', () => {
   it('oculta detalles técnicos de errores internos', () => {
     expect(readableError({ response: { status: 500, data: { message: 'NullPointerException' } } }))
       .toBe('El servicio no está disponible en este momento. Intentá nuevamente más tarde.');
+  });
+});
+
+describe('isConnectivityMessage', () => {
+  it('detecta mensajes de conectividad y disponibilidad', () => {
+    expect(isConnectivityMessage('No hay conexión a internet.')).toBe(true);
+    expect(isConnectivityMessage('El servicio no está disponible en este momento.')).toBe(true);
+    expect(isConnectivityMessage('El DNI ya existe')).toBe(false);
+    expect(isConnectivityMessage(null)).toBe(false);
   });
 });
 
