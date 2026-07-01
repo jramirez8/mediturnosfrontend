@@ -1,13 +1,7 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  Pressable,
-} from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
+import { languageCopy, useTranslation } from '../../i18n/languageStore';
 
 type ImageSourceMenuProps = Readonly<{
   visible: boolean;
@@ -17,17 +11,15 @@ type ImageSourceMenuProps = Readonly<{
 }>;
 
 export function ImageSourceMenu({ visible, onClose, onSelectGallery, onSelectCamera }: ImageSourceMenuProps) {
+  const { language } = useTranslation();
+  const copy = (es: string, en: string, pt: string) => languageCopy(language, es, en, pt);
+
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
         <View style={styles.content}>
           <View style={styles.handle} />
-          <Text style={styles.title}>Seleccionar imagen</Text>
+          <Text style={styles.title}>{copy('Seleccionar imagen', 'Select image', 'Selecionar imagem')}</Text>
 
           <View style={styles.options}>
             <TouchableOpacity
@@ -40,7 +32,7 @@ export function ImageSourceMenu({ visible, onClose, onSelectGallery, onSelectCam
               <View style={styles.iconBox}>
                 <SymbolView name="photo.on.rectangle" size={24} tintColor="#9333ea" />
               </View>
-              <Text style={styles.optionText}>Galería</Text>
+              <Text style={styles.optionText}>{copy('Galeria', 'Gallery', 'Galeria')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -53,12 +45,12 @@ export function ImageSourceMenu({ visible, onClose, onSelectGallery, onSelectCam
               <View style={styles.iconBox}>
                 <SymbolView name="camera.fill" size={24} tintColor="#9333ea" />
               </View>
-              <Text style={styles.optionText}>Cámara</Text>
+              <Text style={styles.optionText}>{copy('Camara', 'Camera', 'Camera')}</Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-            <Text style={styles.cancelText}>Cancelar</Text>
+            <Text style={styles.cancelText}>{copy('Cancelar', 'Cancel', 'Cancelar')}</Text>
           </TouchableOpacity>
         </View>
       </Pressable>
@@ -67,68 +59,14 @@ export function ImageSourceMenu({ visible, onClose, onSelectGallery, onSelectCam
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  content: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    padding: 24,
-    paddingBottom: 40,
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  options: {
-    gap: 12,
-    marginBottom: 20,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f3ff',
-    padding: 16,
-    borderRadius: 16,
-    gap: 16,
-  },
-  iconBox: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#ede9fe',
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  optionText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  cancelButton: {
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#f3f4f6',
-    borderRadius: 16,
-  },
-  cancelText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6b7280',
-  },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  content: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+  handle: { width: 40, height: 4, backgroundColor: '#e5e7eb', borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
+  title: { fontSize: 18, fontWeight: '700', color: '#111827', textAlign: 'center', marginBottom: 24 },
+  options: { gap: 12, marginBottom: 20 },
+  option: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f5f3ff', padding: 16, borderRadius: 16, gap: 16 },
+  iconBox: { width: 48, height: 48, backgroundColor: '#ede9fe', borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  optionText: { fontSize: 16, fontWeight: '600', color: '#1f2937' },
+  cancelButton: { paddingVertical: 16, alignItems: 'center', borderWidth: 2, borderColor: '#f3f4f6', borderRadius: 16 },
+  cancelText: { fontSize: 16, fontWeight: '600', color: '#6b7280' },
 });

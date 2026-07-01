@@ -277,7 +277,7 @@ export default function MedicoDisponibilidadScreen() {
 
   const deleteBloqueo = async (id: number) => {
     if (!professional) return;
-    try { setSaving(true); setNotice(null); setError(null); await agendaService.deleteBloqueo(id); setNotice('Bloqueo eliminado.'); scrollToTop(); await loadAgenda(professional); }
+    try { setSaving(true); setNotice(null); setError(null); await agendaService.deleteBloqueo(id); setNotice('Bloqueo eliminado.'); await loadAgenda(professional); }
     catch (e: unknown) { setError(readableError(e, 'No pudimos eliminar el bloqueo.')); scrollToTop(); }
     finally { setSaving(false); }
   };
@@ -286,19 +286,19 @@ export default function MedicoDisponibilidadScreen() {
 
   return (
     <MtScreen scroll scrollRef={scrollRef}>
-      <MtHeader eyebrow="MÉDICO" title="Mi disponibilidad" subtitle="Definí días de atención, bloqueos y revisá exactamente qué fechas ve el paciente." />
+      <MtHeader eyebrow="MÉDICO" title="Mi disponibilidad" subtitle="Definí tus horarios, bloqueos y cupos disponibles para pacientes." />
       {!!error && <MtNotice type="danger" title="Revisá la disponibilidad" message={error} style={{ marginBottom: 14 }} />}
       {!!notice && <MtNotice type="success" title="Disponibilidad actualizada" message={notice} />}
 
       <MtCard style={{ gap: 10, marginBottom: 14 }}>
-        <Text style={styles.title}>Profesional logueado</Text>
-        <Text style={styles.item}>{professional ? `${professional.apellido}, ${professional.nombre} · ${professional.especialidad}` : 'Sin profesional vinculado'}</Text>
+        <Text style={styles.title}>Tu perfil profesional</Text>
+        <Text style={styles.item}>{professional ? `${professional.apellido}, ${professional.nombre} - ${professional.especialidad}` : 'Sin profesional vinculado'}</Text>
         <View style={styles.statsRow}>
           <View style={styles.statPill}><Text style={styles.statNumber}>{horarios.length}</Text><Text style={styles.statLabel}>horarios</Text></View>
-          <View style={styles.statPill}><Text style={styles.statNumber}>{availableDaysCount}</Text><Text style={styles.statLabel}>días con cupos</Text></View>
+          <View style={styles.statPill}><Text style={styles.statNumber}>{availableDaysCount}</Text><Text style={styles.statLabel}>dias con cupos</Text></View>
           <View style={styles.statPill}><Text style={styles.statNumber}>{bloqueos.length}</Text><Text style={styles.statLabel}>bloqueos</Text></View>
         </View>
-        <Text style={styles.muted}>El calendario no pinta “a ojo”: combina plan semanal, bloqueos y cupos libres reales de /api/turnos/disponibilidad.</Text>
+        <Text style={styles.muted}>Esta vista muestra tus horarios activos, fechas bloqueadas y cupos disponibles para pacientes.</Text>
       </MtCard>
 
       <MtCard style={{ gap: 12, marginBottom: 14 }}>
@@ -375,12 +375,6 @@ export default function MedicoDisponibilidadScreen() {
           </View>
         ))}
         {!bloqueos.length && <Text style={styles.muted}>No hay bloqueos.</Text>}
-      </MtCard>
-
-      <MtCard style={{ gap: 10, marginBottom: 14 }}>
-        <Text style={styles.title}>Cupos que verá el paciente</Text>
-        {slotsVisibles.slice(0, 8).map((s) => <Text key={`${s.fecha}-${s.hora}`} style={styles.muted}>• {formatDate(s.fecha)} a las {formatTime(s.hora)}</Text>)}
-        {!slotsVisibles.length && <Text style={styles.muted}>No hay cupos visibles todavía. Cargá horarios semanales o revisá bloqueos.</Text>}
       </MtCard>
 
       <RoleBottomNav role="medico" active="disponibilidad" />

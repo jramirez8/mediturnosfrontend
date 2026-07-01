@@ -1,13 +1,10 @@
 import React from 'react';
-import { router } from 'expo-router';
 import { ActivityIndicator, findNodeHandle, GestureResponderEvent, Keyboard, Modal, Pressable, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppBottomNav } from './AppBottomNav';
 import { MediturnosTheme } from '../constants/mediturnosTheme';
 import { useMtTheme } from '../theme/themeStore';
 import { translateLiteral, useTranslation } from '../i18n/languageStore';
-import { useAuthStore } from '../auth/authStore';
-import { routeForRole } from '../auth/roles';
 import { isConnectivityMessage } from '../utils/errors';
 import { AnimatedEntrance, AnimatedPopup } from './MicroAnimation';
 type ScreenProps = Readonly<{
@@ -237,12 +234,10 @@ function InlineNotice({ type, title, message, actionTitle, onAction, style }: Re
 }
 export function MtNotice({ type = 'info', title, message, actionTitle, onAction, style, popup }: NoticeProps) {
     const theme = useMtTheme();
-    const role = useAuthStore((state) => state.role);
     const [visible, setVisible] = React.useState(true);
     const shouldPopup = popup ?? (type === 'success' || isConnectivityMessage(message));
     const closePopup = () => {
         setVisible(false);
-        router.replace(routeForRole(role));
     };
     if (shouldPopup) {
         return <NoticePopup visible={visible} title={title} message={message} color={noticeColor(type, theme)} onClose={closePopup}/>;

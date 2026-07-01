@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../auth/authStore';
@@ -50,6 +50,7 @@ type PasswordFieldProps = Pick<LoginCardProps, 'password' | 'setPassword' | 'sho
 type TwoFactorFieldProps = Pick<LoginCardProps, 'twoFactorCode' | 'setTwoFactorCode' | 'focused' | 'setFocused'>;
 type LoginMessagesProps = Pick<LoginCardProps, 'errorMessage' | 'invalidCredentials' | 'infoMessage' | 'twoFactorDestination' | 'identifier'>;
 type LoginActionsProps = Pick<LoginCardProps, 'biometricEmail' | 'twoFactorUserId' | 'loading' | 'submit' | 'resetTwoFactor' | 'biometricLogin'>;
+type LoginDialog = { title: string; message: string } | null;
 
 function LoginFields(props: LoginFieldsProps) {
     const { t } = useTranslation();
@@ -99,6 +100,19 @@ function LoginCard(props: LoginCardProps) {
     <LoginMessages {...props}/><LoginActions {...props}/>
   </View>;
 }
+function LoginErrorDialog({ dialog, onClose }: Readonly<{ dialog: LoginDialog; onClose: () => void }>) {
+    return <Modal visible={Boolean(dialog)} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.dialogBackdrop}>
+        <View style={styles.dialogCard}>
+          <Text style={styles.dialogTitle}>{dialog?.title}</Text>
+          <Text style={styles.dialogMessage}>{dialog?.message}</Text>
+          <Pressable style={styles.dialogButton} onPress={onClose}>
+            <Text style={styles.dialogButtonText}>OK</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>;
+}
 export default function LoginScreen() {
     const params = useLocalSearchParams<{ sessionExpired?: string }>();
     const [identifier, setIdentifier] = useState('');
@@ -107,6 +121,7 @@ export default function LoginScreen() {
     const [focused, setFocused] = useState<FocusedField>(null);
     const [biometricEmail, setBiometricEmail] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [errorDialog, setErrorDialog] = useState<LoginDialog>(null);
     const [invalidCredentials, setInvalidCredentials] = useState(false);
     const [twoFactorUserId, setTwoFactorUserId] = useState<string | null>(null);
     const [twoFactorDestination, setTwoFactorDestination] = useState<string | null>(null);
@@ -202,7 +217,9 @@ export default function LoginScreen() {
             }
             const invalid = status === 400 || status === 401;
             setInvalidCredentials(invalid);
-            Alert.alert(t('login.signInErrorTitle'), invalid ? t('login.errorInvalid') : message, [{ text: 'OK' }]);
+            const dialogMessage = invalid ? 'Revise su correo/DNI o contraseña.' : message;
+            setErrorMessage(dialogMessage);
+            setErrorDialog({ title: 'Error', message: dialogMessage });
         }
     };
     const handleVerifyTwoFactor = async () => {
@@ -241,6 +258,7 @@ export default function LoginScreen() {
           <LoginCard identifier={identifier} setIdentifier={setIdentifier} password={password} setPassword={setPassword} showPassword={showPassword} setShowPassword={setShowPassword} focused={focused} setFocused={setFocused} biometricEmail={biometricEmail} errorMessage={errorMessage} invalidCredentials={invalidCredentials} twoFactorUserId={twoFactorUserId} twoFactorDestination={twoFactorDestination} twoFactorCode={twoFactorCode} setTwoFactorCode={setTwoFactorCode} infoMessage={infoMessage} loading={loading} submit={twoFactorUserId ? handleVerifyTwoFactor : handleLogin} biometricLogin={handleBiometricLogin} resetTwoFactor={resetTwoFactor}/>
         </ScrollView>
       </KeyboardAvoidingView>
+      <LoginErrorDialog dialog={errorDialog} onClose={() => setErrorDialog(null)} />
     </View>);
 }
 const styles = StyleSheet.create({
@@ -515,6 +533,52 @@ const styles = StyleSheet.create({
     },
     disabledButton: {
         opacity: 0.62,
+    },
+    dialogBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(36, 16, 79, 0.48)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+    },
+    dialogCard: {
+        width: '100%',
+        maxWidth: 390,
+        borderRadius: 24,
+        backgroundColor: palette.white,
+        borderWidth: 1,
+        borderColor: palette.purpleBorder,
+        padding: 22,
+        shadowColor: palette.purpleDeep,
+        shadowOpacity: 0.18,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 10 },
+        elevation: 8,
+    },
+    dialogTitle: {
+        color: palette.danger,
+        fontSize: 21,
+        fontWeight: '900',
+        marginBottom: 8,
+    },
+    dialogMessage: {
+        color: palette.ink,
+        fontSize: 16,
+        fontWeight: '700',
+        lineHeight: 23,
+    },
+    dialogButton: {
+        height: 52,
+        borderRadius: 18,
+        backgroundColor: palette.purple,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 18,
+    },
+    dialogButtonText: {
+        color: palette.white,
+        fontSize: 16,
+        fontWeight: '900',
     },
 });
 

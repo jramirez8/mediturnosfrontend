@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { MtButton, MtCard, MtPill } from './mediturnos';
 import { TurnoResponse } from '../api/appointmentService';
+import { languageCopy, useTranslation } from '../i18n/languageStore';
 import { useMtTheme } from '../theme/themeStore';
 import { formatTurnoDate, statusTone } from '../utils/turnos';
 
@@ -17,21 +18,24 @@ export function TurnoCard({
   dangerAction?: { title: string; onPress: () => void };
 }>) {
   const theme = useMtTheme();
-  const paciente = turno.pacienteNombre || 'Paciente sin nombre';
-  const profesional = turno.profesionalNombre || 'Profesional sin nombre';
+  const { language } = useTranslation();
+  const copy = (es: string, en: string, pt: string) => languageCopy(language, es, en, pt);
+  const paciente = turno.pacienteNombre || copy('Paciente sin nombre', 'Patient without name', 'Paciente sem nome');
+  const profesional = turno.profesionalNombre || copy('Profesional sin nombre', 'Professional without name', 'Profissional sem nome');
+
   return (
     <MtCard style={{ marginBottom: 12 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
         <View style={{ flex: 1 }}>
           <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 16 }}>{formatTurnoDate(turno.fecha, turno.hora, turno.fechaHora)}</Text>
           <Text style={{ color: theme.colors.muted, marginTop: 5, fontWeight: '700' }}>{paciente}</Text>
-          <Text style={{ color: theme.colors.muted, marginTop: 2 }}>{turno.especialidad} · {profesional}</Text>
+          <Text style={{ color: theme.colors.muted, marginTop: 2 }}>{turno.especialidad} - {profesional}</Text>
           {!!turno.institucionNombre && <Text style={{ color: theme.colors.soft, marginTop: 2 }}>{turno.institucionNombre}</Text>}
         </View>
         <MtPill label={turno.estado || 'SIN ESTADO'} tone={statusTone(turno.estado)} />
       </View>
-      {!!turno.motivoConsulta && <Text style={{ color: theme.colors.muted, marginTop: 10 }}>Motivo: {turno.motivoConsulta}</Text>}
-      {!!turno.observaciones && <Text style={{ color: theme.colors.muted, marginTop: 6 }}>Obs: {turno.observaciones}</Text>}
+      {!!turno.motivoConsulta && <Text style={{ color: theme.colors.muted, marginTop: 10 }}>{copy('Motivo', 'Reason', 'Motivo')}: {turno.motivoConsulta}</Text>}
+      {!!turno.observaciones && <Text style={{ color: theme.colors.muted, marginTop: 6 }}>{copy('Obs', 'Notes', 'Obs')}: {turno.observaciones}</Text>}
       {(primaryAction || secondaryAction || dangerAction) && (
         <View style={{ gap: 8, marginTop: 14 }}>
           {primaryAction && <MtButton title={primaryAction.title} onPress={primaryAction.onPress} />}

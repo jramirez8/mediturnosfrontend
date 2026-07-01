@@ -109,7 +109,7 @@ export default function MedicoDashboard() {
 
       <Text style={{ color: theme.colors.ink, fontWeight: '900', fontSize: 18, marginBottom: 10 }}>{t('doctor.next')}</Text>
       {next ? (
-        <TurnoCard turno={next} primaryAction={{ title: 'Atender consulta', onPress: () => router.push({ pathname: '/medico/consulta', params: { turnoId: String(next.id) } }) }} />
+        <TurnoCard turno={next} primaryAction={{ title: String(next.estado).toUpperCase() === 'ATENDIDO' ? 'Modificar' : 'Atender consulta', onPress: () => router.push({ pathname: '/medico/consulta', params: { turnoId: String(next.id) } }) }} />
       ) : (
         <MtEmptyState title={language === 'en' ? 'No upcoming appointments' : 'Sin próximos turnos'} subtitle={language === 'en' ? 'There are no upcoming consultations assigned to this doctor.' : 'No hay consultas próximas asignadas para este profesional.'} />
       )}

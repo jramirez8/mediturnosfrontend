@@ -5,6 +5,7 @@ import { appointmentService, TurnoResponse } from '../../api/appointmentService'
 import { useAuthStore } from '../../auth/authStore';
 import { MtBottomNav, MtButton, MtCard, MtEmptyState, MtHeader, MtLoading, MtNotice, MtPill, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
+import { languageCopy, useTranslation } from '../../i18n/languageStore';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 import { addAppointmentToDeviceCalendar } from '../../utils/calendar';
@@ -17,6 +18,8 @@ const FINAL_STATES = new Set(['FINALIZADO', 'ATENDIDO', 'CANCELADO', 'AUSENTE'])
 export default function MisTurnosScreen() {
   const { pacienteId } = useAuthStore();
   const theme = useMtTheme();
+  const { language } = useTranslation();
+  const copy = (es: string, en: string, pt: string) => languageCopy(language, es, en, pt);
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
   const [appointments, setAppointments] = useState<TurnoResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +39,11 @@ export default function MisTurnosScreen() {
       const data = await appointmentService.getMyAppointments(pacienteId);
       setAppointments(data);
     } catch (error: unknown) {
-      setNotice({ type: 'error', title: 'No se pudieron cargar los turnos', message: readableError(error, 'No se pudieron cargar los turnos.') });
+      setNotice({
+        type: 'error',
+        title: copy('No se pudieron cargar los turnos', 'Appointments could not be loaded', 'Nao foi possivel carregar as consultas'),
+        message: readableError(error, copy('No se pudieron cargar los turnos.', 'Appointments could not be loaded.', 'Nao foi possivel carregar as consultas.')),
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -57,8 +64,12 @@ export default function MisTurnosScreen() {
   const handleCancelRequest = (turno: TurnoResponse) => {
     setNotice({
       type: 'warning',
-      title: 'Confirmá la cancelación',
-      message: `Vas a cancelar el turno de ${turno.especialidad} del ${turno.fecha} a las ${turno.hora} hs. No se borra: queda en historial como CANCELADO.`,
+      title: copy('Confirma la cancelacion', 'Confirm cancellation', 'Confirme o cancelamento'),
+      message: copy(
+        `Vas a cancelar el turno de ${turno.especialidad} del ${turno.fecha} a las ${turno.hora} hs. No se borra: queda en historial como CANCELADO.`,
+        `You are about to cancel the ${turno.especialidad} appointment on ${turno.fecha} at ${turno.hora}. It is not deleted: it stays in history as CANCELLED.`,
+        `Voce vai cancelar a consulta de ${turno.especialidad} de ${turno.fecha} as ${turno.hora}. Ela nao e apagada: fica no historico como CANCELADA.`,
+      ),
     });
     setConfirmingCancelId(turno.id);
   };
@@ -74,14 +85,21 @@ export default function MisTurnosScreen() {
       setTab('historial');
       setNotice({
         type: 'success',
-        title: 'Turno cancelado',
-        message: `El turno de ${updated.especialidad || turno.especialidad} quedó en estado CANCELADO. Lo vas a ver en Historial.`,
+        title: copy('Turno cancelado', 'Appointment cancelled', 'Consulta cancelada'),
+        message: copy(
+          `El turno de ${updated.especialidad || turno.especialidad} quedo en estado CANCELADO. Lo vas a ver en Historial.`,
+          `The ${updated.especialidad || turno.especialidad} appointment is now CANCELLED. You will see it in History.`,
+          `A consulta de ${updated.especialidad || turno.especialidad} ficou como CANCELADA. Voce vai ve-la no Historico.`,
+        ),
       });
 
-      // Refresco real para que la pantalla quede alineada con MySQL, no con estado local.
       await fetchAppointments(false);
     } catch (error: unknown) {
-      setNotice({ type: 'error', title: 'No se pudo cancelar', message: readableError(error, 'No pudimos confirmar la cancelación del turno.') });
+      setNotice({
+        type: 'error',
+        title: copy('No se pudo cancelar', 'Cancellation failed', 'Nao foi possivel cancelar'),
+        message: readableError(error, copy('No pudimos confirmar la cancelacion del turno.', 'We could not confirm the appointment cancellation.', 'Nao conseguimos confirmar o cancelamento da consulta.')),
+      });
     } finally {
       setCancelingId(null);
     }
@@ -91,67 +109,87 @@ export default function MisTurnosScreen() {
     try {
       const updated = await appointmentService.confirmarAsistencia(turno.id);
       setAppointments((prev) => prev.map((item) => Number(item.id) === Number(updated.id) ? updated : item));
-      setNotice({ type: 'success', title: 'Asistencia confirmada', message: 'Gracias por confirmar. Te esperamos en el horario indicado.' });
+      setNotice({
+        type: 'success',
+        title: copy('Asistencia confirmada', 'Attendance confirmed', 'Presenca confirmada'),
+        message: copy('Gracias por confirmar. Te esperamos en el horario indicado.', 'Thanks for confirming. We will see you at the scheduled time.', 'Obrigado por confirmar. Esperamos voce no horario indicado.'),
+      });
     } catch (error: unknown) {
-      setNotice({ type: 'error', title: 'No se pudo confirmar asistencia', message: readableError(error, 'Intentá nuevamente en unos segundos.') });
+      setNotice({
+        type: 'error',
+        title: copy('No se pudo confirmar asistencia', 'Attendance could not be confirmed', 'Nao foi possivel confirmar a presenca'),
+        message: readableError(error, copy('Intenta nuevamente en unos segundos.', 'Try again in a few seconds.', 'Tente novamente em alguns segundos.')),
+      });
     }
   };
 
   const handleAddCalendar = async (turno: TurnoResponse) => {
     try {
       await addAppointmentToDeviceCalendar(turno);
-      setNotice({ type: 'success', title: 'Agregado al calendario', message: 'El turno se agregó al calendario del dispositivo con recordatorio 3 horas antes.' });
+      setNotice({
+        type: 'success',
+        title: copy('Agregado al calendario', 'Added to calendar', 'Adicionado ao calendario'),
+        message: copy('El turno se agrego al calendario del dispositivo con recordatorio 3 horas antes.', 'The appointment was added to the device calendar with a reminder 3 hours before.', 'A consulta foi adicionada ao calendario do dispositivo com lembrete 3 horas antes.'),
+      });
     } catch (error: unknown) {
-      setNotice({ type: 'error', title: 'No se pudo agregar al calendario', message: readableError(error, 'Revisá los permisos del calendario.') });
+      setNotice({
+        type: 'error',
+        title: copy('No se pudo agregar al calendario', 'Could not add to calendar', 'Nao foi possivel adicionar ao calendario'),
+        message: readableError(error, copy('Revisa los permisos del calendario.', 'Check calendar permissions.', 'Revise as permissoes do calendario.')),
+      });
     }
   };
 
-  if (loading) return <MtLoading text="Buscando tus turnos..." />;
+  if (loading) return <MtLoading text={copy('Buscando tus turnos...', 'Looking for your appointments...', 'Buscando suas consultas...')} />;
 
   return (
-      <MtScreen scroll={false}>
-        <MtHeader eyebrow="AGENDA" title="Mis turnos" subtitle="Consultá próximos turnos, historial y acciones rápidas." />
+    <MtScreen scroll={false}>
+      <MtHeader
+        eyebrow="AGENDA"
+        title={copy('Mis turnos', 'My appointments', 'Minhas consultas')}
+        subtitle={copy('Consulta proximos turnos, historial y acciones rapidas.', 'Check upcoming appointments, history and quick actions.', 'Consulte proximas consultas, historico e acoes rapidas.')}
+      />
 
-        {!!notice && <NoticeBox notice={notice} />}
+      {!!notice && <NoticeBox notice={notice} />}
 
-        <View style={styles.tabs}>
-          <MtPill label="Próximos" selected={tab === 'proximos'} onPress={() => setTab('proximos')} />
-          <MtPill label="Historial" selected={tab === 'historial'} onPress={() => setTab('historial')} tone="success" />
-          <MtPill label="Todos" selected={tab === 'todos'} onPress={() => setTab('todos')} tone="muted" />
-        </View>
+      <View style={styles.tabs}>
+        <MtPill label={copy('Proximos', 'Upcoming', 'Proximas')} selected={tab === 'proximos'} onPress={() => setTab('proximos')} />
+        <MtPill label={copy('Historial', 'History', 'Historico')} selected={tab === 'historial'} onPress={() => setTab('historial')} tone="success" />
+        <MtPill label={copy('Todos', 'All', 'Todas')} selected={tab === 'todos'} onPress={() => setTab('todos')} tone="muted" />
+      </View>
 
-        <FlatList
-          style={styles.listSurface}
-          data={filtered}
-          keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={styles.list}
-          refreshing={refreshing}
-          onRefresh={() => { setRefreshing(true); fetchAppointments(false); }}
-          ListEmptyComponent={
-            <MtEmptyState
-              title="No hay turnos para mostrar"
-              subtitle="Podés solicitar uno nuevo desde la app."
-              actionTitle="Solicitar turno"
-              onAction={() => router.push('/paciente/solicitar')}
-            />
-          }
-          renderItem={({ item }) => (
-            <AppointmentCard
-              item={item}
-              confirmingCancel={confirmingCancelId === item.id}
-              canceling={cancelingId === item.id}
-              onCancelRequest={() => handleCancelRequest(item)}
-              onCancelConfirm={() => handleCancelConfirm(item)}
-              onCancelAbort={() => { setConfirmingCancelId(null); setNotice(null); }}
-              onConfirmAttendance={() => handleConfirmAttendance(item)}
-              onAddCalendar={() => handleAddCalendar(item)}
-              onFeedback={() => router.push({ pathname: '/paciente/feedback', params: { id: item.id } })}
-              styles={styles}
-            />
-          )}
-        />
-        <MtBottomNav active="turnos" />
-      </MtScreen>
+      <FlatList
+        style={styles.listSurface}
+        data={filtered}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={styles.list}
+        refreshing={refreshing}
+        onRefresh={() => { setRefreshing(true); fetchAppointments(false); }}
+        ListEmptyComponent={
+          <MtEmptyState
+            title={copy('No hay turnos para mostrar', 'No appointments to show', 'Nao ha consultas para mostrar')}
+            subtitle={copy('Podes solicitar uno nuevo desde la app.', 'You can request a new one from the app.', 'Voce pode solicitar uma nova consulta pelo app.')}
+            actionTitle={copy('Solicitar turno', 'Request appointment', 'Solicitar consulta')}
+            onAction={() => router.push('/paciente/solicitar')}
+          />
+        }
+        renderItem={({ item }) => (
+          <AppointmentCard
+            item={item}
+            confirmingCancel={confirmingCancelId === item.id}
+            canceling={cancelingId === item.id}
+            onCancelRequest={() => handleCancelRequest(item)}
+            onCancelConfirm={() => handleCancelConfirm(item)}
+            onCancelAbort={() => { setConfirmingCancelId(null); setNotice(null); }}
+            onConfirmAttendance={() => handleConfirmAttendance(item)}
+            onAddCalendar={() => handleAddCalendar(item)}
+            onFeedback={() => router.push({ pathname: '/paciente/feedback', params: { id: item.id } })}
+            styles={styles}
+          />
+        )}
+      />
+      <MtBottomNav active="turnos" />
+    </MtScreen>
   );
 }
 
@@ -182,6 +220,8 @@ function AppointmentCard({
   onFeedback: () => void;
   styles: ReturnType<typeof createStyles>;
 }>) {
+  const { language } = useTranslation();
+  const copy = (es: string, en: string, pt: string) => languageCopy(language, es, en, pt);
   const estado = String(item.estado).toUpperCase();
   const isFinal = FINAL_STATES.has(estado);
   let tone: 'success' | 'warning' | 'danger' | 'muted' = 'muted';
@@ -204,39 +244,39 @@ function AppointmentCard({
       </View>
 
       <View style={styles.dateBox}>
-        <Text style={styles.dateText}>📆 {item.fecha}</Text>
-        <Text style={styles.dateText}>⏰ {item.hora} hs</Text>
+        <Text style={styles.dateText}>{copy('Fecha', 'Date', 'Data')}: {item.fecha}</Text>
+        <Text style={styles.dateText}>{copy('Hora', 'Time', 'Horario')}: {item.hora} hs</Text>
       </View>
 
-      {!!item.motivoConsulta && <Text style={styles.reason}>Motivo: {item.motivoConsulta}</Text>}
+      {!!item.motivoConsulta && <Text style={styles.reason}>{copy('Motivo', 'Reason', 'Motivo')}: {item.motivoConsulta}</Text>}
 
       <View style={styles.actions}>
-        <MtButton title="Detalle" variant="ghost" onPress={() => router.push({ pathname: '/paciente/turno-detalle', params: { id: item.id } })} style={{ flex: 1 }} />
-        {!isFinal && <MtButton title="Reprogramar" variant="secondary" onPress={() => router.push({ pathname: '/paciente/reprogramar', params: { id: item.id } })} style={{ flex: 1 }} />}
+        <MtButton title={copy('Detalle', 'Details', 'Detalhe')} variant="ghost" onPress={() => router.push({ pathname: '/paciente/turno-detalle', params: { id: item.id } })} style={{ flex: 1 }} />
+        {!isFinal && <MtButton title={copy('Reprogramar', 'Reschedule', 'Reprogramar')} variant="secondary" onPress={() => router.push({ pathname: '/paciente/reprogramar', params: { id: item.id } })} style={{ flex: 1 }} />}
       </View>
 
       {!isFinal && (
         <View style={styles.actionsColumn}>
-          <MtButton title={item.asistenciaConfirmada ? 'Asistencia OK' : 'Confirmar asistencia'} variant="secondary" onPress={onConfirmAttendance} disabled={!!item.asistenciaConfirmada} />
-          <MtButton title="Agregar al calendario" variant="ghost" onPress={onAddCalendar} />
+          <MtButton title={item.asistenciaConfirmada ? copy('Asistencia OK', 'Attendance OK', 'Presenca OK') : copy('Confirmar asistencia', 'Confirm attendance', 'Confirmar presenca')} variant="secondary" onPress={onConfirmAttendance} disabled={!!item.asistenciaConfirmada} />
+          <MtButton title={copy('Agregar al calendario', 'Add to calendar', 'Adicionar ao calendario')} variant="ghost" onPress={onAddCalendar} />
         </View>
       )}
 
       {estado === 'ATENDIDO' && (
-        <MtButton title="Calificar atención" variant="secondary" onPress={onFeedback} style={{ marginTop: 10 }} />
+        <MtButton title={copy('Calificar atencion', 'Rate visit', 'Avaliar atendimento')} variant="secondary" onPress={onFeedback} style={{ marginTop: 10 }} />
       )}
 
       {!isFinal && !confirmingCancel && (
-        <MtButton title="Cancelar turno" variant="danger" onPress={onCancelRequest} style={{ marginTop: 10 }} />
+        <MtButton title={copy('Cancelar turno', 'Cancel appointment', 'Cancelar consulta')} variant="danger" onPress={onCancelRequest} style={{ marginTop: 10 }} />
       )}
 
       {!isFinal && confirmingCancel && (
         <View style={styles.cancelBox}>
-          <Text style={styles.cancelTitle}>¿Seguro que querés cancelar?</Text>
-          <Text style={styles.cancelText}>El turno no se borra. Cambia a estado CANCELADO y queda en el historial.</Text>
+          <Text style={styles.cancelTitle}>{copy('Seguro que queres cancelar?', 'Are you sure you want to cancel?', 'Tem certeza que deseja cancelar?')}</Text>
+          <Text style={styles.cancelText}>{copy('El turno no se borra. Cambia a estado CANCELADO y queda en el historial.', 'The appointment is not deleted. It changes to CANCELLED and remains in history.', 'A consulta nao e apagada. Ela muda para CANCELADA e fica no historico.')}</Text>
           <View style={styles.cancelActions}>
-            <MtButton title="Sí, cancelar" variant="danger" loading={canceling} disabled={canceling} onPress={onCancelConfirm} style={{ flex: 1 }} />
-            <MtButton title="No" variant="ghost" disabled={canceling} onPress={onCancelAbort} style={{ flex: 1 }} />
+            <MtButton title={copy('Si, cancelar', 'Yes, cancel', 'Sim, cancelar')} variant="danger" loading={canceling} disabled={canceling} onPress={onCancelConfirm} style={{ flex: 1 }} />
+            <MtButton title={copy('No', 'No', 'Nao')} variant="ghost" disabled={canceling} onPress={onCancelAbort} style={{ flex: 1 }} />
           </View>
         </View>
       )}

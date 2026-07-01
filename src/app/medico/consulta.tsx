@@ -155,7 +155,7 @@ export default function MedicoConsultaScreen() {
       <MtScreen scroll>
         <MtHeader eyebrow="MÉDICO" title="Registrar consulta" subtitle="Elegí un turno propio de la agenda para atender." />
         {agenda.length ? agenda.map((item) => (
-          <TurnoCard key={item.id} turno={item} primaryAction={{ title: 'Seleccionar para atender', onPress: () => router.replace({ pathname: '/medico/consulta', params: { turnoId: String(item.id) } }) }} />
+          <TurnoCard key={item.id} turno={item} primaryAction={{ title: String(item.estado).toUpperCase() === 'ATENDIDO' ? 'Modificar' : 'Seleccionar para atender', onPress: () => router.replace({ pathname: '/medico/consulta', params: { turnoId: String(item.id) } }) }} />
         )) : <MtEmptyState title="No hay turnos para atender" subtitle="La agenda propia del día está vacía." />}
         <RoleBottomNav role="medico" active="consulta" />
       </MtScreen>

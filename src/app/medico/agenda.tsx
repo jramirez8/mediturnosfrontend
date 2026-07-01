@@ -8,12 +8,17 @@ import { medicoService } from '../../api/staffService';
 import { TurnoResponse } from '../../api/appointmentService';
 import { useAuthStore } from '../../auth/authStore';
 import { filterTurnosForDoctor } from '../../utils/doctorAccess';
+import { languageCopy, useTranslation } from '../../i18n/languageStore';
 import { useMtTheme } from '../../theme/themeStore';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
 import { readableError } from '../../utils/errors';
 
-const WEEKDAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const WEEKDAYS_ES = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
+const WEEKDAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const WEEKDAYS_PT = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
+const MONTHS_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS_PT = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 function toIso(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -53,12 +58,17 @@ export default function MedicoAgendaScreen() {
   const [agenda, setAgenda] = useState<TurnoResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { language } = useTranslation();
+  const copy = useCallback((es: string, en: string, pt: string) => languageCopy(language, es, en, pt), [language]);
+  const weekdays = language === 'en' ? WEEKDAYS_EN : language === 'pt' ? WEEKDAYS_PT : WEEKDAYS_ES;
+  const months = language === 'en' ? MONTHS_EN : language === 'pt' ? MONTHS_PT : MONTHS_ES;
   const theme = useMtTheme();
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
 
   const load = useCallback(async () => {
     if (!usuarioId) return;
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
     try {
       const { desde, hasta } = monthRange(cursor);
       const rawAgenda = await medicoService.agendaRango(usuarioId, desde, hasta);
@@ -71,9 +81,11 @@ export default function MedicoAgendaScreen() {
         setSelectedDate(firstAvailable?.fecha ?? desde);
       }
     } catch (e: unknown) {
-      setError(readableError(e, 'No pudimos cargar la agenda mensual.'));
-    } finally { setLoading(false); }
-  }, [usuarioId, cursor, doctorIdentity]);
+      setError(readableError(e, copy('No pudimos cargar la agenda mensual.', 'We could not load the monthly schedule.', 'Nao foi possivel carregar a agenda mensal.')));
+    } finally {
+      setLoading(false);
+    }
+  }, [usuarioId, cursor, doctorIdentity, copy]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -96,24 +108,28 @@ export default function MedicoAgendaScreen() {
     setSelectedDate(toIso(today));
   };
 
-  if (loading) return <MtLoading text="Cargando agenda mensual..." />;
+  if (loading) return <MtLoading text={copy('Cargando agenda mensual...', 'Loading monthly schedule...', 'Carregando agenda mensal...')} />;
 
   return (
     <MtScreen scroll>
-      <MtHeader eyebrow="MÉDICO" title="Agenda" subtitle="Seleccioná un día con turnos para ver el detalle de las consultas asignadas." />
-      {error ? <MtNotice type="danger" title="No pudimos cargar la agenda" message={error} actionTitle="Reintentar" onAction={load} style={{ marginBottom: 14 }} /> : null}
+      <MtHeader
+        eyebrow={copy('MEDICO', 'DOCTOR', 'MEDICO')}
+        title={copy('Agenda', 'Schedule', 'Agenda')}
+        subtitle={copy('Selecciona un dia con turnos para ver el detalle de las consultas asignadas.', 'Select a day with appointments to see assigned visit details.', 'Selecione um dia com consultas para ver o detalhe dos atendimentos atribuidos.')}
+      />
+      {error ? <MtNotice type="danger" title={copy('No pudimos cargar la agenda', 'We could not load the schedule', 'Nao foi possivel carregar a agenda')} message={error} actionTitle={copy('Reintentar', 'Try again', 'Tentar novamente')} onAction={load} style={{ marginBottom: 14 }} /> : null}
 
       <MtCard style={styles.calendarCard}>
         <View style={styles.monthHeader}>
-          <Pressable style={styles.monthButton} onPress={() => moveMonth(-1)}><Text style={styles.monthButtonText}>‹</Text></Pressable>
+          <Pressable style={styles.monthButton} onPress={() => moveMonth(-1)}><Text style={styles.monthButtonText}>{'<'}</Text></Pressable>
           <View style={{ alignItems: 'center' }}>
-            <Text style={styles.monthTitle}>{MONTHS[cursor.getMonth()]}</Text>
-            <Text style={styles.monthYear}>{cursor.getFullYear()} · {agenda.length} turno(s)</Text>
+            <Text style={styles.monthTitle}>{months[cursor.getMonth()]}</Text>
+            <Text style={styles.monthYear}>{cursor.getFullYear()} - {agenda.length} {copy('turno(s)', 'appointment(s)', 'consulta(s)')}</Text>
           </View>
-          <Pressable style={styles.monthButton} onPress={() => moveMonth(1)}><Text style={styles.monthButtonText}>›</Text></Pressable>
+          <Pressable style={styles.monthButton} onPress={() => moveMonth(1)}><Text style={styles.monthButtonText}>{'>'}</Text></Pressable>
         </View>
-        <MtButton title="Volver a hoy" variant="ghost" onPress={goToday} style={{ minHeight: 42 }} />
-        <View style={styles.weekRow}>{WEEKDAYS.map((day) => <Text key={day} style={styles.weekDay}>{day}</Text>)}</View>
+        <MtButton title={copy('Volver a hoy', 'Back to today', 'Voltar para hoje')} variant="ghost" onPress={goToday} style={{ minHeight: 42 }} />
+        <View style={styles.weekRow}>{weekdays.map((day) => <Text key={day} style={styles.weekDay}>{day}</Text>)}</View>
         <View style={styles.grid}>{cells.map((cell) => {
           const count = counts[cell.iso] || 0;
           const selectable = cell.inMonth && count > 0;
@@ -130,18 +146,18 @@ export default function MedicoAgendaScreen() {
             </Pressable>
           );
         })}</View>
-        <Text style={styles.help}>Los días resaltados tienen turnos. El número indica cuántos hay asignados.</Text>
+        <Text style={styles.help}>{copy('Los dias resaltados tienen turnos. El numero indica cuantos hay asignados.', 'Highlighted days have appointments. The number shows how many are assigned.', 'Os dias destacados tem consultas. O numero indica quantas foram atribuidas.')}</Text>
       </MtCard>
 
-      <Text style={styles.sectionTitle}>Turnos del {displayDate(selectedDate)}</Text>
+      <Text style={styles.sectionTitle}>{copy('Turnos del', 'Appointments for', 'Consultas de')} {displayDate(selectedDate)}</Text>
       {selectedAppointments.length ? selectedAppointments.map((turno) => (
         <TurnoCard
           key={turno.id}
           turno={turno}
-          primaryAction={{ title: 'Atender', onPress: () => router.push({ pathname: '/medico/consulta', params: { turnoId: String(turno.id) } }) }}
-          secondaryAction={{ title: 'Ver historia del paciente', onPress: () => router.push({ pathname: '/medico/historia-paciente', params: { dni: turno.pacienteDni || '' } }) }}
+          primaryAction={{ title: String(turno.estado).toUpperCase() === 'ATENDIDO' ? copy('Modificar', 'Edit', 'Modificar') : copy('Atender', 'Attend', 'Atender'), onPress: () => router.push({ pathname: '/medico/consulta', params: { turnoId: String(turno.id) } }) }}
+          secondaryAction={{ title: copy('Ver historia del paciente', 'View patient history', 'Ver historico do paciente'), onPress: () => router.push({ pathname: '/medico/historia-paciente', params: { dni: turno.pacienteDni || '' } }) }}
         />
-      )) : <MtEmptyState title="Sin turnos en esta fecha" subtitle="Elegí uno de los días resaltados en el calendario." />}
+      )) : <MtEmptyState title={copy('Sin turnos en esta fecha', 'No appointments on this date', 'Sem consultas nesta data')} subtitle={copy('Elegi uno de los dias resaltados en el calendario.', 'Choose one of the highlighted days in the calendar.', 'Escolha um dos dias destacados no calendario.')} />}
 
       <RoleBottomNav role="medico" active="agenda" />
     </MtScreen>

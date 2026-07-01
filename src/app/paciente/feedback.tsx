@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { feedbackService } from '../../api/feedbackService';
 import { MtBottomNav, MtButton, MtCard, MtHeader, MtNotice, MtScreen } from '../../components/mediturnos';
 import { MediturnosTheme } from '../../constants/mediturnosTheme';
+import { languageCopy, useTranslation } from '../../i18n/languageStore';
 import { useMtTheme } from '../../theme/themeStore';
 import { readableError } from '../../utils/errors';
 
@@ -11,6 +12,8 @@ export default function FeedbackScreen() {
   const { id } = useLocalSearchParams();
   const turnoId = Number(id);
   const theme = useMtTheme();
+  const { language } = useTranslation();
+  const copy = (es: string, en: string, pt: string) => languageCopy(language, es, en, pt);
   const styles = useMemo(() => createStyles(theme), [theme.mode]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
@@ -23,33 +26,44 @@ export default function FeedbackScreen() {
       setSaving(true);
       setError(null);
       await feedbackService.save(turnoId, rating, comment);
-      setMessage('Gracias por tu opinión. Tu calificación fue registrada.');
+      setMessage(copy('Gracias por tu opinion. Tu calificacion fue registrada.', 'Thanks for your feedback. Your rating was saved.', 'Obrigado pela sua opiniao. Sua avaliacao foi registrada.'));
     } catch (e: unknown) {
-      setError(readableError(e, 'No pudimos guardar la calificación.'));
+      setError(readableError(e, copy('No pudimos guardar la calificacion.', 'We could not save the rating.', 'Nao foi possivel salvar a avaliacao.')));
     } finally {
       setSaving(false);
     }
   };
 
   return (
-      <MtScreen scroll>
-      <MtHeader eyebrow="EXPERIENCIA" title="Calificar atención" subtitle="Tu opinión ayuda a mejorar la atención del centro médico." />
+    <MtScreen scroll>
+      <MtHeader
+        eyebrow={copy('EXPERIENCIA', 'EXPERIENCE', 'EXPERIENCIA')}
+        title={copy('Calificar atencion', 'Rate visit', 'Avaliar atendimento')}
+        subtitle={copy('Tu opinion ayuda a mejorar la atencion del centro medico.', 'Your opinion helps improve care at the medical center.', 'Sua opiniao ajuda a melhorar o atendimento do centro medico.')}
+      />
       <MtCard style={{ gap: 16 }}>
-        <Text style={styles.label}>Puntuación</Text>
+        <Text style={styles.label}>{copy('Puntuacion', 'Rating', 'Pontuacao')}</Text>
         <View style={styles.stars}>
           {[1, 2, 3, 4, 5].map((value) => (
-            <Text key={value} onPress={() => setRating(value)} style={[styles.star, value <= rating && styles.starActive]}>★</Text>
+            <Text key={value} onPress={() => setRating(value)} style={[styles.star, value <= rating && styles.starActive]}>*</Text>
           ))}
         </View>
-        <Text style={styles.label}>Comentario opcional</Text>
-        <TextInput value={comment} onChangeText={setComment} placeholder="Contanos cómo fue la atención" placeholderTextColor={theme.colors.muted} multiline style={styles.textarea} />
-        {!!error && <MtNotice type="danger" title="No pudimos guardar la calificación" message={error} />}
-        {!!message && <MtNotice type="success" title="Calificación registrada" message={message} />}
-        <MtButton title="Guardar calificación" onPress={save} loading={saving} disabled={saving || !!message} />
-        <MtButton title="Volver a mis turnos" variant="ghost" onPress={() => router.replace('/paciente/turnos')} />
+        <Text style={styles.label}>{copy('Comentario opcional', 'Optional comment', 'Comentario opcional')}</Text>
+        <TextInput
+          value={comment}
+          onChangeText={setComment}
+          placeholder={copy('Contanos como fue la atencion', 'Tell us how the visit went', 'Conte como foi o atendimento')}
+          placeholderTextColor={theme.colors.muted}
+          multiline
+          style={styles.textarea}
+        />
+        {!!error && <MtNotice type="danger" title={copy('No pudimos guardar la calificacion', 'We could not save the rating', 'Nao foi possivel salvar a avaliacao')} message={error} />}
+        {!!message && <MtNotice type="success" title={copy('Calificacion registrada', 'Rating saved', 'Avaliacao registrada')} message={message} />}
+        <MtButton title={copy('Guardar calificacion', 'Save rating', 'Salvar avaliacao')} onPress={save} loading={saving} disabled={saving || !!message} />
+        <MtButton title={copy('Volver a mis turnos', 'Back to my appointments', 'Voltar as minhas consultas')} variant="ghost" onPress={() => router.replace('/paciente/turnos')} />
       </MtCard>
-        <MtBottomNav active="turnos" />
-      </MtScreen>
+      <MtBottomNav active="turnos" />
+    </MtScreen>
   );
 }
 
