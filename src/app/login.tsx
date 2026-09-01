@@ -6,6 +6,7 @@ import { useAuthStore } from '../auth/authStore';
 import { useTranslation } from '../i18n/languageStore';
 import { readableError } from '../utils/errors';
 import { authenticateDevice, canUseDeviceAuth, getBiometricInfo, saveCurrentSessionForDeviceAuth, } from '../utils/deviceAuth';
+import { DEMO_MODE, DEMO_PASSWORD, DEMO_USERS } from '../demo/demoApi';
 const logo = require('../../assets/images/mediturnos-login-logo-transparent.png');
 const palette = {
     ink: '#24104F',
@@ -255,6 +256,11 @@ export default function LoginScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
         <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <View style={styles.logoWrap}><Image source={logo} resizeMode="contain" style={styles.logo}/></View>
+          {DEMO_MODE ? <View style={styles.demoPanel}>
+            <View style={styles.demoHeading}><View><Text style={styles.demoEyebrow}>ENTORNO DEMOSTRATIVO</Text><Text style={styles.demoTitle}>Elegí cómo recorrer Mediturnos</Text></View><Text style={styles.demoBadge}>SIN DATOS REALES</Text></View>
+            <Text style={styles.demoText}>Seleccioná un perfil y después tocá “Ingresar”. La contraseña ya queda cargada.</Text>
+            <View style={styles.demoRoles}>{DEMO_USERS.map((user) => <Pressable key={user.role} onPress={() => { setIdentifier(user.email); setPassword(DEMO_PASSWORD); setErrorMessage(null); }} style={[styles.demoRole, identifier === user.email && styles.demoRoleActive]}><Text style={styles.demoRoleIcon}>{user.role === 'ADMIN' ? '⚙️' : user.role === 'SECRETARY' ? '🗓️' : user.role === 'PROFESSIONAL' ? '🩺' : '👤'}</Text><Text style={[styles.demoRoleText, identifier === user.email && styles.demoRoleTextActive]}>{user.role === 'ADMIN' ? 'Administración' : user.role === 'SECRETARY' ? 'Secretaría' : user.role === 'PROFESSIONAL' ? 'Profesional' : 'Paciente'}</Text></Pressable>)}</View>
+          </View> : null}
           <LoginCard identifier={identifier} setIdentifier={setIdentifier} password={password} setPassword={setPassword} showPassword={showPassword} setShowPassword={setShowPassword} focused={focused} setFocused={setFocused} biometricEmail={biometricEmail} errorMessage={errorMessage} invalidCredentials={invalidCredentials} twoFactorUserId={twoFactorUserId} twoFactorDestination={twoFactorDestination} twoFactorCode={twoFactorCode} setTwoFactorCode={setTwoFactorCode} infoMessage={infoMessage} loading={loading} submit={twoFactorUserId ? handleVerifyTwoFactor : handleLogin} biometricLogin={handleBiometricLogin} resetTwoFactor={resetTwoFactor}/>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -262,6 +268,18 @@ export default function LoginScreen() {
     </View>);
 }
 const styles = StyleSheet.create({
+    demoPanel: { width: '100%', maxWidth: 760, backgroundColor: '#24104F', borderRadius: 24, padding: 20, marginBottom: 18 },
+    demoHeading: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' },
+    demoEyebrow: { color: '#C4B5FD', fontSize: 10, fontWeight: '900', letterSpacing: 1.3 },
+    demoTitle: { color: '#FFFFFF', fontSize: 21, fontWeight: '900', marginTop: 5 },
+    demoBadge: { color: '#24104F', backgroundColor: '#DDD6FE', borderRadius: 99, paddingHorizontal: 10, paddingVertical: 6, fontSize: 9, fontWeight: '900' },
+    demoText: { color: '#D8D0EB', fontSize: 13, lineHeight: 19, marginTop: 11 },
+    demoRoles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
+    demoRole: { flexGrow: 1, minWidth: 130, borderWidth: 1, borderColor: '#65528C', borderRadius: 15, paddingHorizontal: 12, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 8 },
+    demoRoleActive: { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' },
+    demoRoleIcon: { fontSize: 17 },
+    demoRoleText: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
+    demoRoleTextActive: { color: '#24104F' },
     flex: {
         flex: 1,
     },
@@ -581,4 +599,3 @@ const styles = StyleSheet.create({
         fontWeight: '900',
     },
 });
-

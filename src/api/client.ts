@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { hardRedirectToLogin } from '../utils/session';
 import { hardClearAuthStorage, storage } from './storage';
+import { DEMO_MODE, demoAdapter } from '../demo/demoApi';
 
 const DEFAULT_API_ORIGIN = 'https://mediturnosbackend-production.up.railway.app';
 const configuredApiOrigin = process.env.EXPO_PUBLIC_API_BASE_URL || DEFAULT_API_ORIGIN;
@@ -48,6 +49,7 @@ export function apiUrl(path: string) {
 export const api = axios.create({
   baseURL: API_BASE_URL || undefined,
   timeout: 15000,
+  adapter: DEMO_MODE ? demoAdapter : undefined,
 });
 
 let redirectingExpiredSession = false;

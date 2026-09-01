@@ -122,12 +122,12 @@ export default function PacienteHomeScreen() {
 
   const nextAppointment = useMemo(() => {
     return appointments
-      .filter((turno) => !['CANCELADO', 'FINALIZADO'].includes(String(turno.estado).toUpperCase()))
+      .filter((turno) => !['CANCELADO', 'FINALIZADO', 'ATENDIDO', 'AUSENTE'].includes(String(turno.estado).toUpperCase()))
       .sort((a, b) => `${a.fecha} ${a.hora}`.localeCompare(`${b.fecha} ${b.hora}`))[0];
   }, [appointments]);
 
-  const upcomingCount = appointments.filter((turno) => !['CANCELADO', 'FINALIZADO'].includes(String(turno.estado).toUpperCase())).length;
-  const doneCount = appointments.filter((turno) => String(turno.estado).toUpperCase() === 'FINALIZADO').length;
+  const upcomingCount = appointments.filter((turno) => !['CANCELADO', 'FINALIZADO', 'ATENDIDO', 'AUSENTE'].includes(String(turno.estado).toUpperCase())).length;
+  const doneCount = appointments.filter((turno) => ['FINALIZADO', 'ATENDIDO'].includes(String(turno.estado).toUpperCase())).length;
   const doctorChangedCount = appointments.filter(wasChangedByDoctor).length;
 
   const handleLogout = async () => {

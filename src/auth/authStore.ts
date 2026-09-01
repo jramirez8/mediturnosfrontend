@@ -4,6 +4,7 @@ import { hardClearAuthStorage, storage } from '../api/storage';
 import { clearAppCache, purgeLegacyCache } from '../db/cache';
 import { normalizeRole, routeForRole } from './roles';
 import { authenticateDevice, getBiometricInfo, promoteDeviceSessionToActive } from '../utils/deviceAuth';
+import { DEMO_MODE, DEMO_PASSWORD, DEMO_USERS } from '../demo/demoApi';
 
 type LoginResult = {
   role: string | null;
@@ -108,6 +109,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await clearEverythingAuthRelated();
 
     try {
+      if (DEMO_MODE) {
+        const demoUser = DEMO_USERS.find((user) => user.email.toLowerCase() === email.trim().toLowerCase());
+        if (!demoUser || password !== DEMO_PASSWORD) {
+          const error = new Error('Credenciales demo incorrectas.') as Error & { response?: { status: number } };
+          error.response = { status: 401 };
+          throw error;
+        }
+        const token = `demo-${demoUser.role.toLowerCase()}-session`;
+        const pacienteId = 'pacienteId' in demoUser ? demoUser.pacienteId : null;
+        const profesionalId = 'profesionalId' in demoUser ? demoUser.profesionalId : null;
+        const profesionalInstitucionId = 'profesionalInstitucionId' in demoUser ? demoUser.profesionalInstitucionId : null;
+        await Promise.all([
+          storage.setItem('access_token', token),
+          storage.setItem('usuario_id', demoUser.usuarioId),
+          storage.setItem('role', demoUser.role),
+          storage.setItem('nombre_completo', demoUser.nombre),
+          pacienteId ? storage.setItem('paciente_id', pacienteId) : Promise.resolve(),
+          profesionalId ? storage.setItem('profesional_id', profesionalId) : Promise.resolve(),
+          profesionalInstitucionId ? storage.setItem('profesional_institucion_id', profesionalInstitucionId) : Promise.resolve(),
+        ]);
+        set({ token, usuarioId: demoUser.usuarioId, pacienteId, profesionalId, profesionalInstitucionId, role: demoUser.role, nombreCompleto: demoUser.nombre, hydrated: true });
+        return { role: demoUser.role, route: routeForRole(demoUser.role) };
+      }
       const response = await api.post('/api/auth/login', { identificador: email, email, password });
 
       const uId = pickString(response.data?.usuarioId, response.data?.userId, response.data?.id, response.data?.usuario?.id);
